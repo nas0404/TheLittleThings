@@ -1,0 +1,48 @@
+name: Discord Notifications
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, closed, reopened, ready_for_review]
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create message
+        id: msg
+        run: |
+          EVENT_NAME="${{ github.event_name }}"
+
+          if [ "$EVENT_NAME" = "push" ]; then
+            REPO="${{ github.repository }}"
+            BRANCH="${{ github.ref_name }}"
+            COMMIT_MSG="$(echo "${{ github.event.head_commit.message }}" | head -n1)"
+            URL="${{ github.event.head_commit.url }}"
+            echo "content=**[${REPO}]** pushed to **${BRANCH}** — ${COMMIT_MSG}\n<${URL}>" >> $GITHUB_OUTPUT
+          elif [ "$EVENT_NAME" = "pull_request" ]; then
+            ACTION="${{ github.event.action }}"
+            TITLE="${{ github.event.pull_request.title }}"
+            PRNUM="${{ github.event.pull_request.number }}"
+            URL="${{ github.event.pull_request.html_url }}"
+            echo "content=PR #${PRNUM} **${TITLE}** ${ACTION}\n<${URL}>" >> $GITHUB_OUTPUT
+          elif [ "$EVENT_NAME" = "release" ]; then
+            NAME="${{ github.event.release.name }}"
+            TAG="${{ github.event.release.tag_name }}"
+            URL="${{ github.event.release.html_url }}"
+            echo "content= New release **${NAME}** (${TAG})\n<${URL}>" >> $GITHUB_OUTPUT
+          else
+            echo "content=Event: $EVENT_NAME in ${{ github.repository }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send to Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          MSG: ${{ steps.msg.outputs.content }}
+        run: |
+          jq -n --arg content "$MSG" '{content: $content}' \
+          | curl -sS -H "Content-Type: application/json" -X POST \
+                 -d @- "$DISCORD_WEBHOOK"
