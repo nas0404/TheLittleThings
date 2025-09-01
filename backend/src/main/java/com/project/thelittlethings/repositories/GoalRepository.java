@@ -1,29 +1,35 @@
 package com.project.thelittlethings.repositories;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.project.thelittlethings.entities.Goal;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface GoalRepository extends JpaRepository<Goal, Long> {
 
-    //  Listing
-    List<Goal> findByUserId(Long userId);                // all goals for a user
-    List<Goal> findByUserIdAndCategoryId(Long userId, Long categoryId);    // all goals in a category
+    // Listing
+    List<Goal> findByUser_UserId(Long userId);  // all goals for a user
 
-    // Safe ownership fetch
-    Optional<Goal> findByGoalIdAndUserId(Long goalId, Long userId);
+    List<Goal> findByUser_UserIdAndCategory_CategoryId(Long userId, Long categoryId); // goals in a category
 
-    // Boolean checks
-    boolean existsByGoalIdAndUserId(Long goalId, Long userId);   // ownership check
-    boolean existsByUserId(Long userId);                         // any goals for user?
-    boolean existsByCategoryId(Long categoryId);              // any goals in category?
-    boolean existsByUserIdAndTitle(Long userId, String title);   // duplicate title check
+    // “View details” with ownership of goals
+    Optional<Goal> findByGoalIdAndUser_UserId(Long goalId, Long userId);
 
-    // Optional counters
-    long countByUserId(Long userId);
-    long countByCategoryId(Long categoryId);
+    // Booleans / existence checks
+    boolean existsByGoalIdAndUser_UserId(Long goalId, Long userId);
+    boolean existsByUser_UserId(Long userId);
+    boolean existsByCategory_CategoryId(Long categoryId);
+    boolean existsByUser_UserIdAndTitle(Long userId, String title); // duplicate title per user (optional)
+
+    // Counters
+    long countByUser_UserId(Long userId);
+    long countByCategory_CategoryId(Long categoryId);
+
+    // ---- Sorting by priority (HIGH > MEDIUM > LOW) ----
+    // If you want the repository to return sorted results by priority weight:
+    List<Goal> findByUser_UserIdAndPriorityOrderByCreatedAtDesc(Long userId, String priority);
+     List<Goal> findByUser_UserIdAndCategory_CategoryIdAndPriorityOrderByCreatedAtDesc(Long userId, Long categoryId, String priority);
 }
 
