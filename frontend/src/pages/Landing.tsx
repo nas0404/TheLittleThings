@@ -14,9 +14,7 @@ export default function Landing() {
           <Button>Register</Button>
         </Link>
         <Link to="/login">
-          <Button className="bg-white text-blue-600 border border-blue-600 hover:bg-gray-50 hover:bg-opacity-50">
-            Sign In
-          </Button>
+          <Button className="bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50">Sign In</Button>
         </Link>
       </div>
     </div>
