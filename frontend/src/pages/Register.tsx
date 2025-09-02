@@ -52,11 +52,26 @@ export default function Register() {
 
   const handleSubmit: React.FormEventHandler = async (e) => {
     e.preventDefault();
-    // Minimal payload: compute age server-side too; send dob verbatim.
-    const payload = { ...form };
-    console.log("Register payload:", payload);
-    // await api.register(payload);
-    navigate("/"); // or wherever you land post-signup
+    try {
+      const response = await fetch('http://localhost:8080/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form)
+      });
+
+      if (response.ok) {
+        // Registration successful
+        navigate("/home");
+      } else {
+        // reg errors
+        const error = await response.json();
+        console.error('Registration failed:', error);
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+    }
   };
 
   return (
