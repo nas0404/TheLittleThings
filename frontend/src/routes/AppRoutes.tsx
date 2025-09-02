@@ -4,11 +4,13 @@ import About from '../pages/About';
 import Settings from '../pages/Settings';
 import NotFound from '../pages/NotFound';
 import Landing from '../pages/Landing';
+import Register from '../pages/Register';
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/home" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/settings" element={<Settings />} />
