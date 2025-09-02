@@ -10,23 +10,23 @@ import java.util.Optional;
 public interface WinRepository extends JpaRepository<Win, Long> {
 
     // Listing
-    List<Win> findByUserId(Long userId);          // all wins for a user
-    List<Win> findByGoalId(Long goalId);          // all wins tied to a goal
+    List<Win> findByUser_UserId(Long userId);          // all wins for a user
+    List<Win> findByGoal_GoalId(Long goalId);          // all wins tied to a goal
 
     //  Safe ownership fetch
-    Optional<Win> findByWinIdAndUserId(Long winId, Long userId);
+    Optional<Win> findByWinIdAndUser_UserId(Long winId, Long userId);
 
     //  Journal 1:1 link (wins.journal_id is unique)
     Optional<Win> findByJournalId(Long journalId);
 
     //  Boolean checks
-    boolean existsByWinIdAndUserId(Long winId, Long userId);   // ownership check
-    boolean existsByUserId(Long userId);                       // any wins for user?
-    boolean existsByGoalId(Long goalId);                       // any wins for goal?
+    boolean existsByWinIdAndUser_UserId(Long winId, Long userId);   // ownership check
+    boolean existsByUser_UserId(Long userId);                       // any wins for user?
+    boolean existsByGoal_GoalId(Long goalId);                       // any wins for goal?
     boolean existsByJournalId(Long journalId);              // already linked to a journal?
 
     //  Optional counters
-    long countByUserId(Long userId);
-    long countByGoalId(Long goalId);
+    long countByUser_UserId(Long userId);
+    long countByGoal_GoalId(Long goalId);
 }
 
