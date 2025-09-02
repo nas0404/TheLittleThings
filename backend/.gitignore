@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore local application configuration
+/backend/src/main/resources/application.properties
