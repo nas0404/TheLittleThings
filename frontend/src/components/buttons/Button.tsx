@@ -10,8 +10,8 @@ export default function Button({ children, isLoading, className, ...props }: But
       {...props}
       disabled={isLoading || props.disabled}
       className={cn(
-        "inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-white font-medium shadow-sm transition hover:bg-blue-700 disabled:opacity-50",
-        className
+        "inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium shadow-sm transition disabled:opacity-50",
+        className || "bg-blue-600 text-white hover:bg-blue-700"
       )}
     >
       {isLoading ? (

@@ -8,11 +8,10 @@ import java.util.List;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     // Find all categories that belong to a specific user (by userId).
-    List<Category> findByUserId(Long userId);
+    List<Category> findByUser_UserId(Long userId);
     boolean existsByUser_UserIdAndName(Long userId, String name);
 
-
     // Check if this user has ANY categories
-    boolean existsByUserId(Long userId, String name);
+    boolean existsByUser_UserId(Long userId);
 
 }
