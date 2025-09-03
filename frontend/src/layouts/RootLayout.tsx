@@ -12,7 +12,11 @@ export default function RootLayout({ children }: Props) {
             <NavLink to="/" className="hover:underline">Home</NavLink>
             <NavLink to="/about" className="hover:underline">About</NavLink>
             <NavLink to="/settings" className="hover:underline">Settings</NavLink>
-             <NavLink to="/categories" className="hover:underline">Categories</NavLink>
+            <NavLink to="/categories" className="hover:underline">Categories</NavLink>
+            <NavLink to="/wins" className="hover:underline">Wins</NavLink>
+            <NavLink to="/leaderboard" className="hover:underline">Leaderboard</NavLink>
+
+
           </div>
         </nav>
       </header>
