@@ -46,7 +46,7 @@ public class CategoryService {
     if (!userRepo.existsById(userId))
       throw new IllegalArgumentException("user not found");
 
-    return categoryRepo.findByUserId(userId)
+    return categoryRepo.findByUser_UserId(userId)
         .stream()
         .map(this::toResponse)
         .toList();
