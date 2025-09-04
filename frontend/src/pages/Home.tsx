@@ -1,11 +1,8 @@
-import { useState } from "react";
-import Button from "../components/buttons/Button";
 import Card from "../components/ui/Card";
 import UserStatsCard from "../components/ui/UserStatsCard";
 import ChallengeCard from "../components/ui/ChallengeCard";
 
 export default function Home() {
-  const [count, setCount] = useState(0);
 
   return (
     <section className="space-y-6">
@@ -29,12 +26,12 @@ export default function Home() {
 
         <Card title="Card 2" description="This is the second card." />
 
-        <Card title="Card 3" description="Sign in to access your account."/>
-        
-  
+        <Card title="Card 3" description="Sign in to access your account." />
+
+
       </div>
 
-      
+
     </section>
   );
 }
