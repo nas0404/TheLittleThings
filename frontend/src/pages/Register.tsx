@@ -9,7 +9,7 @@ type RegisterForm = {
   firstName: string;
   lastName: string;
   dob: string;          // yyyy-mm-dd
-  gender: "" | "male" | "female" | "other" ;
+  gender: "" | "male" | "female" | "other";
   region: string;
 };
 
@@ -139,7 +139,7 @@ export default function Register() {
               <option value="male">Male</option>
               <option value="female">Female</option>
               <option value="other">Other</option>
-              
+
             </select>
           </Field>
 

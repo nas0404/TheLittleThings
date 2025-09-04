@@ -5,8 +5,8 @@ import Settings from '../pages/Settings';
 import NotFound from '../pages/NotFound';
 import Landing from '../pages/Landing';
 import Register from '../pages/Register';
-import CategoriesIndexPage from '../pages/CategoriesIndexPage.tsx';
-import CategoryGoalsPage from '../pages/CategoryGoalsPage.tsx';
+import CategoriesIndexPage from '../pages/CategoriesIndexPage';
+import CategoryGoalsPage from '../pages/CategoryGoalsPage';
 import Leaderboard from '../pages/Leaderboard.tsx';
 import Wins from '../pages/Wins.tsx';
 

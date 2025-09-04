@@ -11,9 +11,35 @@ steps:
   - script: node -v && npm -v
     displayName: "Show Node & npm versions"
 
+  # Optional: cache npm to speed up CI
+  - task: Cache@2
+    displayName: Cache npm (frontend)
+    inputs:
+      key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
+      path: frontend/node_modules
+      restoreKeys: |
+        npm | "$(Agent.OS)"
+    # Cache only helps if node_modules already exists from a previous run;
+    # npm ci will still run and update as needed.
+
   - script: npm ci
-    displayName: "Install dependencies"
+    displayName: "Install dependencies (frontend)"
+    workingDirectory: frontend
+
+  # Optional but recommended: do a real TS typecheck (Vite/SWC doesn't)
+  - script: npm run typecheck
+    displayName: "Typecheck (tsc --noEmit)"
+    workingDirectory: frontend
+    # package.json -> "typecheck": "tsc -p tsconfig.app.json --noEmit"
 
   - script: npm run build
     displayName: "Build frontend"
     workingDirectory: frontend
+
+  # Optional: publish the built app as an artifact
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish dist"
+    inputs:
+      PathtoPublish: "frontend/dist"
+      ArtifactName: "frontend-dist"
+      publishLocation: "Container"
