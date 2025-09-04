@@ -9,7 +9,7 @@ export default function RootLayout({ children }: Props) {
         <nav className="mx-auto flex max-w-6xl items-center gap-4 p-4">
           <NavLink to="/" className="font-semibold">TheLittleThing</NavLink>
           <div className="ml-auto flex items-center gap-3">
-            <NavLink to="/" className="hover:underline">Home</NavLink>
+            <NavLink to="/home" className="hover:underline">Home</NavLink>
             <NavLink to="/about" className="hover:underline">About</NavLink>
             <NavLink to="/settings" className="hover:underline">Settings</NavLink>
             <NavLink to="/categories" className="hover:underline">Categories</NavLink>

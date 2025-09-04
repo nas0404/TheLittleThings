@@ -1,23 +1,40 @@
 import { useState } from "react";
 import Button from "../components/buttons/Button";
+import Card from "../components/ui/Card";
+import UserStatsCard from "../components/ui/UserStatsCard";
+import ChallengeCard from "../components/ui/ChallengeCard";
 
 export default function Home() {
   const [count, setCount] = useState(0);
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
       <h1 className="text-2xl font-bold">Welcome</h1>
       <p>Start here. Add widgets or cards that matter to your user.</p>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-xl border bg-white p-4 shadow-sm">Card A</div>
-        <div className="rounded-xl border bg-white p-4 shadow-sm">Card B</div>
-        <div className="rounded-xl border bg-white p-4 shadow-sm">Card C</div>
+      <div className="flex flex-col gap-6">
+        <Card title="" description="">
+          <UserStatsCard username="MaximumTab" streak={7} trophies={120} />
+        </Card>
+
+        <Card title="Challenge of the Week" description="">
+          <ChallengeCard
+            title="Complete 6 workouts"
+            description="Stay consistent with your fitness routine."
+            reward={20}
+            progress={{ current: 3, total: 6 }}
+          />
+        </Card>
+
+
+        <Card title="Card 2" description="This is the second card." />
+
+        <Card title="Card 3" description="Sign in to access your account."/>
+        
+  
       </div>
 
-      <Button onClick={() => setCount((c) => c + 1)}>
-        Clicked {count} times
-      </Button>
+      
     </section>
   );
 }
