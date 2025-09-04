@@ -8,8 +8,6 @@ steps:
     inputs:
       version: '20.19.0'
 
-  - script: node -v && npm -v
-    displayName: "Show Node & npm versions"
 
   # Optional: cache npm to speed up CI
   - task: Cache@2
@@ -26,14 +24,12 @@ steps:
     displayName: "Install dependencies (frontend)"
     workingDirectory: frontend
 
+  # Unit test step(s) should go here, after install and before build.
+  # Example later: npm run test or npm run test:ci
+  # workingDirectory: frontend
+
   - script: npm run build
     displayName: "Build frontend"
     workingDirectory: frontend
 
-  # Optional: publish the built app as an artifact
-  - task: PublishBuildArtifacts@1
-    displayName: "Publish dist"
-    inputs:
-      PathtoPublish: "frontend/dist"
-      ArtifactName: "frontend-dist"
-      publishLocation: "Container"
+    
