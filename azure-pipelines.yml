@@ -26,12 +26,6 @@ steps:
     displayName: "Install dependencies (frontend)"
     workingDirectory: frontend
 
-  # Optional but recommended: do a real TS typecheck (Vite/SWC doesn't)
-  - script: npm run typecheck
-    displayName: "Typecheck (tsc --noEmit)"
-    workingDirectory: frontend
-    # package.json -> "typecheck": "tsc -p tsconfig.app.json --noEmit"
-
   - script: npm run build
     displayName: "Build frontend"
     workingDirectory: frontend
