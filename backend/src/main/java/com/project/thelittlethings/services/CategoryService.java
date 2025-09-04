@@ -1,5 +1,6 @@
 package com.project.thelittlethings.services;
 
+import com.project.thelittlethings.MaterialisedView.CategoryNeglectedView;
 import com.project.thelittlethings.dto.categories.CategoryResponse;
 import com.project.thelittlethings.dto.categories.CreateCategoryRequest;
 import com.project.thelittlethings.dto.categories.UpdateCategoryRequest;
@@ -23,7 +24,8 @@ public class CategoryService {
   }
 
   public CategoryResponse create(CreateCategoryRequest r) {
-    if (r.getUserId() == null) throw new IllegalArgumentException("userId is required");
+    if (r.getUserId() == null)
+      throw new IllegalArgumentException("userId is required");
     if (r.getName() == null || r.getName().trim().isEmpty())
       throw new IllegalArgumentException("name is required");
 
@@ -68,13 +70,15 @@ public class CategoryService {
 
     if (r.getName() != null) {
       String newName = r.getName().trim();
-      if (newName.isEmpty()) throw new IllegalArgumentException("name cannot be blank");
+      if (newName.isEmpty())
+        throw new IllegalArgumentException("name cannot be blank");
       if (!newName.equals(c.getName())
           && categoryRepo.existsByUser_UserIdAndName(userId, newName))
         throw new IllegalArgumentException("category name already exists for this user");
       c.setName(newName);
     }
-    if (r.getDescription() != null) c.setDescription(r.getDescription());
+    if (r.getDescription() != null)
+      c.setDescription(r.getDescription());
 
     return toResponse(categoryRepo.save(c));
   }
@@ -96,5 +100,9 @@ public class CategoryService {
     res.setCreatedAt(c.getCreatedAt());
     res.setUpdatedAt(c.getUpdatedAt());
     return res;
+  }
+
+  public List<CategoryNeglectedView> getNeglectedCategories(Long userId, int days) {
+    return categoryRepo.findNeglectedCategories(userId, days);
   }
 }
