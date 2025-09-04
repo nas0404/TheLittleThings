@@ -1,8 +1,9 @@
 import { useState } from "react";
 import Button from "../components/buttons/Button";
 import Card from "../components/ui/Card";
-import UserStatsCard from "../components/ui/UserStatsCard";
+// import UserStatsCard from "../components/ui/UserStatsCard";
 import ChallengeCard from "../components/ui/ChallengeCard";
+import UserStatsCard from "../components/ui/UserStatsCard";
 
 export default function Home() {
   const [count, setCount] = useState(0);

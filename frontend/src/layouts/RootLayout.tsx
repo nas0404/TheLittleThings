@@ -15,6 +15,7 @@ export default function RootLayout({ children }: Props) {
             <NavLink to="/categories" className="hover:underline">Categories</NavLink>
             <NavLink to="/wins" className="hover:underline">Wins</NavLink>
             <NavLink to="/leaderboard" className="hover:underline">Leaderboard</NavLink>
+            <NavLink to="/categories/:categoryId" className="hover:underline">CategoryGoalsPage</NavLink>
 
 
           </div>
