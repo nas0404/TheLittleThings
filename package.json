@@ -1,5 +1,17 @@
 {
-  "dependencies": {
-    "react-router-dom": "^7.8.2"
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.5",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "vite": "^5.4.0",
+    "@vitejs/plugin-react-swc": "^3.7.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "tailwindcss": "^4.0.0"
   }
 }

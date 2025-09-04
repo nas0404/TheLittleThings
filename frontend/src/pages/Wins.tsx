@@ -1,8 +1,13 @@
 import { useState } from "react";
 
+type Win = {
+    id: number;
+    goal: string;
+    date: string;
+};
 export default function Wins() {
     // Static list of wins for now Imma implement it
-    const [wins] = useState([
+    const [wins] = useState<Win[]>([
         {
             id: 1,
             goal: "Complete 5 daily challenges",
