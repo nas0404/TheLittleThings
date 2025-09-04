@@ -1,5 +1,6 @@
 package com.project.thelittlethings.controller;
 
+import com.project.thelittlethings.MaterialisedView.CategoryNeglectedView;
 import com.project.thelittlethings.dto.categories.CategoryResponse;
 import com.project.thelittlethings.dto.categories.CreateCategoryRequest;
 import com.project.thelittlethings.dto.categories.UpdateCategoryRequest;
@@ -50,6 +51,15 @@ public class CategoryController {
     public ResponseEntity<Void> delete(@PathVariable Long id, @RequestParam Long userId) {
         service.delete(id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/categories/neglected")
+    public List<CategoryNeglectedView> neglected(
+        @RequestParam Long userId,
+        @RequestParam(defaultValue = "30") int days
+    ) 
+    {
+        return service.getNeglectedCategories(userId, days);
     }
 }
 

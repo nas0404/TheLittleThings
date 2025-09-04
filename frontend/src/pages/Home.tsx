@@ -1,6 +1,7 @@
 import Card from "../components/ui/Card";
-import UserStatsCard from "../components/ui/UserStatsCard";
+// import UserStatsCard from "../components/ui/UserStatsCard";
 import ChallengeCard from "../components/ui/ChallengeCard";
+import UserStatsCard from "../components/ui/UserStatsCard";
 
 export default function Home() {
 
