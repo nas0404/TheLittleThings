@@ -72,7 +72,7 @@ public class ChallengeController {
     public ResponseEntity<ChallengeResponse> updateProgress(
             @PathVariable Long id,
             @RequestParam Long userId,
-            @RequestBody UpdateProgressRequest req
+            @RequestBody UpdateChallengeRequest req
     ) {
         return ResponseEntity.ok(service.updateProgress(id, userId, req));
     }

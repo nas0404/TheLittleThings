@@ -20,7 +20,8 @@ public class WinService {
     private final UserRepository userRepo;
     private final GoalRepository goalRepo;
 
-    public WinService(WinRepository winRepo, UserRepository userRepo, GoalRepository goalRepo) {
+    public WinService(WinRepository winRepo, UserRepository userRepo,
+            GoalRepository goalRepo) {
         this.winRepo = winRepo;
         this.userRepo = userRepo;
         this.goalRepo = goalRepo;
@@ -74,7 +75,7 @@ public class WinService {
     }
 
     public WinResponse updateWin(Long winId, Long userId, UpdateWinRequest req) {
-        Win win = winRepo.findByWinIdAndUserId(winId, userId)
+        Win win = winRepo.findByWinIdAndUser_UserId(winId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Win not found or not owned by user"));
 
         if (req.getTitle() != null && !req.getTitle().trim().isEmpty()) {
@@ -93,7 +94,8 @@ public class WinService {
         if (req.getJournalId() != null) {
             win.setJournalId(req.getJournalId());
         }
-        // You could add logic to update goal/user if your design allows, but typically
+        // You could add logic to update goal/user if your design allows, but
+        // typically
         // those are fixed.
 
         Win updatedWin = winRepo.save(win);
@@ -103,20 +105,20 @@ public class WinService {
     public List<WinResponse> listWinsByUser(Long userId) {
         if (!userRepo.existsById(userId))
             throw new IllegalArgumentException("user not found");
-        return winRepo.findByUserId(userId)
+        return winRepo.findByUser_UserId(userId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public WinResponse getWinById(Long winId, Long userId) {
-        var win = winRepo.findByWinIdAndUserId(winId, userId)
+        Win win = winRepo.findByWinIdAndUser_UserId(winId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("win not found"));
         return toResponse(win);
     }
 
     public void deleteWin(Long winId, Long userId) {
-        var win = winRepo.findByWinIdAndUserId(winId, userId)
+        var win = winRepo.findByWinIdAndUser_UserId(winId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("win not found"));
         winRepo.delete(win);
     }
