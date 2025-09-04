@@ -16,3 +16,4 @@ steps:
 
   - script: npm run build
     displayName: "Build frontend"
+    workingDirectory: frontend
