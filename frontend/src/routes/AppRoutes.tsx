@@ -11,6 +11,7 @@ import CategoriesIndexPage from '../pages/CategoriesIndexPage';
 import CategoryGoalsPage from '../pages/CategoryGoalsPage';
 import Leaderboard from '../pages/Leaderboard.tsx';
 import Wins from '../pages/Wins.tsx';
+import Journal from '../pages/Journal';
 
 export default function AppRoutes() {
   return (
@@ -25,6 +26,7 @@ export default function AppRoutes() {
       <Route path="/categories" element={<CategoriesIndexPage />} />
       <Route path="/categories/:id" element={<CategoryGoalsPage />} />
       <Route path="/wins" element={<Wins />} />
+      <Route path="/journal" element={<Journal />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
