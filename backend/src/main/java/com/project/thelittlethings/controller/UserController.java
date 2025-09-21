@@ -79,6 +79,21 @@ public class UserController {
         }
     }
 
+    @PostMapping("/change-username")
+    public ResponseEntity<?> changeUsername(@RequestHeader("Authorization") String auth, @RequestBody com.project.thelittlethings.dto.users.ChangeUsernameRequest req) {
+        try {
+            String token = auth.replaceFirst("Bearer ", "");
+            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
+            String username = TokenUtil.extractUsername(token);
+            User u = userService.findByUsername(username);
+            if (u == null) return ResponseEntity.status(404).build();
+            String newToken = userService.changeUsername(u.getUserId(), req.getNewUsername());
+            return ResponseEntity.ok(new AuthResponse(newToken, u.getUserId(), req.getNewUsername()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest req) {
         try {

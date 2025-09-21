@@ -106,5 +106,21 @@ public class UserService {
 		User u = users.get(id);
 		u.setPassword(hash(newPassword));
 	}
+
+	/**
+	 * Change a user's username. Returns a fresh token for the new username.
+	 */
+	public String changeUsername(Long userId, String newUsername) {
+		if (newUsername == null || newUsername.length() < 3) throw new IllegalArgumentException("Invalid username");
+		if (usernameIndex.containsKey(newUsername)) throw new IllegalArgumentException("Username already taken");
+		User u = users.get(userId);
+		if (u == null) throw new IllegalArgumentException("User not found");
+		// update index
+		usernameIndex.remove(u.getUsername());
+		u.setUsername(newUsername);
+		usernameIndex.put(newUsername, userId);
+		// issue a new token bound to the new username
+		return TokenUtil.issueToken(u.getUsername(), 60 * 60 * 24);
+	}
 }
 
