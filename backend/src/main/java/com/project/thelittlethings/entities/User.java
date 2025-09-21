@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "users")
@@ -39,6 +40,8 @@ public class User {
   private LocalDate dob;
 
   private Integer age;
+  @Column(name = "last_login")
+  private OffsetDateTime lastLogin;
   private String gender;
   private Integer streaks;
   private String region;
