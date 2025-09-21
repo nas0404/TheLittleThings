@@ -92,6 +92,18 @@ export default function UserProfile() {
 
 					<div>
 						<Button onClick={logout} className="bg-red-600">Logout</Button>
+						<div className="mt-3">
+							<Button onClick={async () => {
+								if (!confirm('Delete your account? This is irreversible.')) return;
+								const t = localStorage.getItem('token');
+								try {
+									const res = await fetch('http://localhost:8080/api/users/', { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+									if (!res.ok) { setError('Delete failed'); return; }
+									localStorage.removeItem('token');
+									window.location.href = '/';
+								} catch (e) { setError('Network'); }
+							}} className="bg-red-700">Delete account</Button>
+						</div>
 					</div>
 				</div>
 			) : (

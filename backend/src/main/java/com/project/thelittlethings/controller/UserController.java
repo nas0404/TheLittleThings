@@ -94,6 +94,23 @@ public class UserController {
         }
     }
 
+    @DeleteMapping("/")
+    public ResponseEntity<?> deleteAccount(@RequestHeader("Authorization") String auth) {
+        try {
+            String token = auth.replaceFirst("Bearer ", "");
+            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
+            String username = TokenUtil.extractUsername(token);
+            User u = userService.findByUsername(username);
+            if (u == null) return ResponseEntity.status(404).build();
+            boolean ok = userService.deleteUser(u.getUserId());
+            // blacklist the token used to authenticate this deletion
+            userService.logout(token);
+            return ok ? ResponseEntity.ok().build() : ResponseEntity.status(500).build();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest req) {
         try {
