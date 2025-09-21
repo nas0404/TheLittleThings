@@ -80,84 +80,98 @@ export default function Register() {
         <h2 className="text-center text-2xl font-semibold text-gray-900">Create your account</h2>
 
         <form className="mt-6 space-y-5" onSubmit={handleSubmit} noValidate>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="First name" id="firstName">
+          {/* Personal info card */}
+          <div className="rounded-xl border bg-white p-4 shadow-sm">
+            <h3 className="text-lg font-semibold mb-3">Personal Details</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="First name" id="firstName">
+                <input
+                  id="firstName" name="firstName" type="text" autoComplete="given-name" required
+                  className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={form.firstName} onChange={onChange}
+                />
+              </Field>
+              <Field label="Last name" id="lastName">
+                <input
+                  id="lastName" name="lastName" type="text" autoComplete="family-name" required
+                  className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={form.lastName} onChange={onChange}
+                />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <Field label="Date of birth" id="dob" hint={age ? `You’ll be registered as ${age}` : undefined}>
+                <input
+                  id="dob" name="dob" type="date" required
+                  className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={form.dob} onChange={onChange}
+                />
+              </Field>
+              <Field label="Gender" id="gender">
+                <select
+                  id="gender" name="gender"
+                  className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={form.gender} onChange={onChange}
+                >
+                  <option value="">Select</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </Field>
+            </div>
+          </div>
+
+          {/* Account info card */}
+          <div className="rounded-xl border bg-white p-4 shadow-sm">
+            <h3 className="text-lg font-semibold mb-3">Account</h3>
+            <Field label="Username" id="username" hint="3+ characters, lowercase is fine.">
               <input
-                id="firstName" name="firstName" type="text" autoComplete="given-name" required
+                id="username" name="username" type="text" required
                 className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={form.firstName} onChange={onChange}
+                value={form.username} onChange={onChange}
               />
             </Field>
-            <Field label="Last name" id="lastName">
+
+            <Field label="Email" id="email">
               <input
-                id="lastName" name="lastName" type="text" autoComplete="family-name" required
+                id="email" name="email" type="email" autoComplete="email" required
                 className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={form.lastName} onChange={onChange}
+                value={form.email} onChange={onChange}
+              />
+            </Field>
+
+            <Field label="Password" id="password" hint="At least 8 characters.">
+              <input
+                id="password" name="password" type="password" autoComplete="new-password" required
+                className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={form.password} onChange={onChange}
               />
             </Field>
           </div>
 
-          <Field label="Username" id="username" hint="3+ characters, lowercase is fine.">
-            <input
-              id="username" name="username" type="text" required
-              className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={form.username} onChange={onChange}
-            />
-          </Field>
+          {/* Other info card + submit */}
+          <div className="rounded-xl border bg-white p-4 shadow-sm">
+            <h3 className="text-lg font-semibold mb-3">Other</h3>
+            <Field label="Region" id="region">
+              <input
+                id="region" name="region" type="text"
+                className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={form.region} onChange={onChange}
+              />
+            </Field>
 
-          <Field label="Email" id="email">
-            <input
-              id="email" name="email" type="email" autoComplete="email" required
-              className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={form.email} onChange={onChange}
-            />
-          </Field>
-
-          <Field label="Password" id="password" hint="At least 8 characters.">
-            <input
-              id="password" name="password" type="password" autoComplete="new-password" required
-              className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={form.password} onChange={onChange}
-            />
-          </Field>
-
-          <Field label="Date of birth" id="dob" hint={age ? `You’ll be registered as ${age}` : undefined}>
-            <input
-              id="dob" name="dob" type="date" required
-              className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={form.dob} onChange={onChange}
-            />
-          </Field>
-
-          <Field label="Gender" id="gender">
-            <select
-              id="gender" name="gender"
-              className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={form.gender} onChange={onChange}
-            >
-              <option value="">Select</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-
-            </select>
-          </Field>
-
-          <Field label="Region" id="region">
-            <input
-              id="region" name="region" type="text"
-              className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={form.region} onChange={onChange}
-            />
-          </Field>
-
-          <Button
-            type="submit"
-            className="w-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
-            disabled={!isValid}
-          >
-            Register
-          </Button>
+            <div className="mt-4">
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                disabled={!isValid}
+              >
+                Register
+              </Button>
+            </div>
+          </div>
         </form>
       </div>
     </div>
