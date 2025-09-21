@@ -30,14 +30,14 @@ public class ChallengeService {
     @Transactional(readOnly = true)
     public List<ChallengeResponse> listByUser(Long userId, String statusStr) {
         ChallengeStatus status = parseStatus(statusStr, ChallengeStatus.ACTIVE);
-        return challengeRepo.findAllByUserIdAndStatus(userId, status).stream()
+    return challengeRepo.findAllByUser_UserIdAndStatus(userId, status).stream()
                 .map(this::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public ChallengeResponse getAssigned(Long id, Long userId) {
-        Challenge ch = challengeRepo.findByIdAndUserId(id, userId)
+    Challenge ch = challengeRepo.findByIdAndUser_UserId(id, userId)
                 .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
         return toDto(ch);
     }
@@ -126,14 +126,15 @@ public class ChallengeService {
 
         // Very basic heuristic: use count of wins to propose a challenge.
         // Replace with your real logic (e.g., top category in last 30 days).
-        Instant thirtyDaysAgo = Instant.now().minus(30, ChronoUnit.DAYS);
-        long recentWins = winRepo.countRecentWinsForUser(userId, thirtyDaysAgo);
+    Instant thirtyDaysAgoInstant = Instant.now().minus(30, ChronoUnit.DAYS);
+    java.time.OffsetDateTime thirtyDaysAgo = java.time.OffsetDateTime.ofInstant(thirtyDaysAgoInstant, java.time.ZoneOffset.UTC);
+    long recentWins = winRepo.countRecentWinsForUser(userId, thirtyDaysAgo);
         
         int goal = Math.max(3, Math.min(10, (int) recentWins + 2)); // nudge slightly above recent behaviour
 
 
         // Upsert a suggested challenge if none active/suggested
-        boolean exists = challengeRepo.existsByUserIdAndStatusIn(
+    boolean exists = challengeRepo.existsByUser_UserIdAndStatusIn(
                 userId,
                 List.of(ChallengeStatus.SUGGESTED, ChallengeStatus.ACTIVE)
         );
@@ -152,7 +153,7 @@ public class ChallengeService {
             challengeRepo.save(ch);
         }
 
-        return challengeRepo.findAllByUserIdAndStatusIn(
+    return challengeRepo.findAllByUser_UserIdAndStatusIn(
                         userId,
                         List.of(ChallengeStatus.SUGGESTED, ChallengeStatus.ACTIVE))
                 .stream()
@@ -163,7 +164,7 @@ public class ChallengeService {
     // ---------- Helpers ----------
 
     private Challenge requireOwned(Long id, Long userId) {
-        return challengeRepo.findByIdAndUserId(id, userId)
+    return challengeRepo.findByIdAndUser_UserId(id, userId)
                 .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
     }
 
