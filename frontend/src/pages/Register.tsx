@@ -44,6 +44,8 @@ export default function Register() {
     !!form.firstName.trim() &&
     !!form.lastName.trim() &&
     !!form.dob;
+  const [submitting, setSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const onChange: React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement> = (e) => {
     const { name, value } = e.target;
@@ -52,8 +54,14 @@ export default function Register() {
 
   const handleSubmit: React.FormEventHandler = async (e) => {
     e.preventDefault();
+    console.log('Register handleSubmit triggered', { form, isValid });
+    if (!isValid) {
+      console.warn('Form invalid, aborting submit');
+      return;
+    }
     try {
-      const response = await fetch('http://localhost:8080/api/users', {
+      setSubmitting(true);
+      const response = await fetch('http://localhost:8080/api/users/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,15 +70,40 @@ export default function Register() {
       });
 
       if (response.ok) {
-        // Registration successful
-        navigate("/home");
+        setServerError(null);
+        // Registration successful — parse token and store it
+        let data: any = null;
+        try {
+          data = await response.json();
+        } catch (_e) {
+          // ignore
+        }
+        if (data && data.token) {
+          localStorage.setItem('token', data.token);
+          navigate("/home");
+        } else {
+          // If server returned 200 but no token, show message
+          const text = data ? JSON.stringify(data) : 'Registration succeeded but no token received';
+          setServerError(text);
+        }
       } else {
         // reg errors
-        const error = await response.json();
-        console.error('Registration failed:', error);
+        let errorText = 'Registration failed';
+        try {
+          const json = await response.json();
+          errorText = typeof json === 'string' ? json : JSON.stringify(json);
+        } catch (_) {
+          errorText = await response.text();
+        }
+        console.error('Registration failed:', errorText);
+        setServerError(errorText);
       }
     } catch (error) {
       console.error('Registration error:', error);
+      setServerError(String(error));
+    }
+    finally {
+      setSubmitting(false);
     }
   };
 
@@ -163,10 +196,16 @@ export default function Register() {
             </Field>
 
             <div className="mt-4">
+              <ValidationHints form={form} />
+              {serverError ? (
+                <div className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-800">{serverError}</div>
+              ) : null}
               <Button
                 type="submit"
                 className="w-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
-                disabled={!isValid}
+                disabled={!isValid || submitting}
+                isLoading={submitting}
+                title={!isValid ? 'Please fill all required fields correctly' : undefined}
               >
                 Register
               </Button>
@@ -174,6 +213,29 @@ export default function Register() {
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+// Small UI component to render a list of validation hints
+function ValidationHints({ form }: { form: RegisterForm }) {
+  const hints: string[] = [];
+  if (form.username.trim().length < 3) hints.push('Username must be at least 3 characters');
+  if (!/\S+@\S+\.\S+/.test(form.email)) hints.push('Enter a valid email address');
+  if (form.password.length < 8) hints.push('Password must be at least 8 characters');
+  if (!form.firstName.trim()) hints.push('First name is required');
+  if (!form.lastName.trim()) hints.push('Last name is required');
+  if (!form.dob) hints.push('Date of birth is required');
+
+  if (hints.length === 0) return null;
+  return (
+    <div className="mt-3 rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
+      <strong>Fix the following:</strong>
+      <ul className="list-disc list-inside mt-1">
+        {hints.map((h) => (
+          <li key={h}>{h}</li>
+        ))}
+      </ul>
     </div>
   );
 }
