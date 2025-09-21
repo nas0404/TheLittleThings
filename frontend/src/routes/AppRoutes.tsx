@@ -5,6 +5,8 @@ import Settings from '../pages/Settings';
 import NotFound from '../pages/NotFound';
 import Landing from '../pages/Landing';
 import Register from '../pages/Register';
+import SignIn from '../pages/SignIn';
+import UserProfile from '../pages/UserProfile';
 import CategoriesIndexPage from '../pages/CategoriesIndexPage';
 import CategoryGoalsPage from '../pages/CategoryGoalsPage';
 import Leaderboard from '../pages/Leaderboard.tsx';
@@ -14,7 +16,9 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/register" element={<Register />} />
+  <Route path="/register" element={<Register />} />
+  <Route path="/login" element={<SignIn />} />
+  <Route path="/user" element={<UserProfile />} />
       <Route path="/home" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/settings" element={<Settings />} />
