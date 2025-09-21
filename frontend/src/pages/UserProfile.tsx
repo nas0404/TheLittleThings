@@ -33,6 +33,31 @@ export default function UserProfile() {
 		}
 	};
 
+	const [newUsername, setNewUsername] = useState('');
+	const changeUsername = async () => {
+		const t = localStorage.getItem('token');
+		try {
+			const res = await fetch('http://localhost:8080/api/users/change-username', {
+				method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+				body: JSON.stringify({ newUsername })
+			});
+			if (!res.ok) {
+				setError(await res.text());
+				return;
+			}
+			const json = await res.json();
+			if (json.token) {
+				localStorage.setItem('token', json.token);
+				setUser((u: any) => ({ ...u, username: json.username }));
+				setError('Username changed');
+			} else {
+				setError('No token returned');
+			}
+		} catch (e) {
+			setError('Network');
+		}
+	};
+
 	const logout = async () => {
 		const t = localStorage.getItem('token');
 		await fetch('http://localhost:8080/api/users/logout', { method: 'POST', headers: { Authorization: `Bearer ${t}` } });
@@ -50,6 +75,12 @@ export default function UserProfile() {
 						<div><strong>Username:</strong> {user.username}</div>
 						<div><strong>Email:</strong> {user.email}</div>
 						<div><strong>Last login:</strong> {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}</div>
+					</div>
+
+					<div className="rounded-xl border bg-white p-4 shadow-sm">
+						<h3 className="font-semibold mb-2">Change Username</h3>
+						<input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="New username" className="w-full mb-2 rounded-md border px-2 py-1" />
+						<Button onClick={changeUsername}>Change Username</Button>
 					</div>
 
 					<div className="rounded-xl border bg-white p-4 shadow-sm">
