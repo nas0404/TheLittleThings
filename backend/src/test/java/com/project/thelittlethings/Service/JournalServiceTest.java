@@ -1,4 +1,4 @@
-package com.project.thelittlethings.services;
+package com.project.thelittlethings.Service;
 
 import com.project.thelittlethings.dto.journals.CreateJournalRequest;
 import com.project.thelittlethings.dto.journals.UpdateJournalRequest;
@@ -8,6 +8,9 @@ import com.project.thelittlethings.entities.User;
 import com.project.thelittlethings.entities.Journal;
 import com.project.thelittlethings.repositories.JournalRepository;
 import com.project.thelittlethings.repositories.UserRepository;
+import com.project.thelittlethings.services.JournalService;
+import com.project.thelittlethings.services.UserService;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
