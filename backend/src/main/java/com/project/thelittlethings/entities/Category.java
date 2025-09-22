@@ -8,19 +8,18 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.*;
 import lombok.*;
 
+// Category.java
 @Entity
-@Table(
-  name = "categories",
+@Table(name = "categories",
   uniqueConstraints = @UniqueConstraint(name="uq_categories_user_name", columnNames={"user_id","name"})
 )
-// @EntityListeners(AuditingEntityListener.class)
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Category {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name="category_id")
   private Long categoryId;
 
-  @ManyToOne(optional = false)
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name="user_id", foreignKey=@ForeignKey(name="fk_categories_user"))
   private User user;
 
@@ -30,12 +29,12 @@ public class Category {
   @Column(columnDefinition = "text")
   private String description;
 
-  @CreatedDate
-  @Column(name = "created_at", nullable = false, updatable = false)
+  @org.hibernate.annotations.CreationTimestamp
+  @Column(name="created_at", updatable = false)   // remove insertable=false
   private Instant createdAt;
 
-  @LastModifiedDate
-  @Column(name = "updated_at", nullable = false)
+  @org.hibernate.annotations.UpdateTimestamp
+  @Column(name="updated_at")                       // remove insertable/updatable flags
   private Instant updatedAt;
 }
 

@@ -1,8 +1,8 @@
+// src/test/java/com/project/thelittlethings/controller/CategoryControllerTest.java
 package com.project.thelittlethings.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.thelittlethings.config.RestExceptionHandler;
-import com.project.thelittlethings.controller.CategoryController;
 import com.project.thelittlethings.dto.categories.CategoryResponse;
 import com.project.thelittlethings.dto.categories.CreateCategoryRequest;
 import com.project.thelittlethings.services.CategoryService;
@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -21,8 +20,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = CategoryController.class) 
-@Import(RestExceptionHandler.class)                  
+@WebMvcTest(controllers = com.project.thelittlethings.controller.CategoryController.class)
+@Import(RestExceptionHandler.class)
 class CategoryControllerTest {
 
     @Autowired MockMvc mvc;
@@ -30,11 +29,10 @@ class CategoryControllerTest {
 
     @MockBean CategoryService service;
 
-    // @MockBean JpaMetamodelMappingContext jpaMetamodelMappingContext;
-
     @Test
     void create_returns201_andBody() throws Exception {
-        var req = new CreateCategoryRequest(null, "Fitness", "Gym");
+        // DTO is (name, description) — no userId in body
+        var req = new CreateCategoryRequest("Fitness", "Gym");
         var res = new CategoryResponse(1L, 31L, "Fitness", "Gym", null, null);
 
         when(service.create(eq(31L), any(CreateCategoryRequest.class))).thenReturn(res);
