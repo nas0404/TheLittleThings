@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
@@ -17,10 +16,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:h2:mem:testdb",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
+    "spring.datasource.url=jdbc:postgresql://localhost:5432/TheLittleThings",
+    "spring.datasource.username=postgres",
+    "spring.datasource.password=Fake2468",
+    "spring.jpa.hibernate.ddl-auto=none",
+    "spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect"
 })
-@Transactional
 class UserServiceTest {
 
     @Autowired
@@ -29,10 +30,10 @@ class UserServiceTest {
     @Autowired
     private UserRepository userRepository;
 
-    @BeforeEach
-    void setUp() {
-        userRepository.deleteAll();
-    }
+    //@BeforeEach
+    //void setUp() {
+        //userRepository.deleteAll();
+    //}
 
     @Test
     void testRegisterUser_Success() {
@@ -185,5 +186,55 @@ class UserServiceTest {
 
         // Assert
         assertNull(found);
+    }
+
+    @Test
+    void testDatabaseConnection_AddEntry() {
+        // This test specifically verifies database connectivity by directly using the repository
+        
+        // Arrange - Create a user entity directly (all required fields)
+        String uniqueUsername = "dbtest_" + System.currentTimeMillis();
+        User testUser = new User();
+        testUser.setUsername(uniqueUsername);
+        testUser.setEmail("dbtest@example.com");
+        testUser.setPassword("hashedpassword");
+        testUser.setFirstName("Database");
+        testUser.setLastName("Connection");
+        testUser.setDob(LocalDate.of(1990, 5, 15));
+        testUser.setGender("Other");
+        
+        // Act - Save directly to database via repository
+        User savedUser = userRepository.save(testUser);
+        
+        // Verify the save operation worked
+        assertNotNull(savedUser);
+        assertTrue(savedUser.getUserId() > 0);
+        
+        // Act - Retrieve from database to verify connection
+        User retrievedUser = userRepository.findById(savedUser.getUserId()).orElse(null);
+        
+        // Assert - Verify database persistence and retrieval
+        assertNotNull(retrievedUser, "Database connection failed - could not retrieve saved user");
+        assertEquals(uniqueUsername, retrievedUser.getUsername());
+        assertEquals("dbtest@example.com", retrievedUser.getEmail());
+        assertEquals("Database", retrievedUser.getFirstName());
+        assertEquals("Connection", retrievedUser.getLastName());
+        assertEquals("Other", retrievedUser.getGender());
+        assertEquals(LocalDate.of(1990, 5, 15), retrievedUser.getDob());
+        
+        // Additional verification - count total users in database
+        long userCount = userRepository.count();
+        assertTrue(userCount >= 1, "Database should contain at least 1 user after insertion");
+        
+        // Verify the user can be found by username through repository
+        User foundByUsername = userRepository.findByUsername(uniqueUsername).orElse(null);
+        assertNotNull(foundByUsername, "Database connection failed - could not find user by username");
+        assertEquals(savedUser.getUserId(), foundByUsername.getUserId());
+        
+        System.out.println("=== DATABASE CONNECTION TEST SUCCESSFUL ===");
+        System.out.println("User ID: " + savedUser.getUserId());
+        System.out.println("Username: " + uniqueUsername);
+        System.out.println("Email: " + retrievedUser.getEmail());
+        System.out.println("Check DBeaver to see this entry!");
     }
 }
