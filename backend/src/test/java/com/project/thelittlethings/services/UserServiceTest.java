@@ -4,9 +4,13 @@ import com.project.thelittlethings.dto.users.CreateUserRequest;
 import com.project.thelittlethings.dto.users.LoginRequest;
 import com.project.thelittlethings.entities.User;
 import com.project.thelittlethings.repositories.UserRepository;
+
+import jakarta.transaction.Transactional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -15,13 +19,8 @@ import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:postgresql://localhost:5432/TheLittleThings",
-    "spring.datasource.username=postgres",
-    "spring.datasource.password=Fake2468",
-    "spring.jpa.hibernate.ddl-auto=none",
-    "spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect"
-})
+@ActiveProfiles("test")
+@Transactional
 class UserServiceTest {
 
     @Autowired
