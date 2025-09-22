@@ -12,7 +12,12 @@ export default function UserProfile() {
 		if (!t) return;
 		fetch('http://localhost:8080/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
 			.then((r) => r.json())
-			.then(setUser)
+			.then(data => {
+				console.log('User data received:', data);
+				console.log('Age value:', data.age, 'Type:', typeof data.age);
+				console.log('DOB value:', data.dob, 'Type:', typeof data.dob);
+				setUser(data);
+			})
 			.catch(() => setError('Unable to fetch'));
 	}, []);
 
@@ -74,6 +79,11 @@ export default function UserProfile() {
 					<div className="rounded-xl border bg-white p-4 shadow-sm">
 						<div><strong>Username:</strong> {user.username}</div>
 						<div><strong>Email:</strong> {user.email}</div>
+						<div><strong>Age:</strong> {user.age !== null && user.age !== undefined && user.age !== '' ? user.age : 'Not specified'}</div>
+						<div><strong>Date of Birth:</strong> {user.dob ? new Date(user.dob).toLocaleDateString() : 'Not specified'}</div>
+						<div><strong>Gender:</strong> {user.gender || 'Not specified'}</div>
+						<div><strong>Region:</strong> {user.region || 'Not specified'}</div>
+						<div><strong>Streaks:</strong> {user.streaks !== null && user.streaks !== undefined ? user.streaks : 0}</div>
 						<div><strong>Last login:</strong> {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}</div>
 					</div>
 

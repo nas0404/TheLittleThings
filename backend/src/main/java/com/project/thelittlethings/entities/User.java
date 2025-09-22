@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.Period;
 
 @Entity
 @Table(name = "users")
@@ -45,4 +46,22 @@ public class User {
   private String gender;
   private Integer streaks;
   private String region;
+
+  // Method to calculate age from date of birth
+  @Transient
+  public int getCalculatedAge() {
+    if (dob == null) {
+      return 0;
+    }
+    return Period.between(dob, LocalDate.now()).getYears();
+  }
+
+  // Method to update the age field based on dob
+  @PrePersist
+  @PreUpdate
+  public void updateAge() {
+    if (dob != null) {
+      this.age = getCalculatedAge();
+    }
+  }
 }
