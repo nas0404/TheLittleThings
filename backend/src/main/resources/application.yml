@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/thelittlethings
     username: postgres
-    password: DB
+    password: DBASD
   jpa:
     hibernate:
       ddl-auto: update

@@ -32,7 +32,6 @@ public interface WinRepository extends JpaRepository<Win, Long> {
     long countByGoal_GoalId(Long goalId);
 
     //count recent wins for a user
-    @Query("SELECT COUNT(w) FROM Win w WHERE w.user.userId = :userId AND w.createdAt >= :after")
-    long countRecentWinsForUser(@Param("userId") Long userId, @Param("after") java.time.Instant after);
+    long countByUser_UserIdAndCompletionDateAfter(Long userId, java.time.OffsetDateTime since);
 }
 
