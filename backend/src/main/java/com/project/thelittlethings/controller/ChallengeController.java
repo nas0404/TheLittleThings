@@ -77,10 +77,10 @@ public class ChallengeController {
         return ResponseEntity.ok(service.updateProgress(id, userId, req));
     }
 
-    /**
-     * Mark complete (awards trophies, closes the challenge).
-     * Service should enforce completion rules (e.g., current >= total).
-     */
+//     /**
+//      * Mark complete (awards trophies, closes the challenge).
+//      * Service should enforce completion rules (e.g., current >= total).
+//      */
     @PostMapping("/{id}/complete")
     public ResponseEntity<ChallengeResponse> complete(@PathVariable Long id, @RequestParam Long userId) {
         return ResponseEntity.ok(service.complete(id, userId));

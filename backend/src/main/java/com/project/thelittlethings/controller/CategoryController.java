@@ -1,6 +1,7 @@
 package com.project.thelittlethings.controller;
 
-import com.project.thelittlethings.View.CategoryNeglectView;
+
+import com.project.thelittlethings.MaterialisedView.CategoryNeglectedView;
 import com.project.thelittlethings.dto.categories.CategoryResponse;
 import com.project.thelittlethings.dto.categories.CreateCategoryRequest;
 import com.project.thelittlethings.dto.categories.UpdateCategoryRequest;

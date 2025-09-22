@@ -1,6 +1,6 @@
 package com.project.thelittlethings.services;
 
-import com.project.thelittlethings.View.CategoryNeglectView;
+import com.project.thelittlethings.MaterialisedView.CategoryNeglectedView;
 import com.project.thelittlethings.dto.categories.CategoryResponse;
 import com.project.thelittlethings.dto.categories.CreateCategoryRequest;
 import com.project.thelittlethings.dto.categories.UpdateCategoryRequest;
@@ -9,7 +9,7 @@ import com.project.thelittlethings.entities.User;
 import com.project.thelittlethings.repositories.CategoryRepository;
 import com.project.thelittlethings.repositories.UserRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
@@ -23,44 +23,26 @@ public class CategoryService {
     this.userRepo = userRepo;
   }
 
-  // public CategoryResponse create(CreateCategoryRequest r) {
-  //   if (r.getUserId() == null) throw new IllegalArgumentException("userId is required");
-  //   if (r.getName() == null || r.getName().trim().isEmpty())
-  //     throw new IllegalArgumentException("name is required");
+  public CategoryResponse create(CreateCategoryRequest r) {
+    if (r.getUserId() == null)
+      throw new IllegalArgumentException("userId is required");
+    if (r.getName() == null || r.getName().trim().isEmpty())
+      throw new IllegalArgumentException("name is required");
 
-  //   User user = userRepo.findById(r.getUserId())
-  //       .orElseThrow(() -> new IllegalArgumentException("user not found"));
+    User user = userRepo.findById(r.getUserId())
+        .orElseThrow(() -> new IllegalArgumentException("user not found"));
 
-  //   String name = r.getName().trim();
-  //   if (categoryRepo.existsByUser_UserIdAndName(user.getUserId(), name))
-  //     throw new IllegalArgumentException("category name already exists for this user");
+    String name = r.getName().trim();
+    if (categoryRepo.existsByUser_UserIdAndName(user.getUserId(), name))
+      throw new IllegalArgumentException("category name already exists for this user");
 
-  //   Category c = new Category();
-  //   c.setUser(user);
-  //   c.setName(name);
-  //   c.setDescription(r.getDescription());
+    Category c = new Category();
+    c.setUser(user);
+    c.setName(name);
+    c.setDescription(r.getDescription());
 
-  //   return toResponse(categoryRepo.save(c));
-  // }
-    public CategoryResponse create(Long userId, CreateCategoryRequest r) {
-      if (userId == null) throw new IllegalArgumentException("userId is required");
-      if (r.getName() == null || r.getName().trim().isEmpty())
-        throw new IllegalArgumentException("name is required");
-
-      User user = userRepo.findById(userId)
-          .orElseThrow(() -> new IllegalArgumentException("user not found"));
-
-      String name = r.getName().trim();
-      if (categoryRepo.existsByUser_UserIdAndName(userId, name))
-        throw new IllegalArgumentException("category name already exists for this user");
-
-      Category c = new Category();
-      c.setUser(user);
-      c.setName(name);
-      c.setDescription(r.getDescription());
-
-      return toResponse(categoryRepo.save(c));
-    }
+    return toResponse(categoryRepo.save(c));
+  }
 
   public List<CategoryResponse> listByUser(long userId) {
     if (!userRepo.existsById(userId))
@@ -88,13 +70,15 @@ public class CategoryService {
 
     if (r.getName() != null) {
       String newName = r.getName().trim();
-      if (newName.isEmpty()) throw new IllegalArgumentException("name cannot be blank");
+      if (newName.isEmpty())
+        throw new IllegalArgumentException("name cannot be blank");
       if (!newName.equals(c.getName())
           && categoryRepo.existsByUser_UserIdAndName(userId, newName))
         throw new IllegalArgumentException("category name already exists for this user");
       c.setName(newName);
     }
-    if (r.getDescription() != null) c.setDescription(r.getDescription());
+    if (r.getDescription() != null)
+      c.setDescription(r.getDescription());
 
     return toResponse(categoryRepo.save(c));
   }
@@ -107,14 +91,6 @@ public class CategoryService {
     categoryRepo.delete(c);
   }
 
-  @Transactional(readOnly = true)
-  public List<CategoryNeglectView> neglected(Long userId, Integer days) {
-    if (!userRepo.existsById(userId))
-      throw new IllegalArgumentException("user not found");
-    int window = (days == null || days <= 0) ? 14 : days;
-    return categoryRepo.findNeglectedByUser(userId, window);
-  }
-
   private CategoryResponse toResponse(Category c) {
     CategoryResponse res = new CategoryResponse();
     res.setCategoryId(c.getCategoryId());
@@ -124,5 +100,9 @@ public class CategoryService {
     res.setCreatedAt(c.getCreatedAt());
     res.setUpdatedAt(c.getUpdatedAt());
     return res;
+  }
+
+  public List<CategoryNeglectedView> getNeglectedCategories(Long userId, int days) {
+    return categoryRepo.findNeglectedCategories(userId, days);
   }
 }
