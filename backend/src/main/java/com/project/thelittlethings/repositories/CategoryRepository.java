@@ -18,28 +18,27 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     // Check if this user has ANY categories
     boolean existsByUser_UserId(Long userId);
 
-      @Query(value = """
-    WITH last_win AS (
-      SELECT g.category_id, MAX(w.created_at) AS last_win_at
-      FROM goals g
-      LEFT JOIN wins w ON w.goal_id = g.goal_id
-      WHERE g.user_id = :userId
-      GROUP BY g.category_id
-    )
-    SELECT
-      c.category_id AS categoryId,
-      c.name        AS name,
-      l.last_win_at AS lastWinAt
-    FROM categories c
-    LEFT JOIN last_win l ON l.category_id = c.category_id
-    WHERE c.user_id = :userId
-      AND (l.last_win_at IS NULL OR l.last_win_at < NOW() - (:days || ' days')::interval)
-    ORDER BY l.last_win_at NULLS FIRST
-    """,
-    nativeQuery = true)
-List<CategoryNeglectedView> findNeglectedCategories(
-    @Param("userId") Long userId,
-    @Param("days") int days
-);
-
+    @Query(
+  value =
+  "SELECT " +
+  "  c.category_id AS categoryId, " +
+  "  c.user_id     AS userId, " +
+  "  c.name        AS name, " +
+  "  c.description AS description, " +
+  "  COALESCE(MAX(w.completion_date), c.created_at) AS lastWinAt, " +
+  "  SUM(CASE WHEN w.completion_date IS NOT NULL " +
+  "            AND w.completion_date >= NOW() - CAST(:days || ' days' AS interval) " +
+  "      THEN 1 ELSE 0 END) AS recentWins, " +
+  "  CEIL(EXTRACT(EPOCH FROM (NOW() - COALESCE(MAX(w.completion_date), c.created_at))) / 86400.0)::bigint AS neglectDays " +
+  "FROM categories c " +
+  "LEFT JOIN goals g ON g.category_id = c.category_id AND g.user_id = c.user_id " +
+  "LEFT JOIN wins  w ON w.goal_id     = g.goal_id     AND w.user_id = c.user_id AND w.completion_date IS NOT NULL " +
+  "WHERE c.user_id = :userId " +
+  "GROUP BY c.category_id, c.user_id, c.name, c.description, c.created_at " +
+  "ORDER BY (MAX(w.completion_date) IS NULL) DESC, COALESCE(MAX(w.completion_date), c.created_at) ASC",
+  nativeQuery = true
+)
+List<CategoryNeglectView> findNeglectedByUser(@Param("userId") Long userId,
+                                              @Param("days") int days);
 }
+

@@ -1,4 +1,10 @@
 package com.project.thelittlethings.entities;
+import java.time.Instant;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -7,6 +13,7 @@ import lombok.*;
   name = "categories",
   uniqueConstraints = @UniqueConstraint(name="uq_categories_user_name", columnNames={"user_id","name"})
 )
+// @EntityListeners(AuditingEntityListener.class)
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Category {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,11 +30,13 @@ public class Category {
   @Column(columnDefinition = "text")
   private String description;
 
-  // DB-managed timestamps (from DEFAULT NOW())
-  @Column(name="created_at", insertable=false, updatable=false)
-  private java.time.OffsetDateTime createdAt;
+  @CreatedDate
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private Instant createdAt;
 
-  @Column(name="updated_at", insertable=false, updatable=false)
-  private java.time.OffsetDateTime updatedAt;
+  @LastModifiedDate
+  @Column(name = "updated_at", nullable = false)
+  private Instant updatedAt;
 }
+
 
