@@ -102,15 +102,30 @@ public class GoalService {
         .toList();
   }
 
-  public Map<String, List<GoalResponse>> listGrouped(Long userId, Long categoryId) {
+  public Map<String, List<GoalResponse>> listGrouped(Long userId, Long categoryId, String priority) {
     List<Goal> all = (categoryId == null)
         ? goalRepo.findByUser_UserId(userId)
         : goalRepo.findByUser_UserIdAndCategory_CategoryId(userId, categoryId);
 
     Map<String, List<GoalResponse>> grouped = new HashMap<>();
-    grouped.put("HIGH", all.stream().filter(g -> "HIGH".equals(g.getPriority())).map(this::toResponse).toList());
-    grouped.put("MEDIUM", all.stream().filter(g -> "MEDIUM".equals(g.getPriority())).map(this::toResponse).toList());
-    grouped.put("LOW", all.stream().filter(g -> "LOW".equals(g.getPriority())).map(this::toResponse).toList());
+    grouped.put("HIGH", all.stream()
+            .filter(g -> "HIGH".equals(g.getPriority()))
+            .map(this::toResponse).toList());
+    grouped.put("MEDIUM", all.stream()
+            .filter(g -> "MEDIUM".equals(g.getPriority()))
+            .map(this::toResponse).toList());
+    grouped.put("LOW", all.stream()
+            .filter(g -> "LOW".equals(g.getPriority()))
+            .map(this::toResponse).toList());
+
+    // if user passed ?priority=HIGH → only return that key
+    if (priority != null) {
+        String p = priority.toUpperCase();
+        if (!grouped.containsKey(p)) {
+            throw new IllegalArgumentException("priority must be HIGH, MEDIUM, or LOW");
+        }
+        return Map.of(p, grouped.get(p));
+    }
 
     return grouped;
 }

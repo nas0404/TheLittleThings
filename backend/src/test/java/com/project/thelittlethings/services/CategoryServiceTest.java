@@ -1,5 +1,5 @@
 // src/test/java/com/project/thelittlethings/services/CategoryServiceTest.java
-package com.project.thelittlethings.Service;
+package com.project.thelittlethings.services;
 
 import com.project.thelittlethings.dto.categories.CreateCategoryRequest;
 import com.project.thelittlethings.dto.categories.UpdateCategoryRequest;

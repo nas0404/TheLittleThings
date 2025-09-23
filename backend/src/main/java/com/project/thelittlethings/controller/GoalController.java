@@ -49,11 +49,12 @@ public class GoalController {
   }
   
 
-  @GetMapping("/grouped")
-  public Map<String, List<GoalResponse>> listGrouped(@PathVariable Long userId,
-                                                     @RequestParam(required = false) Long categoryId) {
-    return service.listGrouped(userId, categoryId);
-  }
+ @GetMapping("/grouped")
+public Map<String, List<GoalResponse>> listGrouped(@PathVariable Long userId,
+                                                   @RequestParam(required = false) Long categoryId,
+                                                   @RequestParam(required = false) String priority) {
+    return service.listGrouped(userId, categoryId, priority);
+}
 
   @GetMapping("/{goalId}")
   public GoalResponse getOne(@PathVariable Long userId, @PathVariable Long goalId) {
