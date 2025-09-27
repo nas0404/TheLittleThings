@@ -1,6 +1,8 @@
 package com.project.thelittlethings.dto.goals;
 
 import lombok.*;
+
+import java.time.Instant;
 import java.time.OffsetDateTime;
 
 @Data
@@ -13,5 +15,6 @@ public class GoalResponse {
     private String title;
     private String description;
     private String priority;
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

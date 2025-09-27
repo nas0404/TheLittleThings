@@ -23,13 +23,14 @@ public class CategoryService {
     this.userRepo = userRepo;
   }
 
-  public CategoryResponse create(CreateCategoryRequest r) {
-    if (r.getUserId() == null)
-      throw new IllegalArgumentException("userId is required");
+  
+
+  public CategoryResponse create(Long userId, CreateCategoryRequest r) {
+    if (userId == null) throw new IllegalArgumentException("userId is required");
     if (r.getName() == null || r.getName().trim().isEmpty())
       throw new IllegalArgumentException("name is required");
 
-    User user = userRepo.findById(r.getUserId())
+    User user = userRepo.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException("user not found"));
 
     String name = r.getName().trim();
@@ -41,8 +42,13 @@ public class CategoryService {
     c.setName(name);
     c.setDescription(r.getDescription());
 
-    return toResponse(categoryRepo.save(c));
+    Category saved = categoryRepo.save(c);
+    // re-read to populate DB-managed timestamps
+    saved = categoryRepo.findById(saved.getCategoryId())
+        .orElseThrow(() -> new IllegalArgumentException("category missing after save"));
+    return toResponse(saved);
   }
+
 
   public List<CategoryResponse> listByUser(long userId) {
     if (!userRepo.existsById(userId))
