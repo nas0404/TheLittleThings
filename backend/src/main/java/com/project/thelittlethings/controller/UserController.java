@@ -1,62 +1,124 @@
 package com.project.thelittlethings.controller;
 
 import com.project.thelittlethings.entities.User;
+import com.project.thelittlethings.dto.users.*;
+import com.project.thelittlethings.services.UserService;
+import com.project.thelittlethings.security.TokenUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
 
-  
-    private final Map<Long, User> users = new HashMap<>();
-    private Long currentId = 1L;
-    
-    @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(new ArrayList<>(users.values()));
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        User user = users.get(id);
-        if (user != null) {
-            return ResponseEntity.ok(user);
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody CreateUserRequest req) {
+        try {
+            User u = userService.register(req);
+            String token = TokenUtil.issueToken(u.getUsername(), 60 * 60 * 24);
+            return ResponseEntity.ok(new AuthResponse(token, u.getUserId(), u.getUsername()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
-        return ResponseEntity.notFound().build();
     }
 
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        user.setUserId(currentId);
-        users.put(currentId, user);
-        currentId++;
-        return ResponseEntity.ok(user);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(
-            @PathVariable Long id,
-            @RequestBody User updatedUser) {
-        if (users.containsKey(id)) {
-            updatedUser.setUserId(id);
-            users.put(id, updatedUser);
-            return ResponseEntity.ok(updatedUser);
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+        try {
+            String token = userService.login(req);
+            String username = TokenUtil.extractUsername(token);
+            User u = userService.findByUsername(username);
+            return ResponseEntity.ok(new AuthResponse(token, u.getUserId(), u.getUsername()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(401).body(ex.getMessage());
         }
-        return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        if (users.remove(id) != null) {
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String auth) {
+        String token = auth.replaceFirst("Bearer ", "");
+        userService.logout(token);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(@RequestHeader("Authorization") String auth) {
+        try {
+            String token = auth.replaceFirst("Bearer ", "");
+            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
+            String username = TokenUtil.extractUsername(token);
+            User u = userService.findByUsername(username);
+            if (u == null) return ResponseEntity.status(404).build();
+            // Map to DTO so we can include a human-readable lastLogin without changing User.java
+            com.project.thelittlethings.dto.users.UserResponse resp = com.project.thelittlethings.dto.users.UserResponse.fromUser(u);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).build();
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String auth, @RequestBody ChangePasswordRequest req) {
+        try {
+            String token = auth.replaceFirst("Bearer ", "");
+            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
+            String username = TokenUtil.extractUsername(token);
+            User u = userService.findByUsername(username);
+            userService.changePassword(u.getUserId(), req.getOldPassword(), req.getNewPassword());
             return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
-        return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/change-username")
+    public ResponseEntity<?> changeUsername(@RequestHeader("Authorization") String auth, @RequestBody com.project.thelittlethings.dto.users.ChangeUsernameRequest req) {
+        try {
+            String token = auth.replaceFirst("Bearer ", "");
+            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
+            String username = TokenUtil.extractUsername(token);
+            User u = userService.findByUsername(username);
+            if (u == null) return ResponseEntity.status(404).build();
+            String newToken = userService.changeUsername(u.getUserId(), req.getNewUsername());
+            return ResponseEntity.ok(new AuthResponse(newToken, u.getUserId(), req.getNewUsername()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @DeleteMapping("/")
+    public ResponseEntity<?> deleteAccount(@RequestHeader("Authorization") String auth) {
+        try {
+            String token = auth.replaceFirst("Bearer ", "");
+            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
+            String username = TokenUtil.extractUsername(token);
+            User u = userService.findByUsername(username);
+            if (u == null) return ResponseEntity.status(404).build();
+            boolean ok = userService.deleteUser(u.getUserId());
+            // blacklist the token used to authenticate this deletion
+            userService.logout(token);
+            return ok ? ResponseEntity.ok().build() : ResponseEntity.status(500).build();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest req) {
+        try {
+            // In real app we'd email a reset link. For demo accept new password param or set default
+            userService.resetPassword(req.getEmail(), "new-temporary-password");
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 }

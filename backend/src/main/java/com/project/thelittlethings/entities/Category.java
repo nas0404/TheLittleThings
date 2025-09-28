@@ -1,10 +1,16 @@
 package com.project.thelittlethings.entities;
+import java.time.Instant;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import jakarta.persistence.*;
 import lombok.*;
 
+// Category.java
 @Entity
-@Table(
-  name = "categories",
+@Table(name = "categories",
   uniqueConstraints = @UniqueConstraint(name="uq_categories_user_name", columnNames={"user_id","name"})
 )
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
@@ -13,7 +19,7 @@ public class Category {
   @Column(name="category_id")
   private Long categoryId;
 
-  @ManyToOne(optional = false)
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name="user_id", foreignKey=@ForeignKey(name="fk_categories_user"))
   private User user;
 
@@ -23,11 +29,13 @@ public class Category {
   @Column(columnDefinition = "text")
   private String description;
 
-  // DB-managed timestamps (from DEFAULT NOW())
-  @Column(name="created_at", insertable=false, updatable=false)
-  private java.time.OffsetDateTime createdAt;
+  @org.hibernate.annotations.CreationTimestamp
+  @Column(name="created_at", updatable = false)   // remove insertable=false
+  private Instant createdAt;
 
-  @Column(name="updated_at", insertable=false, updatable=false)
-  private java.time.OffsetDateTime updatedAt;
+  @org.hibernate.annotations.UpdateTimestamp
+  @Column(name="updated_at")                       // remove insertable/updatable flags
+  private Instant updatedAt;
 }
+
 

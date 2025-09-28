@@ -3,8 +3,8 @@ package com.project.thelittlethings.services;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale.Category;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
@@ -19,6 +19,7 @@ import com.project.thelittlethings.repositories.CategoryRepository;
 import com.project.thelittlethings.repositories.GoalRepository;
 import com.project.thelittlethings.repositories.WinRepository;
 import com.project.thelittlethings.repositories.UserRepository;
+import com.project.thelittlethings.entities.Category;
 
 @Service
 public class GoalService {
@@ -45,32 +46,55 @@ public class GoalService {
     r.setDescription(save.getDescription());
     r.setPriority(save.getPriority());
     r.setCreatedAt(save.getCreatedAt());
+    r.setUpdatedAt(save.getUpdatedAt());
     return r;
   }
 
-  public GoalResponse createGoal(CreateGoalRequest gr) {
-    if (gr.getUserId() == null)
+  public GoalResponse createGoal(Long userId, Long categoryId, CreateGoalRequest req) {
+    if (userId == null)
       throw new IllegalArgumentException("userId is required");
-    if (gr.getCategoryId() == null)
+    if (categoryId == null)
       throw new IllegalArgumentException("categoryId is required");
-    if (gr.getTitle() == null || gr.getTitle().trim().isEmpty())
+    if (req.getTitle() == null || req.getTitle().trim().isEmpty())
       throw new IllegalArgumentException("title is required");
-    if (gr.getPriority() == null || gr.getPriority().trim().isEmpty())
+    if (req.getPriority() == null || req.getPriority().trim().isEmpty())
       throw new IllegalArgumentException("priority is required");
-    if (!gr.getPriority().equals("HIGH") && !gr.getPriority().equals("MEDIUM") && !gr.getPriority().equals("LOW"))
+
+    String priority = req.getPriority().trim().toUpperCase();
+    if (!priority.equals("HIGH") && !priority.equals("MEDIUM") && !priority.equals("LOW"))
       throw new IllegalArgumentException("priority must be HIGH, MEDIUM, or LOW");
 
-    var user = userRepo.findById(gr.getUserId())
+    User user = userRepo.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException("user not found"));
-    var category = categoryRepo.findById(gr.getCategoryId())
+
+    Category category = categoryRepo.findById(categoryId)
         .orElseThrow(() -> new IllegalArgumentException("category not found"));
-    var goal = new Goal();
-    goal.setUser(user);
-    goal.setCategory(category);
-    goal.setTitle(gr.getTitle().trim());
-    goal.setDescription(gr.getDescription());
-    goal.setPriority(gr.getPriority().trim());
-    return toResponse(goalRepo.save(goal));
+
+    // IMPORTANT: category must belong to the same user
+    if (!Objects.equals(category.getUser().getUserId(), userId))
+      throw new IllegalArgumentException("category does not belong to user");
+
+    // Optional: enforce unique goal title per user, if you want parity with
+    // Category
+    // if (goalRepo.existsByUser_UserIdAndTitle(userId, req.getTitle().trim()))
+    // throw new IllegalArgumentException("goal title already exists for this
+    // user");
+
+    Goal g = new Goal();
+    g.setUser(user);
+    g.setCategory(category);
+    g.setTitle(req.getTitle().trim());
+    g.setDescription(req.getDescription());
+    g.setPriority(priority);
+
+    // force DB insert (so defaults/triggers run)
+    Goal saved = goalRepo.saveAndFlush(g);
+
+    // re-read so created_at/updated_at from DB are present
+    saved = goalRepo.findById(saved.getGoalId())
+        .orElseThrow(() -> new IllegalArgumentException("goal missing after save"));
+
+    return toResponse(saved);
   }
 
   public List<GoalResponse> listGoalsByUser(long userId) {
@@ -93,15 +117,30 @@ public class GoalService {
         .toList();
   }
 
-  public Map<String, List<GoalResponse>> listGrouped(Long userId, Long categoryId) {
+  public Map<String, List<GoalResponse>> listGrouped(Long userId, Long categoryId, String priority) {
     List<Goal> all = (categoryId == null)
         ? goalRepo.findByUser_UserId(userId)
         : goalRepo.findByUser_UserIdAndCategory_CategoryId(userId, categoryId);
 
     Map<String, List<GoalResponse>> grouped = new HashMap<>();
-    grouped.put("HIGH", all.stream().filter(g -> "HIGH".equals(g.getPriority())).map(this::toResponse).toList());
-    grouped.put("MEDIUM", all.stream().filter(g -> "MEDIUM".equals(g.getPriority())).map(this::toResponse).toList());
-    grouped.put("LOW", all.stream().filter(g -> "LOW".equals(g.getPriority())).map(this::toResponse).toList());
+    grouped.put("HIGH", all.stream()
+        .filter(g -> "HIGH".equals(g.getPriority()))
+        .map(this::toResponse).toList());
+    grouped.put("MEDIUM", all.stream()
+        .filter(g -> "MEDIUM".equals(g.getPriority()))
+        .map(this::toResponse).toList());
+    grouped.put("LOW", all.stream()
+        .filter(g -> "LOW".equals(g.getPriority()))
+        .map(this::toResponse).toList());
+
+    // if user passed ?priority=HIGH → only return that key
+    if (priority != null) {
+      String p = priority.toUpperCase();
+      if (!grouped.containsKey(p)) {
+        throw new IllegalArgumentException("priority must be HIGH, MEDIUM, or LOW");
+      }
+      return Map.of(p, grouped.get(p));
+    }
 
     return grouped;
   }

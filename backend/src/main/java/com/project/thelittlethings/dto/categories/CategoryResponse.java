@@ -1,6 +1,8 @@
 package com.project.thelittlethings.dto.categories;
 
 import lombok.*;
+
+import java.time.Instant;
 import java.time.OffsetDateTime;
 
 @Data
@@ -11,6 +13,6 @@ public class CategoryResponse {
     private Long userId;
     private String name;
     private String description;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 }
