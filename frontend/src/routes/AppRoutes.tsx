@@ -9,6 +9,7 @@ import CategoriesIndexPage from '../pages/CategoriesIndexPage';
 import CategoryGoalsPage from '../pages/CategoryGoalsPage';
 import Leaderboard from '../pages/Leaderboard.tsx';
 import Wins from '../pages/Wins.tsx';
+import Goals from '../pages/Goals.tsx';
 
 export default function AppRoutes() {
   return (
@@ -22,6 +23,7 @@ export default function AppRoutes() {
       <Route path="/categories/:id" element={<CategoryGoalsPage />} />
       <Route path="/wins" element={<Wins />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
+      <Route path="/goals" element={<Goals />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
