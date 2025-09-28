@@ -11,15 +11,16 @@ import CategoriesIndexPage from '../pages/CategoriesIndexPage';
 import CategoryGoalsPage from '../pages/CategoryGoalsPage';
 import Leaderboard from '../pages/Leaderboard.tsx';
 import Wins from '../pages/Wins.tsx';
+import Goals from '../pages/Goals.tsx';
 import Journal from '../pages/Journal';
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-  <Route path="/register" element={<Register />} />
-  <Route path="/login" element={<SignIn />} />
-  <Route path="/user" element={<UserProfile />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<SignIn />} />
+      <Route path="/user" element={<UserProfile />} />
       <Route path="/home" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/settings" element={<Settings />} />
@@ -28,6 +29,7 @@ export default function AppRoutes() {
       <Route path="/wins" element={<Wins />} />
       <Route path="/journal" element={<Journal />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
+      <Route path="/goals" element={<Goals />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
