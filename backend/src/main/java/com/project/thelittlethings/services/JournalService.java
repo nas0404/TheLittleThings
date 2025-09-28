@@ -32,29 +32,26 @@ public class JournalService {
 
     @Transactional
     public JournalResponse createJournal(Long userId, CreateJournalRequest request) {
-        // Find the user
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Create new journal entry
         Journal journal = new Journal();
         journal.setUser(user);
         journal.setTitle(request.getTitle());
         journal.setContent(request.getContent());
         journal.setReminderType(request.getReminderType());
 
-        // Link to win if specified
         if (request.getLinkedWinId() != null) {
             Optional<Win> win = winRepository.findById(request.getLinkedWinId());
             if (win.isPresent() && win.get().getUser().getUserId().equals(userId)) {
                 journal.setLinkedWin(win.get());
             } else {
-                throw new IllegalArgumentException("Win not found or does not belong to user");
+                throw new IllegalArgumentException("Win not found");
             }
         }
 
-        Journal savedJournal = journalRepository.save(journal);
-        return JournalResponse.fromJournal(savedJournal);
+        Journal saved = journalRepository.save(journal);
+        return JournalResponse.fromJournal(saved);
     }
 
     public JournalResponse getJournal(Long journalId, Long userId) {
@@ -83,30 +80,23 @@ public class JournalService {
         Journal journal = journalRepository.findByJournalIdAndUser_UserId(journalId, userId)
             .orElseThrow(() -> new IllegalArgumentException("Journal entry not found or access denied"));
 
-        // Update fields if provided
         if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
             journal.setTitle(request.getTitle());
         }
-        
         if (request.getContent() != null) {
             journal.setContent(request.getContent());
         }
-
         if (request.getReminderType() != null) {
             journal.setReminderType(request.getReminderType());
         }
 
-        // Handle linked win update
         if (request.getLinkedWinId() != null) {
             Optional<Win> win = winRepository.findById(request.getLinkedWinId());
             if (win.isPresent() && win.get().getUser().getUserId().equals(userId)) {
                 journal.setLinkedWin(win.get());
             } else {
-                throw new IllegalArgumentException("Win not found or does not belong to user");
+                throw new IllegalArgumentException("Win not found");
             }
-        } else if (request.getLinkedWinId() == null) {
-            // If explicitly set to null, unlink the win
-            journal.setLinkedWin(null);
         }
 
         Journal savedJournal = journalRepository.save(journal);
@@ -123,13 +113,10 @@ public class JournalService {
         return true;
     }
 
-    // Helper method to get user's wins for linking purposes
     public List<Win> getUserWins(Long userId) {
-        // Verify user exists
         if (!userRepository.existsById(userId)) {
             throw new IllegalArgumentException("User not found");
         }
-        
         return winRepository.findByUser_UserId(userId);
     }
 }

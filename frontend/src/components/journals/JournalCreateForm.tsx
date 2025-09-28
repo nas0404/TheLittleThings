@@ -58,11 +58,11 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
 
   const validateForm = () => {
     if (!formData.title.trim()) {
-      setError('Title is required');
+      setError('Title required');
       return false;
     }
     if (!formData.content.trim()) {
-      setError('Content is required');
+      setError('Content required');
       return false;
     }
     if (formData.title.length > 255) {
@@ -74,8 +74,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
+    if (!validateForm()) return; // don't submit if invalid
 
     setLoading(true);
     setError(null);
@@ -88,7 +87,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         return;
       }
 
-      const requestBody = {
+      const body = {
         title: formData.title,
         content: formData.content,
         reminderType: formData.reminderType,
@@ -101,18 +100,17 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
         onSuccess();
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to create journal entry' }));
-        setServerError(errorData.error || 'Failed to create journal entry');
+        const error = await response.text();
+        setServerError(error || 'Failed to create entry');
       }
     } catch (err) {
-      setServerError('Failed to create journal entry');
-      console.error('Error creating journal entry:', err);
+      setServerError('Network error');
     } finally {
       setLoading(false);
     }
