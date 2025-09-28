@@ -7,7 +7,6 @@ interface JournalEntry {
   content: string;
   linkedWinId?: number;
   linkedWinTitle?: string;
-  reminderType: 'DAILY' | 'WEEKLY' | 'ON_WIN_CREATED' | 'NONE';
   createdAt: string;
   updatedAt: string;
 }
@@ -39,15 +38,7 @@ export default function JournalEntryCard({ entry, onDeleted, onUpdated }: Journa
     }
   };
 
-  const getReminderTypeDisplay = (type: string) => {
-    switch (type) {
-      case 'DAILY': return 'Daily';
-      case 'WEEKLY': return 'Weekly';
-      case 'ON_WIN_CREATED': return 'On Win';
-      case 'NONE': return 'None';
-      default: return type;
-    }
-  };
+
 
   const handleDelete = async () => {
     setLoading(true);
@@ -106,7 +97,6 @@ export default function JournalEntryCard({ entry, onDeleted, onUpdated }: Journa
             {entry.updatedAt !== entry.createdAt && (
               <span>Updated: {formatDate(entry.updatedAt)}</span>
             )}
-            <span>Reminder: {getReminderTypeDisplay(entry.reminderType)}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 ml-4">

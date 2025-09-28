@@ -28,19 +28,10 @@ public class Journal {
   @JoinColumn(name="linked_win_id", foreignKey=@ForeignKey(name="fk_journal_win"))
   private Win linkedWin;
 
-  // Reminder settings: DAILY, WEEKLY, ON_WIN_CREATED, NONE
-  @Enumerated(EnumType.STRING)
-  @Column(name="reminder_type")
-  private ReminderType reminderType = ReminderType.NONE;
-
   @Column(name="created_at", insertable=false, updatable=false)
   private OffsetDateTime createdAt;
 
   @Column(name="updated_at", insertable=false, updatable=false)
   private OffsetDateTime updatedAt;
-
-  public enum ReminderType {
-    DAILY, WEEKLY, ON_WIN_CREATED, NONE
-  }
 }
 

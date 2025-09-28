@@ -36,11 +36,10 @@ public class UserService {
 
 	@Transactional
 	public synchronized User register(CreateUserRequest req) {
-		// basic validation
-		if (req.getUsername() == null || req.getUsername().length() < 3) throw new IllegalArgumentException("Invalid username");
+		if (req.getUsername() == null || req.getUsername().length() < 3) throw new IllegalArgumentException("Username too short, must be atelast 3 characters");
 		if (req.getEmail() == null || !req.getEmail().contains("@")) throw new IllegalArgumentException("Invalid email");
-		if (req.getPassword() == null || req.getPassword().length() < 8) throw new IllegalArgumentException("Invalid password");
-	if (userRepository.existsByUsername(req.getUsername()) || userRepository.existsByEmail(req.getEmail())) throw new IllegalArgumentException("User exists");
+		if (req.getPassword() == null || req.getPassword().length() < 8) throw new IllegalArgumentException("Password too short");
+		if (userRepository.existsByUsername(req.getUsername()) || userRepository.existsByEmail(req.getEmail())) throw new IllegalArgumentException("User already exists");
 
 		User u = new User();
 		u.setUsername(req.getUsername());
@@ -59,23 +58,11 @@ public class UserService {
 		return userRepository.save(u);
 	}
 
-	/**
-	 * Normalize a free-text gender input into one of the canonical values
-	 * expected by the database: "Male", "Female", or "Other".
-	 *
-	 * This accepts common variations (case-insensitive) such as "male", "M", "man",
-	 * "female", "F", "woman", and maps anything else (including null/empty)
-	 * to "Other".
-	 */
 	private String normalizeGender(String raw) {
-		if (raw == null) return "Other";
-		String s = raw.trim().toLowerCase(Locale.ROOT);
-		if (s.isEmpty()) return "Other";
-		if (s.equals("male") || s.equals("m") || s.equals("man") || s.equals("male ")) return "Male";
-		if (s.equals("female") || s.equals("f") || s.equals("woman") || s.equals("female ")) return "Female";
-		// common synonyms for non-binary / other
-		if (s.equals("non-binary") || s.equals("nonbinary") || s.equals("nb") || s.equals("nonbinary") || s.equals("non-binary") ) return "Other";
-		// default fallback
+		if (raw == null || raw.trim().isEmpty()) return "Other";
+		String s = raw.trim().toLowerCase();
+		if (s.equals("male") || s.equals("m")) return "Male";
+		if (s.equals("female") || s.equals("f")) return "Female";
 		return "Other";
 	}
 
@@ -85,18 +72,21 @@ public class UserService {
 	}
 
 	public String login(LoginRequest req) {
-		Optional<User> opt;
-		if (req.getUsernameOrEmail().contains("@")) opt = userRepository.findByEmail(req.getUsernameOrEmail());
-		else opt = userRepository.findByUsername(req.getUsernameOrEmail());
-		if (opt.isEmpty()) throw new IllegalArgumentException("User not found");
-		User u = opt.get();
-		if (!u.getPassword().equals(hash(req.getPassword()))) throw new IllegalArgumentException("Invalid credentials");
+		Optional<User> userOpt = req.getUsernameOrEmail().contains("@") 
+			? userRepository.findByEmail(req.getUsernameOrEmail())
+			: userRepository.findByUsername(req.getUsernameOrEmail());
+		
+		if (userOpt.isEmpty()) throw new IllegalArgumentException("User not found");
+		
+		User user = userOpt.get();
+		if (!user.getPassword().equals(hash(req.getPassword()))) {
+			throw new IllegalArgumentException("Wrong password");
+		}
 
-		// update last login and persist
-		u.setLastLogin(java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC));
-		userRepository.save(u);
+		user.setLastLogin(java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC));
+		userRepository.save(user);
 
-		return TokenUtil.issueToken(u.getUsername(), 60 * 60 * 24); // 1 day
+		return TokenUtil.issueToken(user.getUsername(), 60 * 60 * 24);
 	}
 
 	public User findByUsername(String username) {
@@ -123,9 +113,6 @@ public class UserService {
 		userRepository.save(u);
 	}
 
-	/**
-	 * Change a user's username. Returns a fresh token for the new username.
-	 */
 	public String changeUsername(Long userId, String newUsername) {
 		if (newUsername == null || newUsername.length() < 3) throw new IllegalArgumentException("Invalid username");
 		if (userRepository.existsByUsername(newUsername)) throw new IllegalArgumentException("Username already taken");
@@ -135,9 +122,6 @@ public class UserService {
 		return TokenUtil.issueToken(u.getUsername(), 60 * 60 * 24);
 	}
 
-	/**
-	 * Delete a user account from the in-memory store. Returns true if deleted.
-	 */
 	public boolean deleteUser(Long userId) {
 		if (!userRepository.existsById(userId)) return false;
 		userRepository.deleteById(userId);

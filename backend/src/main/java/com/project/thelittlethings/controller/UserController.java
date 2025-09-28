@@ -53,13 +53,16 @@ public class UserController {
     public ResponseEntity<?> me(@RequestHeader("Authorization") String auth) {
         try {
             String token = auth.replaceFirst("Bearer ", "");
-            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
+            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) {
+                return ResponseEntity.status(401).build();
+            }
+            
             String username = TokenUtil.extractUsername(token);
-            User u = userService.findByUsername(username);
-            if (u == null) return ResponseEntity.status(404).build();
-            // Map to DTO so we can include a human-readable lastLogin without changing User.java
-            com.project.thelittlethings.dto.users.UserResponse resp = com.project.thelittlethings.dto.users.UserResponse.fromUser(u);
-            return ResponseEntity.ok(resp);
+            User user = userService.findByUsername(username);
+            if (user == null) return ResponseEntity.status(404).build();
+            
+            UserResponse response = UserResponse.fromUser(user);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(401).build();
         }
@@ -80,15 +83,19 @@ public class UserController {
     }
 
     @PostMapping("/change-username")
-    public ResponseEntity<?> changeUsername(@RequestHeader("Authorization") String auth, @RequestBody com.project.thelittlethings.dto.users.ChangeUsernameRequest req) {
+    public ResponseEntity<?> changeUsername(@RequestHeader("Authorization") String auth, @RequestBody ChangeUsernameRequest req) {
         try {
             String token = auth.replaceFirst("Bearer ", "");
-            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
+            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) {
+                return ResponseEntity.status(401).build();
+            }
+            
             String username = TokenUtil.extractUsername(token);
-            User u = userService.findByUsername(username);
-            if (u == null) return ResponseEntity.status(404).build();
-            String newToken = userService.changeUsername(u.getUserId(), req.getNewUsername());
-            return ResponseEntity.ok(new AuthResponse(newToken, u.getUserId(), req.getNewUsername()));
+            User user = userService.findByUsername(username);
+            if (user == null) return ResponseEntity.status(404).build();
+            
+            String newToken = userService.changeUsername(user.getUserId(), req.getNewUsername());
+            return ResponseEntity.ok(new AuthResponse(newToken, user.getUserId(), req.getNewUsername()));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
@@ -98,14 +105,17 @@ public class UserController {
     public ResponseEntity<?> deleteAccount(@RequestHeader("Authorization") String auth) {
         try {
             String token = auth.replaceFirst("Bearer ", "");
-            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
+            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) {
+                return ResponseEntity.status(401).build();
+            }
+            
             String username = TokenUtil.extractUsername(token);
-            User u = userService.findByUsername(username);
-            if (u == null) return ResponseEntity.status(404).build();
-            boolean ok = userService.deleteUser(u.getUserId());
-            // blacklist the token used to authenticate this deletion
+            User user = userService.findByUsername(username);
+            if (user == null) return ResponseEntity.status(404).build();
+            
+            boolean deleted = userService.deleteUser(user.getUserId());
             userService.logout(token);
-            return ok ? ResponseEntity.ok().build() : ResponseEntity.status(500).build();
+            return deleted ? ResponseEntity.ok().build() : ResponseEntity.status(500).build();
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
@@ -114,8 +124,7 @@ public class UserController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest req) {
         try {
-            // In real app we'd email a reset link. For demo accept new password param or set default
-            userService.resetPassword(req.getEmail(), "new-temporary-password");
+            userService.resetPassword(req.getEmail(), "temp123456");
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());

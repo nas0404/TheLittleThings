@@ -52,57 +52,35 @@ export default function Register() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const handleSubmit: React.FormEventHandler = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Register handleSubmit triggered', { form, isValid });
-    if (!isValid) {
-      console.warn('Form invalid, aborting submit');
-      return;
-    }
+    if (!isValid) return;
+    
+    setSubmitting(true);
+    setServerError(null);
+    
     try {
-      setSubmitting(true);
-      const response = await fetch('http://localhost:8080/api/users/register', {
+      const res = await fetch('http://localhost:8080/api/users/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       });
 
-      if (response.ok) {
-        setServerError(null);
-        // Registration successful — parse token and store it
-        let data: any = null;
-        try {
-          data = await response.json();
-        } catch (_e) {
-          // ignore
-        }
-        if (data && data.token) {
+      if (res.ok) {
+        const data = await res.json();
+        if (data.token) {
           localStorage.setItem('token', data.token);
           navigate("/home");
         } else {
-          // If server returned 200 but no token, show message
-          const text = data ? JSON.stringify(data) : 'Registration succeeded but no token received';
-          setServerError(text);
+          setServerError('Something went wrong');
         }
       } else {
-        // reg errors
-        let errorText = 'Registration failed';
-        try {
-          const json = await response.json();
-          errorText = typeof json === 'string' ? json : JSON.stringify(json);
-        } catch (_) {
-          errorText = await response.text();
-        }
-        console.error('Registration failed:', errorText);
-        setServerError(errorText);
+        const errorData = await res.text();
+        setServerError(errorData || 'Registration failed');
       }
     } catch (error) {
-      console.error('Registration error:', error);
-      setServerError(String(error));
-    }
-    finally {
+      setServerError('Network error - please try again');
+    } finally {
       setSubmitting(false);
     }
   };
@@ -217,7 +195,6 @@ export default function Register() {
   );
 }
 
-// Small UI component to render a list of validation hints
 function ValidationHints({ form }: { form: RegisterForm }) {
   const hints: string[] = [];
   if (form.username.trim().length < 3) hints.push('Username must be at least 3 characters');
@@ -228,19 +205,17 @@ function ValidationHints({ form }: { form: RegisterForm }) {
   if (!form.dob) hints.push('Date of birth is required');
 
   if (hints.length === 0) return null;
+  
   return (
     <div className="mt-3 rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
-      <strong>Fix the following:</strong>
+      <strong>Please fix:</strong>
       <ul className="list-disc list-inside mt-1">
-        {hints.map((h) => (
-          <li key={h}>{h}</li>
-        ))}
+        {hints.map((hint, i) => <li key={i}>{hint}</li>)}
       </ul>
     </div>
   );
 }
 
-/** Small presentational wrapper to keep JSX tidy */
 function Field(props: { id: string; label: string; children: React.ReactNode; hint?: string }) {
   return (
     <div>

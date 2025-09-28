@@ -9,7 +9,6 @@ public class JournalResponse {
     private String content;
     private Long linkedWinId;
     private String linkedWinTitle; // For convenience in UI
-    private Journal.ReminderType reminderType;
     private String createdAt;
     private String updatedAt;
 
@@ -17,14 +16,12 @@ public class JournalResponse {
     public JournalResponse() {}
 
     public JournalResponse(Long journalId, String title, String content, Long linkedWinId, 
-                          String linkedWinTitle, Journal.ReminderType reminderType, 
-                          String createdAt, String updatedAt) {
+                          String linkedWinTitle, String createdAt, String updatedAt) {
         this.journalId = journalId;
         this.title = title;
         this.content = content;
         this.linkedWinId = linkedWinId;
         this.linkedWinTitle = linkedWinTitle;
-        this.reminderType = reminderType;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -37,7 +34,6 @@ public class JournalResponse {
         response.content = journal.getContent();
         response.linkedWinId = journal.getLinkedWin() != null ? journal.getLinkedWin().getWinId() : null;
         response.linkedWinTitle = journal.getLinkedWin() != null ? journal.getLinkedWin().getTitle() : null;
-        response.reminderType = journal.getReminderType();
         
         DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
         response.createdAt = journal.getCreatedAt() != null ? journal.getCreatedAt().format(formatter) : null;
@@ -61,9 +57,6 @@ public class JournalResponse {
 
     public String getLinkedWinTitle() { return linkedWinTitle; }
     public void setLinkedWinTitle(String linkedWinTitle) { this.linkedWinTitle = linkedWinTitle; }
-
-    public Journal.ReminderType getReminderType() { return reminderType; }
-    public void setReminderType(Journal.ReminderType reminderType) { this.reminderType = reminderType; }
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
