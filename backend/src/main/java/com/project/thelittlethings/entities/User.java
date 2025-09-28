@@ -46,6 +46,7 @@ public class User {
   private String gender;
   private Integer streaks;
   private String region;
+  private Integer trophies;
 
   // Method to calculate age from date of birth
   @Transient
