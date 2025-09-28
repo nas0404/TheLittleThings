@@ -14,8 +14,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    linkedWinId: '',
-    reminderType: 'NONE' as 'DAILY' | 'WEEKLY' | 'ON_WIN_CREATED' | 'NONE'
+    linkedWinId: ''
   });
   
   const [wins, setWins] = useState<Win[]>([]);
@@ -90,7 +89,6 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
       const body = {
         title: formData.title,
         content: formData.content,
-        reminderType: formData.reminderType,
         ...(formData.linkedWinId && { linkedWinId: parseInt(formData.linkedWinId) })
       };
 
@@ -175,28 +173,6 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         </select>
         <div className="mt-1 text-xs text-gray-500">
           Connect this journal entry to one of your achievements
-        </div>
-      </div>
-
-      {/* Reminder Type Field */}
-      <div>
-        <label htmlFor="reminderType" className="block text-sm font-medium text-gray-700 mb-1">
-          Reminder Setting
-        </label>
-        <select
-          id="reminderType"
-          name="reminderType"
-          value={formData.reminderType}
-          onChange={handleInputChange}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          <option value="NONE">No reminders</option>
-          <option value="DAILY">Daily reminder</option>
-          <option value="WEEKLY">Weekly reminder</option>
-          <option value="ON_WIN_CREATED">Remind me when I achieve a win</option>
-        </select>
-        <div className="mt-1 text-xs text-gray-500">
-          Choose when you'd like to be reminded to journal
         </div>
       </div>
 

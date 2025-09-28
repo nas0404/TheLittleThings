@@ -1,6 +1,5 @@
 package com.project.thelittlethings.dto.journals;
 
-import com.project.thelittlethings.entities.Journal;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -15,17 +14,13 @@ public class CreateJournalRequest {
     // Optional linked win ID
     private Long linkedWinId;
 
-    // Reminder type - defaults to NONE if not specified
-    private Journal.ReminderType reminderType = Journal.ReminderType.NONE;
-
     // Constructors
     public CreateJournalRequest() {}
 
-    public CreateJournalRequest(String title, String content, Long linkedWinId, Journal.ReminderType reminderType) {
+    public CreateJournalRequest(String title, String content, Long linkedWinId) {
         this.title = title;
         this.content = content;
         this.linkedWinId = linkedWinId;
-        this.reminderType = reminderType;
     }
 
     // Getters and setters
@@ -37,7 +32,4 @@ public class CreateJournalRequest {
 
     public Long getLinkedWinId() { return linkedWinId; }
     public void setLinkedWinId(Long linkedWinId) { this.linkedWinId = linkedWinId; }
-
-    public Journal.ReminderType getReminderType() { return reminderType; }
-    public void setReminderType(Journal.ReminderType reminderType) { this.reminderType = reminderType; }
 }

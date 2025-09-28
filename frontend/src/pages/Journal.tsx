@@ -9,7 +9,6 @@ interface JournalEntry {
   content: string;
   linkedWinId?: number;
   linkedWinTitle?: string;
-  reminderType: 'DAILY' | 'WEEKLY' | 'ON_WIN_CREATED' | 'NONE';
   createdAt: string;
   updatedAt: string;
 }

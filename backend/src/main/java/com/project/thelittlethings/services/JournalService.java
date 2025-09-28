@@ -39,7 +39,6 @@ public class JournalService {
         journal.setUser(user);
         journal.setTitle(request.getTitle());
         journal.setContent(request.getContent());
-        journal.setReminderType(request.getReminderType());
 
         if (request.getLinkedWinId() != null) {
             Optional<Win> win = winRepository.findById(request.getLinkedWinId());
@@ -85,9 +84,6 @@ public class JournalService {
         }
         if (request.getContent() != null) {
             journal.setContent(request.getContent());
-        }
-        if (request.getReminderType() != null) {
-            journal.setReminderType(request.getReminderType());
         }
 
         if (request.getLinkedWinId() != null) {
