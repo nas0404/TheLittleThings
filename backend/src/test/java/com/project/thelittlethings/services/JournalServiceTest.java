@@ -68,7 +68,7 @@ class JournalServiceTest {
         CreateJournalRequest request = new CreateJournalRequest();
         request.setTitle("Test Entry");
         request.setContent("This is test content for the journal entry.");
-        request.setReminderType(Journal.ReminderType.NONE);
+        
 
         // Act
         JournalResponse response = journalService.createJournal(testUserId, request);
@@ -78,7 +78,7 @@ class JournalServiceTest {
         assertNotNull(response.getJournalId());
         assertEquals("Test Entry", response.getTitle());
         assertEquals("This is test content for the journal entry.", response.getContent());
-        assertEquals(Journal.ReminderType.NONE, response.getReminderType());
+        
     }
 
     @Test
@@ -87,12 +87,12 @@ class JournalServiceTest {
         CreateJournalRequest request1 = new CreateJournalRequest();
         request1.setTitle("First Entry");
         request1.setContent("First content");
-        request1.setReminderType(Journal.ReminderType.DAILY);
+        
         
         CreateJournalRequest request2 = new CreateJournalRequest();
         request2.setTitle("Second Entry");
         request2.setContent("Second content");
-        request2.setReminderType(Journal.ReminderType.WEEKLY);
+        
 
         journalService.createJournal(testUserId, request1);
         journalService.createJournal(testUserId, request2);
@@ -115,12 +115,12 @@ class JournalServiceTest {
         CreateJournalRequest request1 = new CreateJournalRequest();
         request1.setTitle("Beta Entry");
         request1.setContent("Beta content");
-        request1.setReminderType(Journal.ReminderType.NONE);
+        
         
         CreateJournalRequest request2 = new CreateJournalRequest();
         request2.setTitle("Alpha Entry");
         request2.setContent("Alpha content");
-        request2.setReminderType(Journal.ReminderType.NONE);
+        
 
         journalService.createJournal(testUserId, request1);
         journalService.createJournal(testUserId, request2);
@@ -143,7 +143,7 @@ class JournalServiceTest {
         CreateJournalRequest request = new CreateJournalRequest();
         request.setTitle("Get Test Entry");
         request.setContent("Content for get test");
-        request.setReminderType(Journal.ReminderType.ON_WIN_CREATED);
+        
         
         JournalResponse created = journalService.createJournal(testUserId, request);
 
@@ -155,7 +155,7 @@ class JournalServiceTest {
         assertEquals(created.getJournalId(), retrieved.getJournalId());
         assertEquals("Get Test Entry", retrieved.getTitle());
         assertEquals("Content for get test", retrieved.getContent());
-        assertEquals(Journal.ReminderType.ON_WIN_CREATED, retrieved.getReminderType());
+        
     }
 
     @Test
@@ -172,14 +172,14 @@ class JournalServiceTest {
         CreateJournalRequest createRequest = new CreateJournalRequest();
         createRequest.setTitle("Original Title");
         createRequest.setContent("Original content");
-        createRequest.setReminderType(Journal.ReminderType.NONE);
+        
         
         JournalResponse created = journalService.createJournal(testUserId, createRequest);
 
         UpdateJournalRequest updateRequest = new UpdateJournalRequest();
         updateRequest.setTitle("Updated Title");
         updateRequest.setContent("Updated content");
-        updateRequest.setReminderType(Journal.ReminderType.DAILY);
+        
 
         // Act
         JournalResponse updated = journalService.updateJournal(created.getJournalId(), testUserId, updateRequest);
@@ -189,7 +189,7 @@ class JournalServiceTest {
         assertEquals(created.getJournalId(), updated.getJournalId());
         assertEquals("Updated Title", updated.getTitle());
         assertEquals("Updated content", updated.getContent());
-        assertEquals(Journal.ReminderType.DAILY, updated.getReminderType());
+        
     }
 
     @Test
@@ -198,7 +198,7 @@ class JournalServiceTest {
         CreateJournalRequest request = new CreateJournalRequest();
         request.setTitle("Delete Test Entry");
         request.setContent("Content to be deleted");
-        request.setReminderType(Journal.ReminderType.NONE);
+        
         
         JournalResponse created = journalService.createJournal(testUserId, request);
 
