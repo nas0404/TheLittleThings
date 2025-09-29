@@ -66,7 +66,7 @@ public class CategoryController {
     }
     @GetMapping("/neglected")
     public List<CategoryNeglectedView> neglected(@PathVariable Long userId,
-                                            @RequestParam(required = false) Integer days) {
+                                                @RequestParam(required = false) Integer days) {
     return service.getNeglectedCategories(userId, days);
     }
 }
