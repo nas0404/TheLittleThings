@@ -43,7 +43,8 @@ export default function Register() {
     form.password.length >= 8 &&
     !!form.firstName.trim() &&
     !!form.lastName.trim() &&
-    !!form.dob;
+    !!form.dob &&
+    !!form.region.trim();
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -167,7 +168,7 @@ export default function Register() {
             <h3 className="text-lg font-semibold mb-3">Other</h3>
             <Field label="Region" id="region">
               <input
-                id="region" name="region" type="text"
+                id="region" name="region" type="text" required
                 className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 value={form.region} onChange={onChange}
               />
@@ -203,6 +204,7 @@ function ValidationHints({ form }: { form: RegisterForm }) {
   if (!form.firstName.trim()) hints.push('First name is required');
   if (!form.lastName.trim()) hints.push('Last name is required');
   if (!form.dob) hints.push('Date of birth is required');
+  if (!form.region.trim()) hints.push('Region is required');
 
   if (hints.length === 0) return null;
   

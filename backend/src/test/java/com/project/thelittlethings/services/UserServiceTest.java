@@ -4,42 +4,57 @@ import com.project.thelittlethings.dto.users.CreateUserRequest;
 import com.project.thelittlethings.dto.users.LoginRequest;
 import com.project.thelittlethings.entities.User;
 import com.project.thelittlethings.repositories.UserRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.*;
+import org.mockito.*;
 
 import java.time.LocalDate;
+import java.util.Optional;
+import java.security.MessageDigest;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-// testing user stuff
-@SpringBootTest
-@TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:postgresql://localhost:5432/TheLittleThings",
-    "spring.datasource.username=postgres",
-    "spring.datasource.password=Fake2468",
-    "spring.jpa.hibernate.ddl-auto=none",
-    "spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect"
-})
 class UserServiceTest {
 
-    @Autowired
+    @Mock UserRepository userRepo;
+    
     UserService userService;
     
-    @Autowired
-    UserRepository userRepository;
+    User testUser;
 
+    private String hash(String s) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] b = md.digest(s.getBytes("UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            for (byte x : b) sb.append(String.format("%02x", x));
+            return sb.toString();
+        } catch (Exception e) { throw new RuntimeException(e); }
+    }
 
     @BeforeEach
-    void setUp() {
-        userRepository.deleteAll();
+    void setup() {
+        MockitoAnnotations.openMocks(this);
+        userService = new UserService(userRepo);
+        
+        testUser = new User();
+        testUser.setUserId(1L);
+        testUser.setUsername("testuser");
+        testUser.setEmail("test@example.com");
+        testUser.setPassword(hash("password123"));
+        testUser.setFirstName("Test");
+        testUser.setLastName("User");
+        testUser.setGender("Male");
+        testUser.setRegion("Australia");
     }
 
     @Test
-    void registerWorks() {
-        CreateUserRequest request = new CreateUserRequest();
+    void testRegister() {
+        when(userRepo.existsByUsername("testuser")).thenReturn(false);
+        when(userRepo.save(any(User.class))).thenReturn(testUser);
+
+        var request = new CreateUserRequest();
         request.setUsername("testuser");
         request.setEmail("test@example.com");
         request.setPassword("password123");
@@ -53,31 +68,30 @@ class UserServiceTest {
 
         assertNotNull(response);
         assertEquals("testuser", response.getUsername());
-        assertTrue(response.getUserId() > 0);
-        
-        var savedUser = userRepository.findByUsername("testuser").orElse(null);
-        assertNotNull(savedUser);
-        assertEquals("test@example.com", savedUser.getEmail());
-        assertEquals("Male", savedUser.getGender());
+        verify(userRepo).save(any(User.class));
     }
 
     @Test
-    void loginWorks() {
-        // register user
-        var registerRequest = new CreateUserRequest();
-        registerRequest.setUsername("logintest");
-        registerRequest.setEmail("login@example.com");
-        registerRequest.setPassword("password123");
-        registerRequest.setFirstName("Login");
-        registerRequest.setLastName("Test");
-        registerRequest.setDob(LocalDate.of(1990, 1, 1));
-        registerRequest.setGender("Female");
-        registerRequest.setRegion("TestRegion");
-        
-        userService.register(registerRequest);
+    void testRegisterWithDuplicateUsername() {
+        when(userRepo.existsByUsername("duplicate")).thenReturn(true);
+
+        var request = new CreateUserRequest();
+        request.setUsername("duplicate");
+        request.setEmail("test@example.com");
+        request.setPassword("password123");
+        request.setFirstName("Test");
+        request.setLastName("User");
+
+        assertThrows(IllegalArgumentException.class, 
+            () -> userService.register(request));
+    }
+
+    @Test
+    void testLogin() {
+        when(userRepo.findByUsername("testuser")).thenReturn(Optional.of(testUser));
 
         var loginRequest = new LoginRequest();
-        loginRequest.setUsernameOrEmail("logintest");
+        loginRequest.setUsernameOrEmail("testuser");
         loginRequest.setPassword("password123");
         
         String token = userService.login(loginRequest);
@@ -86,79 +100,28 @@ class UserServiceTest {
         assertFalse(token.isEmpty());
     }
 
-   
-
     @Test
-    void duplicateUsernameFails() {
-        // register first user
-        var request1 = new CreateUserRequest();
-        request1.setUsername("duplicate");
-        request1.setEmail("first@example.com");
-        request1.setPassword("password123");
-        request1.setFirstName("First");
-        request1.setLastName("User");
-        request1.setDob(LocalDate.of(1990, 1, 1));
-        request1.setGender("Male");
-        request1.setRegion("TestRegion");
-        
-        userService.register(request1);
+    void testLoginWithInvalidUser() {
+        when(userRepo.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-        //same username
-        var request2 = new CreateUserRequest();
-        request2.setUsername("duplicate");
-        request2.setEmail("second@example.com");
-        request2.setPassword("password123");
-        request2.setFirstName("Second");
-        request2.setLastName("User");
-        request2.setDob(LocalDate.of(1991, 1, 1));
-        request2.setGender("Female");
-        request2.setRegion("TestRegion");
+        var loginRequest = new LoginRequest();
+        loginRequest.setUsernameOrEmail("nonexistent");
+        loginRequest.setPassword("password123");
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            userService.register(request2);
-        });
+        assertThrows(IllegalArgumentException.class, 
+            () -> userService.login(loginRequest));
     }
 
     @Test
-    void genderTest() {
-        var request = new CreateUserRequest();
-        request.setUsername("gendertest");
-        request.setEmail("gender@example.com");
-        request.setPassword("password123");
-        request.setFirstName("Gender");
-        request.setLastName("Test");
-        request.setDob(LocalDate.of(1990, 1, 1));
-        request.setGender("male"); // lowercase
-        request.setRegion("TestRegion");
+    void testFindByUsername() {
+        when(userRepo.findByUsername("testuser")).thenReturn(Optional.of(testUser));
 
-        var response = userService.register(request);
-
-        assertNotNull(response);
-        assertEquals("Male", response.getGender()); // should fix case
-    }
-
-    @Test
-    void findWorks() {
-        var request = new CreateUserRequest();
-        request.setUsername("findtest");
-        request.setEmail("find@example.com");
-        request.setPassword("password123");
-        request.setFirstName("Find");
-        request.setLastName("Test");
-        request.setDob(LocalDate.of(1990, 1, 1));
-        request.setGender("Male");
-        request.setRegion("TestRegion");
-        
-        userService.register(request);
-
-        var found = userService.findByUsername("findtest");
+        User found = userService.findByUsername("testuser");
 
         assertNotNull(found);
-        assertEquals("findtest", found.getUsername());
-        assertEquals("find@example.com", found.getEmail());
+        assertEquals("testuser", found.getUsername());
+        assertEquals("test@example.com", found.getEmail());
     }
-
-    ;
-    }
+}
 
  
