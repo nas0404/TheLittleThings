@@ -6,10 +6,10 @@ import java.util.Base64;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
-public class TokenUtil {
+public class HMACtokens {
     private static final String HMAC = "HmacSHA256";
-    // In a real app, store this securely and don't hardcode
-    private static final String SECRET = "dev-secret-change-me";
+  
+    private static final String SECRET = "thelittlethingsASD";
 
     // token format: base64(username:expiry):signature
     public static String issueToken(String username, long ttlSeconds) {
