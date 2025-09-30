@@ -83,7 +83,7 @@ export default function UserProfile() {
 						<div><strong>Date of Birth:</strong> {user.dob ? new Date(user.dob).toLocaleDateString() : 'Not specified'}</div>
 						<div><strong>Gender:</strong> {user.gender || 'Not specified'}</div>
 						<div><strong>Region:</strong> {user.region || 'Not specified'}</div>
-						<div><strong>Streaks:</strong> {user.streaks !== null && user.streaks !== undefined ? user.streaks : 0}</div>
+						<div><strong>Streak:</strong> {user.streaks !== null && user.streaks !== undefined ? user.streaks : 0}</div>
 						<div><strong>Last login:</strong> {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}</div>
 					</div>
 
