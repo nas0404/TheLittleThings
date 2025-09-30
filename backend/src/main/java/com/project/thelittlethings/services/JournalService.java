@@ -32,6 +32,14 @@ public class JournalService {
 
     @Transactional
     public JournalResponse createJournal(Long userId, CreateJournalRequest request) {
+        // prevent null pointer crashes
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
+        
         var userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) throw new IllegalArgumentException("User not found");
         User user = userOpt.get();
@@ -79,6 +87,17 @@ public class JournalService {
 
     @Transactional
     public JournalResponse updateJournal(Long journalId, Long userId, UpdateJournalRequest request) {
+        // basic validation
+        if (journalId == null || journalId <= 0) {
+            throw new IllegalArgumentException("Invalid journal ID");
+        }
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
+        
         var journalOpt = journalRepository.findByJournalIdAndUser_UserId(journalId, userId);
         if (journalOpt.isEmpty()) throw new IllegalArgumentException("Journal not found");
         Journal journal = journalOpt.get();
@@ -101,6 +120,14 @@ public class JournalService {
 
     @Transactional
     public boolean deleteJournal(Long journalId, Long userId) {
+        // check for null IDs to avoid crashes
+        if (journalId == null || journalId <= 0) {
+            throw new IllegalArgumentException("Invalid journal ID");
+        }
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
+        
         if (!journalRepository.existsByJournalIdAndUser_UserId(journalId, userId)) {
             return false;
         }

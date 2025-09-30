@@ -67,6 +67,7 @@ export default function JournalEntryCard({ entry, onDeleted, onUpdated }: Journa
     }
   };
 
+  // truncate long content
   const contentPreview = entry.content.length > 200 
     ? entry.content.substring(0, 200) + '...' 
     : entry.content;
@@ -87,11 +88,11 @@ export default function JournalEntryCard({ entry, onDeleted, onUpdated }: Journa
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm max-w-full overflow-hidden">
       {/* Header */}
       <div className="mb-4 flex items-start justify-between">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">{entry.title}</h3>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-semibold text-gray-900 mb-1 break-words">{entry.title}</h3>
           <div className="flex items-center gap-4 text-sm text-gray-500">
             <span>Created: {formatDate(entry.createdAt)}</span>
             {entry.updatedAt !== entry.createdAt && (
@@ -99,7 +100,7 @@ export default function JournalEntryCard({ entry, onDeleted, onUpdated }: Journa
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex items-center gap-2 ml-4 flex-shrink-0">
           <button
             onClick={() => setIsEditing(true)}
             className="rounded-md bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-200"
@@ -118,15 +119,15 @@ export default function JournalEntryCard({ entry, onDeleted, onUpdated }: Journa
 
       {/* Linked Win */}
       {entry.linkedWinId && entry.linkedWinTitle && (
-        <div className="mb-3 flex items-center gap-2 rounded-md bg-blue-50 border border-blue-200 px-3 py-2">
-          <span className="text-sm font-medium text-blue-700">🏆 Linked Win:</span>
-          <span className="text-sm text-blue-600">{entry.linkedWinTitle}</span>
+        <div className="mb-3 flex items-center gap-2 rounded-md bg-blue-50 border border-blue-200 px-3 py-2 max-w-full">
+          <span className="text-sm font-medium text-blue-700 flex-shrink-0">🏆 Linked Win:</span>
+          <span className="text-sm text-blue-600 truncate">{entry.linkedWinTitle}</span>
         </div>
       )}
 
-      {/* Content */}
-      <div className="text-gray-700">
-        <div className="whitespace-pre-wrap">
+      {/* Content - fixed overflow */}
+      <div className="text-gray-700 max-w-full">
+        <div className="whitespace-pre-wrap break-words overflow-hidden">
           {isExpanded ? entry.content : contentPreview}
         </div>
         {entry.content.length > 200 && (

@@ -12,7 +12,7 @@ public class JournalResponse {
     private String createdAt;
     private String updatedAt;
 
-    // Constructrs
+   
     public JournalResponse() {}
 
     public JournalResponse(Long journalId, String title, String content, Long linkedWinId, 
@@ -26,7 +26,6 @@ public class JournalResponse {
         this.updatedAt = updatedAt;
     }
 
-    // make  response from a journal entity
     public static JournalResponse fromJournal(Journal journal) {
         JournalResponse response = new JournalResponse();
         response.journalId = journal.getJournalId();
@@ -39,7 +38,7 @@ public class JournalResponse {
         response.updatedAt = journal.getUpdatedAt() != null ? journal.getUpdatedAt().format(formatter) : null;
         return response; }
 
-    // Gettrs and setters
+   
     public Long getJournalId() { return journalId; }
     public void setJournalId(Long journalId) { this.journalId = journalId; }
 

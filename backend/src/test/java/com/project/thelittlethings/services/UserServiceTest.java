@@ -1,18 +1,12 @@
 package com.project.thelittlethings.services;
-// package com.project.thelittlethings.Service;
 
 import com.project.thelittlethings.dto.users.CreateUserRequest;
 import com.project.thelittlethings.dto.users.LoginRequest;
 import com.project.thelittlethings.entities.User;
 import com.project.thelittlethings.repositories.UserRepository;
-import com.project.thelittlethings.services.UserService;
-
-import jakarta.transaction.Transactional;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,16 +14,23 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// testing user stuff
 @SpringBootTest
-@ActiveProfiles("test")
-@Transactional
+@TestPropertySource(properties = {
+    "spring.datasource.url=jdbc:postgresql://localhost:5432/TheLittleThings",
+    "spring.datasource.username=postgres",
+    "spring.datasource.password=Fake2468",
+    "spring.jpa.hibernate.ddl-auto=none",
+    "spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect"
+})
 class UserServiceTest {
 
     @Autowired
-    private UserService userService;
+    UserService userService;
     
     @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
+
 
     @BeforeEach
     void setUp() {
@@ -37,8 +38,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testRegisterUser_Success() {
-        // Arrange
+    void registerWorks() {
         CreateUserRequest request = new CreateUserRequest();
         request.setUsername("testuser");
         request.setEmail("test@example.com");
@@ -49,25 +49,22 @@ class UserServiceTest {
         request.setGender("Male");
         request.setRegion("TestRegion");
 
-        // Act
         User response = userService.register(request);
 
-        // Assert
         assertNotNull(response);
         assertEquals("testuser", response.getUsername());
         assertTrue(response.getUserId() > 0);
         
-        // Verify user was saved
-        User savedUser = userRepository.findByUsername("testuser").orElse(null);
+        var savedUser = userRepository.findByUsername("testuser").orElse(null);
         assertNotNull(savedUser);
         assertEquals("test@example.com", savedUser.getEmail());
-        assertEquals("Male", savedUser.getGender()); // Should be normalized
+        assertEquals("Male", savedUser.getGender());
     }
 
     @Test
-    void testLogin_Success() {
-        // Arrange - First register a user
-        CreateUserRequest registerRequest = new CreateUserRequest();
+    void loginWorks() {
+        // register user
+        var registerRequest = new CreateUserRequest();
         registerRequest.setUsername("logintest");
         registerRequest.setEmail("login@example.com");
         registerRequest.setPassword("password123");
@@ -79,35 +76,31 @@ class UserServiceTest {
         
         userService.register(registerRequest);
 
-        // Act - Now login
-        LoginRequest loginRequest = new LoginRequest();
+        var loginRequest = new LoginRequest();
         loginRequest.setUsernameOrEmail("logintest");
         loginRequest.setPassword("password123");
         
         String token = userService.login(loginRequest);
 
-        // Assert
         assertNotNull(token);
         assertFalse(token.isEmpty());
     }
 
     @Test
-    void testLogin_InvalidCredentials() {
-        // Arrange
-        LoginRequest loginRequest = new LoginRequest();
+    void badLogin() {
+        var loginRequest = new LoginRequest();
         loginRequest.setUsernameOrEmail("nonexistent");
         loginRequest.setPassword("wrongpassword");
 
-        // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
             userService.login(loginRequest);
         });
     }
 
     @Test
-    void testRegisterUser_DuplicateUsername() {
-        // Arrange - Register first user
-        CreateUserRequest request1 = new CreateUserRequest();
+    void duplicateUsernameFails() {
+        // register first user
+        var request1 = new CreateUserRequest();
         request1.setUsername("duplicate");
         request1.setEmail("first@example.com");
         request1.setPassword("password123");
@@ -119,8 +112,8 @@ class UserServiceTest {
         
         userService.register(request1);
 
-        // Act & Assert - Try to register with same username
-        CreateUserRequest request2 = new CreateUserRequest();
+        // try same username
+        var request2 = new CreateUserRequest();
         request2.setUsername("duplicate");
         request2.setEmail("second@example.com");
         request2.setPassword("password123");
@@ -136,30 +129,26 @@ class UserServiceTest {
     }
 
     @Test
-    void testGenderNormalization() {
-        // Arrange
-        CreateUserRequest request = new CreateUserRequest();
+    void genderTest() {
+        var request = new CreateUserRequest();
         request.setUsername("gendertest");
         request.setEmail("gender@example.com");
         request.setPassword("password123");
         request.setFirstName("Gender");
         request.setLastName("Test");
         request.setDob(LocalDate.of(1990, 1, 1));
-        request.setGender("male"); // lowercase should be normalized to "Male"
+        request.setGender("male"); // lowercase
         request.setRegion("TestRegion");
 
-        // Act
-        User response = userService.register(request);
+        var response = userService.register(request);
 
-        // Assert
         assertNotNull(response);
-        assertEquals("Male", response.getGender()); // Should be normalized to proper case
+        assertEquals("Male", response.getGender()); // should fix case
     }
 
     @Test
-    void testFindByUsername_Success() {
-        // Arrange
-        CreateUserRequest request = new CreateUserRequest();
+    void findWorks() {
+        var request = new CreateUserRequest();
         request.setUsername("findtest");
         request.setEmail("find@example.com");
         request.setPassword("password123");
@@ -171,18 +160,15 @@ class UserServiceTest {
         
         userService.register(request);
 
-        // Act
-        User found = userService.findByUsername("findtest");
+        var found = userService.findByUsername("findtest");
 
-        // Assert
         assertNotNull(found);
         assertEquals("findtest", found.getUsername());
         assertEquals("find@example.com", found.getEmail());
     }
 
     @Test
-    void testFindByUsername_NotFound() {
-        // Act
+    void findNotFound() {
         User found = userService.findByUsername("nonexistent");
 
         // Assert
@@ -190,12 +176,11 @@ class UserServiceTest {
     }
 
     @Test
-    void testDatabaseConnection_AddEntry() {
-        // This test specifically verifies database connectivity by directly using the repository
+    void databaseTest() {
+        // making sure DB works
         
-        // Arrange - Create a user entity directly (all required fields)
-        String uniqueUsername = "dbtest_" + System.currentTimeMillis();
-        User testUser = new User();
+        var uniqueUsername = "dbtest_" + System.currentTimeMillis();
+        var testUser = new User();
         testUser.setUsername(uniqueUsername);
         testUser.setEmail("dbtest@example.com");
         testUser.setPassword("hashedpassword");
@@ -204,18 +189,14 @@ class UserServiceTest {
         testUser.setDob(LocalDate.of(1990, 5, 15));
         testUser.setGender("Other");
         
-        // Act - Save directly to database via repository
-        User savedUser = userRepository.save(testUser);
+        var savedUser = userRepository.save(testUser);
         
-        // Verify the save operation worked
         assertNotNull(savedUser);
         assertTrue(savedUser.getUserId() > 0);
         
-        // Act - Retrieve from database to verify connection
-        User retrievedUser = userRepository.findById(savedUser.getUserId()).orElse(null);
+        var retrievedUser = userRepository.findById(savedUser.getUserId()).orElse(null);
         
-        // Assert - Verify database persistence and retrieval
-        assertNotNull(retrievedUser, "Database connection failed - could not retrieve saved user");
+        assertNotNull(retrievedUser);
         assertEquals(uniqueUsername, retrievedUser.getUsername());
         assertEquals("dbtest@example.com", retrievedUser.getEmail());
         assertEquals("Database", retrievedUser.getFirstName());
@@ -223,19 +204,15 @@ class UserServiceTest {
         assertEquals("Other", retrievedUser.getGender());
         assertEquals(LocalDate.of(1990, 5, 15), retrievedUser.getDob());
         
-        // Additional verification - count total users in database
         long userCount = userRepository.count();
-        assertTrue(userCount >= 1, "Database should contain at least 1 user after insertion");
+        assertTrue(userCount >= 1);
         
-        // Verify the user can be found by username through repository
-        User foundByUsername = userRepository.findByUsername(uniqueUsername).orElse(null);
-        assertNotNull(foundByUsername, "Database connection failed - could not find user by username");
+        var foundByUsername = userRepository.findByUsername(uniqueUsername).orElse(null);
+        assertNotNull(foundByUsername);
         assertEquals(savedUser.getUserId(), foundByUsername.getUserId());
         
-        System.out.println("=== DATABASE CONNECTION TEST SUCCESSFUL ===");
+        System.out.println("DB test worked!");
         System.out.println("User ID: " + savedUser.getUserId());
         System.out.println("Username: " + uniqueUsername);
-        System.out.println("Email: " + retrievedUser.getEmail());
-        System.out.println("Check DBeaver to see this entry!");
     }
 }

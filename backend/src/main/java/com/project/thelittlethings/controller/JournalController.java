@@ -30,6 +30,17 @@ public class JournalController {
     public ResponseEntity<?> createJournal(@RequestHeader("Authorization") String token,
                                          @RequestBody CreateJournalRequest request) {
         try {
+            // basic validation - prevent crashes
+            if (request == null) {
+                return ResponseEntity.badRequest().body("Request cannot be empty");
+            }
+            if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Title is required");
+            }
+            if (request.getContent() == null) {
+                return ResponseEntity.badRequest().body("Content is required");
+            }
+            
             Long userId = getUserIdFromAuthToken(token);
             JournalResponse journal = journalService.createJournal(userId, request);
             return ResponseEntity.ok(journal);
@@ -67,6 +78,17 @@ public class JournalController {
                                          @PathVariable Long journalId,
                                          @RequestBody UpdateJournalRequest request) {
         try {
+            // check inputs to avoid crashes
+            if (journalId == null || journalId <= 0) {
+                return ResponseEntity.badRequest().body("Invalid journal ID");
+            }
+            if (request == null) {
+                return ResponseEntity.badRequest().body("Request cannot be empty");
+            }
+            if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Title is required");
+            }
+            
             Long userId = getUserIdFromAuthToken(token);
             JournalResponse journal = journalService.updateJournal(journalId, userId, request);
             return ResponseEntity.ok(journal);
@@ -79,6 +101,10 @@ public class JournalController {
     public ResponseEntity<?> deleteJournal(@RequestHeader("Authorization") String token,
                                          @PathVariable Long journalId) {
         try {
+            if (journalId == null || journalId <= 0) {
+                return ResponseEntity.badRequest().body("Invalid journal ID");
+            }
+            
             Long userId = getUserIdFromAuthToken(token);
             journalService.deleteJournal(journalId, userId);
             return ResponseEntity.ok("Deleted");
