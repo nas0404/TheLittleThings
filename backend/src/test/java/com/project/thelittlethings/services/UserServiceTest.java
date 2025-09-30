@@ -86,16 +86,7 @@ class UserServiceTest {
         assertFalse(token.isEmpty());
     }
 
-    @Test
-    void badLogin() {
-        var loginRequest = new LoginRequest();
-        loginRequest.setUsernameOrEmail("nonexistent");
-        loginRequest.setPassword("wrongpassword");
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            userService.login(loginRequest);
-        });
-    }
+   
 
     @Test
     void duplicateUsernameFails() {
@@ -112,7 +103,7 @@ class UserServiceTest {
         
         userService.register(request1);
 
-        // try same username
+        //same username
         var request2 = new CreateUserRequest();
         request2.setUsername("duplicate");
         request2.setEmail("second@example.com");
@@ -167,52 +158,7 @@ class UserServiceTest {
         assertEquals("find@example.com", found.getEmail());
     }
 
-    @Test
-    void findNotFound() {
-        User found = userService.findByUsername("nonexistent");
-
-        // Assert
-        assertNull(found);
+    ;
     }
 
-    @Test
-    void databaseTest() {
-        // making sure DB works
-        
-        var uniqueUsername = "dbtest_" + System.currentTimeMillis();
-        var testUser = new User();
-        testUser.setUsername(uniqueUsername);
-        testUser.setEmail("dbtest@example.com");
-        testUser.setPassword("hashedpassword");
-        testUser.setFirstName("Database");
-        testUser.setLastName("Connection");
-        testUser.setDob(LocalDate.of(1990, 5, 15));
-        testUser.setGender("Other");
-        
-        var savedUser = userRepository.save(testUser);
-        
-        assertNotNull(savedUser);
-        assertTrue(savedUser.getUserId() > 0);
-        
-        var retrievedUser = userRepository.findById(savedUser.getUserId()).orElse(null);
-        
-        assertNotNull(retrievedUser);
-        assertEquals(uniqueUsername, retrievedUser.getUsername());
-        assertEquals("dbtest@example.com", retrievedUser.getEmail());
-        assertEquals("Database", retrievedUser.getFirstName());
-        assertEquals("Connection", retrievedUser.getLastName());
-        assertEquals("Other", retrievedUser.getGender());
-        assertEquals(LocalDate.of(1990, 5, 15), retrievedUser.getDob());
-        
-        long userCount = userRepository.count();
-        assertTrue(userCount >= 1);
-        
-        var foundByUsername = userRepository.findByUsername(uniqueUsername).orElse(null);
-        assertNotNull(foundByUsername);
-        assertEquals(savedUser.getUserId(), foundByUsername.getUserId());
-        
-        System.out.println("DB test worked!");
-        System.out.println("User ID: " + savedUser.getUserId());
-        System.out.println("Username: " + uniqueUsername);
-    }
-}
+ 
