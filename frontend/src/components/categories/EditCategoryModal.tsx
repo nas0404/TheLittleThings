@@ -1,4 +1,3 @@
-// src/components/categories/EditCategoryModal.tsx
 import React, { useState } from "react";
 import type { Category, UpdateCategoryRequest } from "../../api/CategoryApi";
 import { mapServerErrors } from "../../lib/mapServerErrors";
@@ -8,6 +7,7 @@ type Props = {
   onClose: () => void;
   onSaved: (payload: UpdateCategoryRequest) => Promise<void>;
 };
+
 
 export default function EditCategoryModal({ category, onClose, onSaved }: Props) {
   const [name, setName] = useState(category.name);
@@ -20,7 +20,6 @@ export default function EditCategoryModal({ category, onClose, onSaved }: Props)
     setSaving(true);
     setErrs({});
     try {
-      // both fields are fine; backend can treat them as full or partial update
       await onSaved({ name, description: description ? description : null });
     } catch (e: any) {
       const mapped = mapServerErrors(e?.details);

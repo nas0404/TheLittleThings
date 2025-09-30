@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import Card from "../ui/Card";
 import { CategoriesAPI } from "../../api/CategoryApi";
 
-
-// Data shape for neglected categories returned by backend
 type NeglectedItem = {
   categoryId: number;
   name: string;
@@ -12,17 +10,11 @@ type NeglectedItem = {
   neglectDays?: number | null;
 };
 
-// Input validation constraints
 const MIN_DAYS = 1;
 const MAX_DAYS = 3650;
 const DEBOUNCE_MS = 400;
 
-/**
- CategoryNeglected
-  - Lets user input a "lookback days" number
-  - Fetches neglected categories from backend
- - Shows list ordered by oldest last activity
- */
+
 export default function CategoryNeglected() {
   const [daysInput, setDaysInput] = React.useState("14");
   const parsedDays = React.useMemo(() => parseInt(daysInput, 10), [daysInput]);
@@ -32,10 +24,9 @@ export default function CategoryNeglected() {
     parsedDays <= MAX_DAYS;
 
   const [items, setItems] = React.useState<NeglectedItem[]>([]);
-  const [loading, setLoading] = React.useState<boolean>(false);
+  const [loading, setLoading] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
 
-   // When user leaves the field, adjust value so it stays within allowed range
   const clampOnBlur = () => {
     if (!Number.isFinite(parsedDays)) {
       setDaysInput(String(MIN_DAYS));
@@ -44,10 +35,9 @@ export default function CategoryNeglected() {
     const clamped = Math.min(Math.max(parsedDays, MIN_DAYS), MAX_DAYS);
     setDaysInput(String(clamped));
   };
-  
-  // Fetch neglected categories when input changes (debounced)
+
   React.useEffect(() => {
-    if (!isValid) return; 
+    if (!isValid) return;
 
     let alive = true;
     setLoading(true);
@@ -73,7 +63,6 @@ export default function CategoryNeglected() {
     };
   }, [parsedDays, isValid]);
 
-  // Format last activity date
   const fmtDate = (iso?: string | null) =>
     iso ? new Date(iso).toLocaleDateString() : "no wins yet";
 

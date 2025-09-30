@@ -7,6 +7,6 @@ public interface CategoryNeglectedView {
     Long getUserId();
     String getName();
     String getDescription();
-    Instant getLastWinAt(); // may be the created_at when no wins
-    Long getNeglectDays();  // computed days since last activity
+    Instant getLastWinAt(); 
+    Long getNeglectDays(); 
 }

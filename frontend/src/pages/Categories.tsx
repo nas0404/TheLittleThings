@@ -1,4 +1,3 @@
-// src/pages/Categories.tsx
 import React, { useEffect, useState } from "react";
 import { CategoriesAPI } from "../api/CategoryApi";
 import type {
@@ -11,30 +10,21 @@ import CategoryCard from "../components/categories/CategoryCard";
 import EditCategoryModal from "../components/categories/EditCategoryModal";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { mapServerErrors } from "../lib/mapServerErrors";
-import CategoryNeglected from "../components/categories/CategoryNeglected"; // ← add this
+import CategoryNeglected from "../components/categories/CategoryNeglected";
+import CategoryForm from "../components/categories/CategoryForm";
 
 export default function CategoriesPage() {
-  const devUserId = localStorage.getItem("devUserId") ?? "—";
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageErr, setPageErr] = useState<string | null>(null);
 
-  // create form
-  // Create initial form state (right column)
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [createErrs, setCreateErrs] = useState<Record<string, string>>({});
-
-  // edit modal
   const [editing, setEditing] = useState<Category | null>(null);
 
-  // in-app delete confirm
   const [toDelete, setToDelete] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Load categories from API
+  const [creating, setCreating] = useState(false);
+
   async function refresh() {
     setLoading(true);
     setPageErr(null);
@@ -52,38 +42,25 @@ export default function CategoriesPage() {
     refresh();
   }, []);
 
-
-  /*All the functions below are calling an API
-   and handling the results/errors appropriately.
-  */
-
-  // Handle create form submission
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleCreate(values: { name: string; description?: string | null }) {
     setCreating(true);
-    setCreateErrs({});
     const payload: CreateCategoryRequest = {
-      name,
-      description: description ? description : null,
+      name: values.name,
+      description: values.description ?? null,
     };
     try {
       await CategoriesAPI.create(payload);
-      setName("");
-      setDescription("");
       await refresh();
-    } catch (e: any) {
-      const mapped = mapServerErrors(e?.details);
-      setCreateErrs(Object.keys(mapped).length ? mapped : { form: e?.message || "Create failed" });
-    } finally {
+    } 
+    finally {
       setCreating(false);
     }
   }
 
-  // request delete from card
   function requestDelete(category: Category) {
     setToDelete(category);
   }
-  // confirm delete from ConfirmDialog
+
   async function confirmDelete() {
     if (!toDelete) return;
     setDeleting(true);
@@ -100,11 +77,9 @@ export default function CategoriesPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Left: list */}
       <div className="rounded-2xl border border-slate-200 p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-semibold">Categories</h2>
-          <span className="text-xs text-slate-500">dev user: {devUserId}</span>
         </div>
 
         {loading && <div className="text-sm text-slate-500">Loading…</div>}
@@ -126,48 +101,16 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      {/* Right: create */}
       <div className="rounded-2xl border border-slate-200 p-5">
         <h2 className="text-xl font-semibold mb-3">New Category</h2>
 
-        {createErrs.form && <div className="mb-3 text-sm text-red-600">{createErrs.form}</div>}
 
-        <form onSubmit={handleCreate} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Name</label>
-            <input
-              className={`w-full rounded-lg border px-3 py-2 ${createErrs.name ? "border-red-400" : ""}`}
-              placeholder="e.g., Health"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            {createErrs.name && <p className="text-xs text-red-600 mt-1">{createErrs.name}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea
-              className="w-full rounded-lg border px-3 py-2"
-              placeholder="Optional"
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={creating}
-            className={`w-full rounded-xl bg-black text-white py-2 font-medium hover:opacity-90 ${
-              creating ? "opacity-70 cursor-not-allowed" : ""
-            }`}
-          >
-            {creating ? "Saving…" : "Create"}
-          </button>
-        </form>
+        <CategoryForm
+          submitText={creating ? "Saving…" : "Create"}
+          onSubmit={handleCreate}
+        />
       </div>
 
-      {/* Neglected categories (third card in grid) */}
       <CategoryNeglected />
 
       {editing && (
@@ -180,13 +123,12 @@ export default function CategoriesPage() {
               setEditing(null);
               await refresh();
             } catch (e) {
-              throw e; // handled in the modal
+              throw e; 
             }
           }}
         />
       )}
 
-      {/* in-app confirm dialog for delete */}
       <ConfirmDialog
         open={!!toDelete}
         title="Delete category"

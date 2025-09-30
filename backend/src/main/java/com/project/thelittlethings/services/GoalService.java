@@ -30,7 +30,6 @@ public class GoalService {
   private final CategoryRepository categoryRepo;
   private final WinRepository winRepo;
 
-  // Flip to true  to prevent duplicate goal titles per user
   private static final boolean ENFORCE_UNIQUE_TITLES_PER_USER = false;
 
   public GoalService(GoalRepository g, UserRepository u, CategoryRepository c, WinRepository w) {
@@ -40,36 +39,27 @@ public class GoalService {
     this.winRepo = w;
   }
 
-  //Helper functions which involve validations, conversions and fetching related entities.
 
-  private static String trimOrNull(String s) {
-    return s == null ? null : s.trim();
-  }
+  private static String trimOrNull(String s) { return s == null ? null : s.trim(); }
 
-  private static String normPriority(String p) {
-    return p == null ? null : p.trim().toUpperCase();
-  }
+  private static String normPriority(String p) { return p == null ? null : p.trim().toUpperCase(); }
 
   private static void requirePriority(String p) {
     String v = normPriority(p);
-    if (v == null || v.isEmpty())
-      throw new IllegalArgumentException("priority is required");
+    if (v == null || v.isEmpty()) throw new IllegalArgumentException("priority is required");
     if (!v.equals("HIGH") && !v.equals("MEDIUM") && !v.equals("LOW"))
       throw new IllegalArgumentException("priority must be HIGH, MEDIUM, or LOW");
   }
 
   private User mustUser(Long userId) {
     return userRepo.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("user not found"));
+      .orElseThrow(() -> new IllegalArgumentException("user not found"));
   }
 
   private Category mustCategoryOwned(Long userId, Long categoryId) {
-    if (categoryId == null) {
-      // we require category for create; update may omit to avoid moving
-      throw new IllegalArgumentException("categoryId is required");
-    }
+    if (categoryId == null) throw new IllegalArgumentException("categoryId is required");
     Category c = categoryRepo.findById(categoryId)
-        .orElseThrow(() -> new IllegalArgumentException("category not found"));
+      .orElseThrow(() -> new IllegalArgumentException("category not found"));
     if (!Objects.equals(c.getUser().getUserId(), userId))
       throw new IllegalArgumentException("category does not belong to user");
     return c;
@@ -77,7 +67,7 @@ public class GoalService {
 
   private Goal mustGoalOwned(Long goalId, Long userId) {
     return goalRepo.findByGoalIdAndUser_UserId(goalId, userId)
-        .orElseThrow(() -> new IllegalArgumentException("goal not found"));
+      .orElseThrow(() -> new IllegalArgumentException("goal not found"));
   }
 
   private GoalResponse toResponse(Goal g) {
@@ -93,14 +83,13 @@ public class GoalService {
     return r;
   }
 
-  //Service methods for creating, listing, updating, and deleting goals.
-  public GoalResponse createGoal(Long userId, Long categoryId, CreateGoalRequest req) {
-    if (userId == null) throw new IllegalArgumentException("userId is required");
-    // require category & ownership
-    User user = mustUser(userId);
-    Category category = mustCategoryOwned(userId, categoryId);
 
-    // validate fields
+  public GoalResponse create(Long userId, CreateGoalRequest req) {
+    if (userId == null) throw new IllegalArgumentException("userId is required");
+
+    User user = mustUser(userId);
+    Category category = mustCategoryOwned(userId, req.getCategoryId());
+
     String title = trimOrNull(req.getTitle());
     if (title == null || title.isEmpty())
       throw new IllegalArgumentException("title is required");
@@ -108,57 +97,40 @@ public class GoalService {
       throw new IllegalArgumentException("title must be ≤ 255 characters");
 
     String description = trimOrNull(req.getDescription());
-    if (description != null && description.length() > 1000)
-      throw new IllegalArgumentException("description must be ≤ 1000 characters");
+    if (description != null && description.length() > 100)
+      throw new IllegalArgumentException("description must be ≤ 100 characters");
 
     String priority = normPriority(req.getPriority());
     requirePriority(priority);
 
-    if (ENFORCE_UNIQUE_TITLES_PER_USER
-        && goalRepo.existsByUser_UserIdAndTitle(userId, title)) {
+    if (ENFORCE_UNIQUE_TITLES_PER_USER && goalRepo.existsByUser_UserIdAndTitle(userId, title))
       throw new IllegalArgumentException("goal title already exists for this user");
-    }
 
     Goal g = new Goal();
     g.setUser(user);
-    g.setCategory(category);        
+    g.setCategory(category);
     g.setTitle(title);
     g.setDescription(description);
     g.setPriority(priority);
 
-    Goal saved = goalRepo.saveAndFlush(g);
-
-    //a re-read ensures DB-generated timestamps present
-    saved = goalRepo.findById(saved.getGoalId())
-        .orElseThrow(() -> new IllegalArgumentException("goal missing after save"));
-
+    Goal saved = goalRepo.save(g);
     return toResponse(saved);
   }
 
-  //List all goals for a user.
   @Transactional(readOnly = true)
   public List<GoalResponse> listGoalsByUser(long userId) {
     mustUser(userId);
-    return goalRepo.findByUser_UserId(userId).stream()
-        .map(this::toResponse).toList();
+    return goalRepo.findByUser_UserId(userId).stream().map(this::toResponse).toList();
   }
 
-  //List all goals for a user within a specific category
   @Transactional(readOnly = true)
   public List<GoalResponse> listGoalsByUserAndCategory(long userId, long categoryId) {
     mustUser(userId);
-    // ensure category exists AND belongs to the same user
     mustCategoryOwned(userId, categoryId);
-
-    return goalRepo.findByUser_UserIdAndCategory_CategoryId(userId, categoryId).stream()
-        .map(this::toResponse).toList();
+    return goalRepo.findByUser_UserIdAndCategory_CategoryId(userId, categoryId)
+                   .stream().map(this::toResponse).toList();
   }
 
-  /*
-   Returns goals grouped by priority (HIGH/MEDIUM/LOW).
-   If categoryId is provided, enforces ownership of that category.
-   If priority is provided, returns a single-key map.
-   */
   @Transactional(readOnly = true)
   public Map<String, List<GoalResponse>> listGrouped(Long userId, Long categoryId, String priority) {
     mustUser(userId);
@@ -169,14 +141,11 @@ public class GoalService {
         : goalRepo.findByUser_UserIdAndCategory_CategoryId(userId, categoryId);
 
     Map<String, List<GoalResponse>> grouped = new HashMap<>();
-    grouped.put("HIGH", all.stream()
-        .filter(g -> "HIGH".equalsIgnoreCase(g.getPriority()))
+    grouped.put("HIGH", all.stream().filter(g -> "HIGH".equalsIgnoreCase(g.getPriority()))
         .map(this::toResponse).toList());
-    grouped.put("MEDIUM", all.stream()
-        .filter(g -> "MEDIUM".equalsIgnoreCase(g.getPriority()))
+    grouped.put("MEDIUM", all.stream().filter(g -> "MEDIUM".equalsIgnoreCase(g.getPriority()))
         .map(this::toResponse).toList());
-    grouped.put("LOW", all.stream()
-        .filter(g -> "LOW".equalsIgnoreCase(g.getPriority()))
+    grouped.put("LOW", all.stream().filter(g -> "LOW".equalsIgnoreCase(g.getPriority()))
         .map(this::toResponse).toList());
 
     if (priority != null) {
@@ -184,38 +153,28 @@ public class GoalService {
       requirePriority(p);
       return Map.of(p, grouped.get(p));
     }
-
     return grouped;
   }
 
-  //Fetches a specific goal owned by a user
   @Transactional(readOnly = true)
   public GoalResponse getOwnedGoal(Long goalId, Long userId) {
     return toResponse(mustGoalOwned(goalId, userId));
   }
 
-public void completeGoal(Long goalId) {
+  public void completeGoal(Long goalId) {
     Goal goal = goalRepo.findById(goalId)
         .orElseThrow(() -> new RuntimeException("Goal not found"));
 
-    // Create a new Win without altering the goal
     Win win = new Win();
     win.setGoal(goal);
     win.setUser(goal.getUser());
     win.setTitle(goal.getTitle());
     win.setDescription(goal.getDescription());
     win.setCompletionDate(OffsetDateTime.now());
-    win.setNumTrophies(1); // You can decide the logic for how many trophies per goal
-
+    win.setNumTrophies(1); 
     winRepo.save(win);
-
-    // Optional: update user's trophies
-    // User user = goal.getUser();
-    // user.setTrophies(user.getTrophies() + win.getNumTrophies());
-    // userRepo.save(user);
   }
 
-  //Updates a goal's details, ensuring the user owns the goal and validating input.
   public GoalResponse updateGoal(Long goalId, Long userId, UpdateGoalRequest r) {
     Goal g = mustGoalOwned(goalId, userId);
 
@@ -235,8 +194,8 @@ public void completeGoal(Long goalId) {
 
     if (r.getDescription() != null) {
       String d = trimOrNull(r.getDescription());
-      if (d != null && d.length() > 1000)
-        throw new IllegalArgumentException("description must be ≤ 1000 characters");
+      if (d != null && d.length() > 100)
+        throw new IllegalArgumentException("description must be ≤ 100 characters");
       g.setDescription(d);
     }
 
@@ -248,13 +207,12 @@ public void completeGoal(Long goalId) {
 
     if (r.getCategoryId() != null) {
       Category cat = mustCategoryOwned(userId, r.getCategoryId());
-      g.setCategory(cat); // move goal; never null
+      g.setCategory(cat);
     }
 
     return toResponse(goalRepo.save(g));
   }
 
-  //Deletes a goal owned by a user.
   public void delete(Long goalId, Long userId) {
     Goal g = mustGoalOwned(goalId, userId);
     goalRepo.delete(g);

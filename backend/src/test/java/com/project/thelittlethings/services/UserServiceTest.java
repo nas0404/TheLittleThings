@@ -31,10 +31,10 @@ class UserServiceTest {
     @Autowired
     private UserRepository userRepository;
 
-    //@BeforeEach
-    //void setUp() {
-        //userRepository.deleteAll();
-    //}
+    @BeforeEach
+    void setUp() {
+        userRepository.deleteAll();
+    }
 
     @Test
     void testRegisterUser_Success() {

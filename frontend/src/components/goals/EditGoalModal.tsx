@@ -3,13 +3,11 @@ import { mapServerErrors } from  "../../lib/mapServerErrors";
 
 type Priority = "HIGH" | "MEDIUM" | "LOW";
 
-// Minimal category info (used in dropdown)
 type CategoryLite = {
   categoryId: number;
   name: string;
 };
 
-// Goal shape used to prefill the form
 type GoalForEdit = {
   goalId: number;
   title: string;
@@ -18,7 +16,6 @@ type GoalForEdit = {
   categoryId: number;
 };
 
-// Payload for updating a goal (all fields optional)
 export type UpdateGoalRequest = Partial<{
   title: string;
   description: string | null;
@@ -26,20 +23,14 @@ export type UpdateGoalRequest = Partial<{
   categoryId: number;
 }>;
 
-// Props expected by EditGoalModal
 type Props = {
-  goal: GoalForEdit;                  // goal being edited
-  categories: CategoryLite[];         // categories for dropdown
-  onClose: () => void;                // close modal
-  onSave: (payload: UpdateGoalRequest) => Promise<void>; // save handler
+  goal: GoalForEdit;                  
+  categories: CategoryLite[];         
+  onClose: () => void;               
+  onSave: (payload: UpdateGoalRequest) => Promise<void>;
 };
 
-/**
-   Modal for editing a goal.
-   Prefills fields with current goal values
-   Allows updating title, description, category, and priority
-   Maps server validation errors to inline field errors
- */
+
 export default function EditGoalModal({
   goal,
   categories,
@@ -53,7 +44,6 @@ export default function EditGoalModal({
   const [saving, setSaving] = useState(false);
   const [errs, setErrs] = useState<Record<string, string>>({});
 
-  // Handle form submit
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -79,17 +69,14 @@ export default function EditGoalModal({
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg p-5">
-        {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">Edit Goal</h3>
           <button className="text-slate-500" onClick={onClose} type="button">✕</button>
         </div>
 
-        {/* Top-level error */}
         {errs.form && <div className="mb-3 text-sm text-red-600">{errs.form}</div>}
 
         <form onSubmit={submit} className="space-y-4">
-          {/* Category dropdown */}
           <div>
             <label className="block text-sm font-medium mb-1">Category</label>
             <select
@@ -106,7 +93,6 @@ export default function EditGoalModal({
             {errs.categoryId && <p className="text-xs text-red-600 mt-1">{errs.categoryId}</p>}
           </div>
 
-          {/* Title input */}
           <div>
             <label className="block text-sm font-medium mb-1">Title</label>
             <input
@@ -116,8 +102,6 @@ export default function EditGoalModal({
             />
             {errs.title && <p className="text-xs text-red-600 mt-1">{errs.title}</p>}
           </div>
-
-          {/* Description textarea */}
           <div>
             <label className="block text-sm font-medium mb-1">Description</label>
             <textarea
@@ -127,8 +111,6 @@ export default function EditGoalModal({
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-
-          {/* Priority dropdown */}
           <div>
             <label className="block text-sm font-medium mb-1">Priority</label>
             <select
@@ -141,8 +123,6 @@ export default function EditGoalModal({
               <option value="LOW">LOW</option>
             </select>
           </div>
-
-          {/* Action buttons */}
           <div className="flex gap-2 justify-end pt-2">
             <button type="button" className="px-4 py-2 rounded-lg border" onClick={onClose} disabled={saving}>
               Cancel

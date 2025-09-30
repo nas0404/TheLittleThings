@@ -1,7 +1,5 @@
-// src/api/CategoryApi.ts
 import { http } from "./http";
 
-/** Backend DTO */
 type CategoryDTO = {
   categoryId: number;
   name: string;
@@ -27,7 +25,6 @@ export type UpdateCategoryRequest = {
   description?: string | null;
 };
 
-// Convert backend DTO to frontend model
 const toCategory = (d: CategoryDTO): Category => ({
   id: d.categoryId,
   name: d.name,
@@ -37,21 +34,14 @@ const toCategory = (d: CategoryDTO): Category => ({
 });
 const toCategoryArray = (arr: CategoryDTO[]): Category[] => arr.map(toCategory);
 
-// make sure this never returns null
-const uid = () => (localStorage.getItem("devUserId") ?? "35");
-
-
-
- //Category API wrapper around backend endpoints.
- //Provides list/create/update/delete/neglected calls.
 export const CategoriesAPI = {
   async list(): Promise<Category[]> {
-    const data = await http<CategoryDTO[]>(`/users/${uid()}/categories`);
+    const data = await http<CategoryDTO[]>(`/api/categories`);
     return toCategoryArray(data);
   },
 
   async create(body: CreateCategoryRequest): Promise<Category> {
-    const data = await http<CategoryDTO>(`/users/${uid()}/categories`, {
+    const data = await http<CategoryDTO>(`/api/categories`, {
       method: "POST",
       body: JSON.stringify(body),
     });
@@ -59,7 +49,7 @@ export const CategoriesAPI = {
   },
 
   async update(id: number, body: UpdateCategoryRequest): Promise<Category> {
-    const data = await http<CategoryDTO>(`/users/${uid()}/categories/${id}`, {
+    const data = await http<CategoryDTO>(`/api/categories/${id}`, {
       method: "PUT",
       body: JSON.stringify(body),
     });
@@ -67,12 +57,13 @@ export const CategoriesAPI = {
   },
 
   async remove(id: number): Promise<void> {
-    await http<void>(`/users/${uid()}/categories/${id}`, { method: "DELETE" });
+    await http<void>(`/api/categories/${id}`, { method: "DELETE" });
   },
 
   async neglected(days: number): Promise<any[]> {
-    return http<any[]>(`/users/${uid()}/categories/neglected?days=${days}`);
+    return http<any[]>(`/api/categories/neglected?days=${days}`);
   },
 };
 
 export default CategoriesAPI;
+

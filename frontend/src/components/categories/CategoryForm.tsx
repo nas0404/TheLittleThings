@@ -1,4 +1,3 @@
-// src/components/categories/CategoryForm.tsx
 import * as React from "react";
 import { ApiError } from "../../api/http";
 
@@ -7,7 +6,7 @@ type Props = {
   initial?: Partial<Values>;
   submitText?: string;
   onSubmit: (values: Values) => Promise<void> | void;
-  onCancel?: () => void;              //This will show in edit mode
+  onCancel?: () => void;
 };
 
 export default function CategoryForm({
@@ -22,7 +21,6 @@ export default function CategoryForm({
   const [formErr, setFormErr] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
-  // keep inputs in sync if a different "editing" item is selected
   React.useEffect(() => {
     setName(initial?.name ?? "");
     setDescription(initial?.description ?? "");
@@ -45,28 +43,24 @@ export default function CategoryForm({
     return map;
   };
 
-   // Handle form submit (validation → call onSubmit → handle errors)
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     setFormErr(null);
     setFieldErrs({});
 
-     // Client-side validation to avoid unnecessary requests
     const trimmed = name.trim();
     if (!trimmed) return setFieldErrs({ name: "name is required" });
     if (trimmed.length > 100) return setFieldErrs({ name: "name must be ≤ 100 characters" });
-    if ((description || "").length > 1000)
-      return setFieldErrs({ description: "description must be ≤ 1000 characters" });
+    if ((description || "").length > 100)
+      return setFieldErrs({ description: "description must be ≤ 100 characters" });
 
     setSubmitting(true);
     try {
       await onSubmit({ name: trimmed, description: description || null });
-      // auto-clear after successful create:
-      if (!onCancel) {               // create mode
+      if (!onCancel) {
         setName("");
         setDescription("");
       }
-      // Handle API errors consistently (409 conflict, validation errors, others)
     } catch (err: any) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
@@ -107,7 +101,7 @@ export default function CategoryForm({
           value={description || ""}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Optional"
-          maxLength={1001}
+          maxLength={101}
           className={`w-full rounded-xl border px-3 py-2 text-sm ${fieldErrs.description ? "border-red-400 focus:border-red-500" : ""}`}
         />
         {fieldErrs.description && <div className="mt-1 text-xs text-red-600">{fieldErrs.description}</div>}
@@ -115,7 +109,6 @@ export default function CategoryForm({
 
       {formErr && <div className="text-sm text-red-600">{formErr}</div>}
 
-      {/* Buttons */}
       <div className="flex gap-2">
         {onCancel && (
           <button

@@ -1,33 +1,26 @@
-// src/pages/GoalsPage.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import GoalCard from "../components/goals/GoalCard";
 import EditGoalModal, { type UpdateGoalRequest } from "../components/goals/EditGoalModal";
 import { mapServerErrors } from "../lib/mapServerErrors";
 
-// Use your centralized APIs
 import { GoalsAPI, type GoalResponse, type Priority, type CreateGoalRequest } from "../api/GoalApi";
 import { CategoriesAPI, type Category as UICategory } from "../api/CategoryApi";
 
-// ---- NEW: sort key type ----
 type SortKey = "createdAt_desc" | "priority_desc";
 
 export default function GoalsPage() {
   const devUserId = localStorage.getItem("devUserId") ?? "—";
 
-  // data
   const [categories, setCategories] = useState<UICategory[]>([]);
   const [goals, setGoals] = useState<GoalResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // filter (left)
   const [filterCategoryIdStr, setFilterCategoryIdStr] = useState<string>("");
 
-  // ---- NEW: sort state ----
   const [sortBy, setSortBy] = useState<SortKey>("createdAt_desc");
 
-  // create (right)
   const [newCategoryIdStr, setNewCategoryIdStr] = useState<string>("");
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -35,7 +28,6 @@ export default function GoalsPage() {
   const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
   const [creating, setCreating] = useState(false);
 
-  // edit / delete
   const [editingGoal, setEditingGoal] = useState<GoalResponse | null>(null);
   const [toDelete, setToDelete] = useState<GoalResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -50,7 +42,7 @@ export default function GoalsPage() {
     setError(null);
     try {
       const [cats, goalsList] = await Promise.all([
-        CategoriesAPI.list(), // UI categories { id, name, ... }
+        CategoriesAPI.list(), 
         GoalsAPI.list({ categoryId: selectedFilterCategoryId }),
       ]);
       setCategories(cats);
@@ -64,10 +56,8 @@ export default function GoalsPage() {
 
   useEffect(() => {
     refreshAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFilterCategoryId]);
 
-  // ---- NEW: compute sorted list per AC ----
   const sortedGoals = useMemo(() => {
     const byNewest = (a: GoalResponse, b: GoalResponse) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -78,19 +68,18 @@ export default function GoalsPage() {
     return [...goals].sort((a, b) => {
       const wa = weight[a.priority] ?? 3;
       const wb = weight[b.priority] ?? 3;
-      if (wa !== wb) return wa - wb; // HIGH→MEDIUM→LOW
-      return byNewest(a, b);         // tie-break by newest
+      if (wa !== wb) return wa - wb; 
+      return byNewest(a, b);         
     });
   }, [goals, sortBy]);
 
-  // CREATE
   async function handleCreateGoal(e: React.FormEvent) {
     e.preventDefault();
     setCreating(true);
     setCreateErrors({});
 
     const payload: Required<CreateGoalRequest> = {
-      categoryId: Number(newCategoryIdStr),                // required by backend
+      categoryId: Number(newCategoryIdStr),             
       title: newTitle.trim(),
       description: newDescription ? newDescription : null,
       priority: newPriority,
@@ -111,13 +100,11 @@ export default function GoalsPage() {
     }
   }
 
-  // UPDATE (modal)
   async function handleUpdateGoal(goalId: number, body: UpdateGoalRequest) {
     await GoalsAPI.update(goalId, body);
     await refreshAll();
   }
 
-  // DELETE
   function requestDelete(goal: GoalResponse) {
     setToDelete(goal);
   }
@@ -137,14 +124,10 @@ export default function GoalsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Left: list, filter, sort */}
       <div className="rounded-2xl border border-slate-200 p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-semibold">Goals</h2>
-          <span className="text-xs text-slate-500">dev user: {devUserId}</span>
         </div>
-
-        {/* Filter + Sort row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1">Filter by category</label>
@@ -162,7 +145,6 @@ export default function GoalsPage() {
             </select>
           </div>
 
-          {/* NEW: Sort control */}
           <div>
             <label className="block text-sm font-medium mb-1">Sort by</label>
             <select
@@ -190,7 +172,7 @@ export default function GoalsPage() {
               goal={{
                 goalId: g.goalId,
                 title: g.title,
-                description: g.description ?? null, // normalize for GoalCard type
+                description: g.description ?? null, 
                 priority: g.priority,
               }}
               onRequestDelete={() => requestDelete(g)}
@@ -200,7 +182,6 @@ export default function GoalsPage() {
         </div>
       </div>
 
-      {/* Right: New Goal */}
       <div className="rounded-2xl border border-slate-200 p-5">
         <h2 className="text-xl font-semibold mb-3">New Goal</h2>
 
@@ -275,7 +256,6 @@ export default function GoalsPage() {
         </form>
       </div>
 
-      {/* Edit modal */}
       {editingGoal && (
         <EditGoalModal
           goal={{
@@ -292,13 +272,12 @@ export default function GoalsPage() {
               await handleUpdateGoal(editingGoal.goalId, payload);
               setEditingGoal(null);
             } catch (e) {
-              throw e; // handled inside modal
+              throw e; 
             }
           }}
         />
       )}
 
-      {/* Delete confirm */}
       <ConfirmDialog
         open={!!toDelete}
         title="Delete goal"

@@ -16,9 +16,6 @@ export default function Landing() {
         <Link to="/login">
           <Button className="bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50">Sign In</Button>
         </Link>
-        <Link to="/dev-user">
-          <Button>DevUser</Button>
-        </Link>
       </div>
     </div>
   );

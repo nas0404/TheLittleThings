@@ -1,8 +1,8 @@
 package com.project.thelittlethings.dto.categories;
 
+import lombok.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.*;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 public class CreateCategoryRequest {
@@ -11,6 +11,6 @@ public class CreateCategoryRequest {
   @Size(max = 100, message = "name must be ≤ 100 characters")
   private String name;
 
-  @Size(max = 1000, message = "description must be ≤ 1000 characters")
+  @Size(max = 100, message = "description must be ≤ 100 characters")
   private String description;
 }

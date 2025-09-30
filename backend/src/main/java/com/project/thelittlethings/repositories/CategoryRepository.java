@@ -7,16 +7,15 @@ import org.springframework.data.repository.query.Param;
 import com.project.thelittlethings.MaterialisedView.CategoryNeglectedView;
 import com.project.thelittlethings.View.CategoryNeglectView;
 import com.project.thelittlethings.entities.Category;
+import com.project.thelittlethings.entities.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
-    // Find all categories that belong to a specific user (by userId).
     List<Category> findByUser_UserId(Long userId);
     boolean existsByUser_UserIdAndName(Long userId, String name);
-
-    // Check if this user has ANY categories
     boolean existsByUser_UserId(Long userId);
 
 
@@ -57,4 +56,5 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
       """, nativeQuery = true)
     List<CategoryNeglectedView> findNeglectedCategories(@Param("userId") Long userId,
                                                         @Param("days") int days);
+    Optional<Category> findByCategoryIdAndUser_UserId(Long categoryId, Long userId);
     }

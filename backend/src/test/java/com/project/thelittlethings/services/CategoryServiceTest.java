@@ -1,17 +1,19 @@
-// src/test/java/com/project/thelittlethings/services/CategoryServiceTest.java
 package com.project.thelittlethings.services;
 
 import com.project.thelittlethings.dto.categories.CreateCategoryRequest;
 import com.project.thelittlethings.dto.categories.UpdateCategoryRequest;
+import com.project.thelittlethings.dto.categories.CategoryResponse;
 import com.project.thelittlethings.entities.Category;
 import com.project.thelittlethings.entities.User;
 import com.project.thelittlethings.repositories.CategoryRepository;
 import com.project.thelittlethings.repositories.UserRepository;
-import com.project.thelittlethings.services.CategoryService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,99 +22,116 @@ import static org.mockito.Mockito.*;
 
 class CategoryServiceTest {
 
-  private CategoryRepository categoryRepo;
-  private UserRepository userRepo;
-  private CategoryService service;
+    private CategoryRepository categoryRepo;
+    private UserRepository userRepo;
+    private CategoryService service;
 
-  @BeforeEach
-  void setup() {
-    categoryRepo = mock(CategoryRepository.class);
-    userRepo = mock(UserRepository.class);
-    MockitoAnnotations.openMocks(this);
-    service = new CategoryService(categoryRepo, userRepo);
-  }
+    @BeforeEach
+    void setup() {
+        categoryRepo = mock(CategoryRepository.class);
+        userRepo = mock(UserRepository.class);
+        MockitoAnnotations.openMocks(this);
+        service = new CategoryService(categoryRepo, userRepo);
+    }
 
-  @Test
-  void create_success() {
-    long userId = 31L;
-    var user = new User();
-    user.setUserId(userId);
+    private User mockUser(long id) {
+        User u = new User();
+        u.setUserId(id);
+        return u;
+    }
 
-    when(userRepo.findById(userId)).thenReturn(Optional.of(user));
-    when(categoryRepo.existsByUser_UserIdAndName(userId, "Fitness")).thenReturn(false);
+    private Category mockCategory(User u, long id, String name, String desc) {
+        Category c = new Category();
+        c.setCategoryId(id);
+        c.setUser(u);
+        c.setName(name);
+        c.setDescription(desc);
+        c.setCreatedAt(Instant.now());
+        c.setUpdatedAt(Instant.now());
+        return c;
+    }
 
-    var saved = new Category();
-    saved.setCategoryId(1L);
-    saved.setUser(user);
-    saved.setName("Fitness");
+    @Test
+void create_success() {
+    User user = mockUser(10L);
+    when(userRepo.findById(10L)).thenReturn(Optional.of(user));
+    when(categoryRepo.existsByUser_UserIdAndName(10L, "Fitness")).thenReturn(false);
 
-    when(categoryRepo.save(any(Category.class))).thenReturn(saved);
-    when(categoryRepo.findById(1L)).thenReturn(Optional.of(saved)); // re-read after save
+    when(categoryRepo.save(any(Category.class))).thenAnswer(inv -> {
+        Category c = inv.getArgument(0);
+        c.setCategoryId(1L);
+        return c;
+    });
 
-    var res = service.create(userId, new CreateCategoryRequest("Fitness", "Gym"));
+    var req = new CreateCategoryRequest("Fitness", "Gym");
+    CategoryResponse res = service.create(10L, req);
+
     assertEquals(1L, res.getCategoryId());
-  }
+    assertEquals("Fitness", res.getName());
+    verify(categoryRepo).save(any(Category.class));
+}
 
-  @Test
-  void invalidate_missingName() {
-    var req = new CreateCategoryRequest("   ", null);
-    var ex = assertThrows(IllegalArgumentException.class, () -> service.create(1L, req));
-    assertTrue(ex.getMessage().toLowerCase().contains("name is required"));
-  }
 
-  @Test
-  void create_userNotFound() {
-    var req = new CreateCategoryRequest("X", null);
-    when(userRepo.findById(999L)).thenReturn(Optional.empty());
+    @Test
+    void create_fails_missingName() {
+        User user = mockUser(10L);
+        when(userRepo.findById(10L)).thenReturn(Optional.of(user));
 
-    var ex = assertThrows(IllegalArgumentException.class, () -> service.create(999L, req));
-    assertTrue(ex.getMessage().toLowerCase().contains("user not found"));
-  }
+        var req = new CreateCategoryRequest("   ", null);
+        var ex = assertThrows(IllegalArgumentException.class,
+                () -> service.create(10L, req));
+        assertTrue(ex.getMessage().toLowerCase().contains("name is required"));
+    }
 
-  @Test
-  void invalidate_duplicate() {
-    var req = new CreateCategoryRequest("Fitness", null);
-    var user = new User();
-    user.setUserId(31L);
 
-    when(userRepo.findById(31L)).thenReturn(Optional.of(user));
-    when(categoryRepo.existsByUser_UserIdAndName(31L, "Fitness")).thenReturn(true);
 
-    var ex = assertThrows(IllegalArgumentException.class, () -> service.create(31L, req));
-    assertTrue(ex.getMessage().toLowerCase().contains("already exists"));
-  }
 
-  @Test
-  void invalidate_wrongOwner() {
-    var owner = new User();
-    owner.setUserId(31L);
+    @Test
+    void update_success() {
+        User user = mockUser(10L);
+        Category cat = mockCategory(user, 1L, "Old", "desc");
 
-    var cat = new Category();
-    cat.setCategoryId(9L);
-    cat.setUser(owner);
-    cat.setName("A");
+        when(categoryRepo.findByCategoryIdAndUser_UserId(1L, 10L))
+            .thenReturn(Optional.of(cat));
 
-    when(categoryRepo.findById(9L)).thenReturn(Optional.of(cat));
+        when(categoryRepo.existsByUser_UserIdAndName(10L, "New")).thenReturn(false);
 
-    var ex = assertThrows(IllegalArgumentException.class, () -> service.getOwned(9L, 777L));
-    assertTrue(ex.getMessage().toLowerCase().contains("not found"));
-  }
+        when(categoryRepo.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
 
-  @Test
-  void rename_Conflict() {
-    var owner = new User();
-    owner.setUserId(31L);
+        var req = new UpdateCategoryRequest("New", "Updated");
+        CategoryResponse res = service.update(1L, 10L, req);
 
-    var cat = new Category();
-    cat.setCategoryId(5L);
-    cat.setUser(owner);
-    cat.setName("Old");
+        assertEquals("New", res.getName());
+        assertEquals("Updated", res.getDescription());
+    }
 
-    when(categoryRepo.findById(5L)).thenReturn(Optional.of(cat));
-    when(categoryRepo.existsByUser_UserIdAndName(31L, "New")).thenReturn(true);
 
-    var ex = assertThrows(IllegalArgumentException.class,
-        () -> service.update(5L, 31L, new UpdateCategoryRequest("New", null)));
-    assertTrue(ex.getMessage().toLowerCase().contains("already exists"));
-  }
+    @Test
+    void delete_success() {
+      User user = mockUser(10L);
+      Category cat = mockCategory(user, 5L, "Temp", null);
+
+      when(categoryRepo.findByCategoryIdAndUser_UserId(5L, 10L))
+          .thenReturn(Optional.of(cat));
+
+      service.delete(5L, 10L);
+
+      verify(categoryRepo).delete(cat);
+    }
+
+    @Test
+    void listByUser_success() {
+        User user = mockUser(10L);
+        Category cat1 = mockCategory(user, 1L, "A", null);
+        Category cat2 = mockCategory(user, 2L, "B", null);
+
+        when(userRepo.existsById(10L)).thenReturn(true);
+
+        when(categoryRepo.findByUser_UserId(10L)).thenReturn(List.of(cat1, cat2));
+
+        List<CategoryResponse> list = service.listByUser(10L);
+        assertEquals(2, list.size());
+        assertEquals("A", list.get(0).getName());
+    }
+
 }

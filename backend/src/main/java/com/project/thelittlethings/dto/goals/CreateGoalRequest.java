@@ -15,7 +15,7 @@ public class CreateGoalRequest {
   @Size(max = 255, message = "title must be ≤ 255 characters")
   private String title;
 
-  @Size(max = 1000, message = "description must be ≤ 1000 characters")
+  @Size(max = 100, message = "description must be ≤ 100 characters")
   private String description;
 
   @NotBlank(message = "priority is required")
@@ -23,4 +23,3 @@ public class CreateGoalRequest {
            message = "priority must be HIGH, MEDIUM, or LOW")
   private String priority;
 }
-

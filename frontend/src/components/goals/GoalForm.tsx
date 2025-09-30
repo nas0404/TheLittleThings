@@ -1,4 +1,3 @@
-// src/components/goals/GoalForm.tsx
 import * as React from "react";
 import { ApiError } from "../../api/http";
 import type {
@@ -9,11 +8,9 @@ import type {
 
 type CategoryOpt = { id: number; name: string };
 
-// Shared
 type BaseProps = {
   initial?: Partial<CreateGoalRequest & UpdateGoalRequest>;
   categoryOptions: CategoryOpt[];
-  /** If provided, category select is hidden and locked to this id */
   lockCategoryId?: number;
 };
 
@@ -32,6 +29,8 @@ type EditProps = BaseProps & {
 type Props = CreateProps | EditProps;
 
 const PRIOS: Priority[] = ["HIGH", "MEDIUM", "LOW"];
+
+
 
 export default function GoalForm(props: Props) {
   const { initial, categoryOptions, lockCategoryId } = props;
@@ -71,7 +70,6 @@ export default function GoalForm(props: Props) {
 
     const t = title.trim();
 
-    // quick client-side checks
     if (props.mode === "create" && !categoryId) {
       return setFieldErrs({ categoryId: "category is required" });
     }
