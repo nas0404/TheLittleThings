@@ -10,6 +10,4 @@ public class UpdateWinRequest {
     private String title;
     private String description;
     private Integer numTrophies;
-    private Long goalId;
-    private Long journalId;
 }
