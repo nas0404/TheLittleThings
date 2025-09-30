@@ -10,7 +10,6 @@ type CategoryDTO = {
   updatedAt?: string;
 };
 
-/** UI model (use this everywhere in the frontend) */
 export type Category = {
   id: number;
   name: string;
@@ -19,7 +18,6 @@ export type Category = {
   updatedAt?: string;
 };
 
-/** Request types (exported so components can import) */
 export type CreateCategoryRequest = {
   name: string;
   description?: string | null;
@@ -29,6 +27,7 @@ export type UpdateCategoryRequest = {
   description?: string | null;
 };
 
+// Convert backend DTO to frontend model
 const toCategory = (d: CategoryDTO): Category => ({
   id: d.categoryId,
   name: d.name,
@@ -41,6 +40,10 @@ const toCategoryArray = (arr: CategoryDTO[]): Category[] => arr.map(toCategory);
 // make sure this never returns null
 const uid = () => (localStorage.getItem("devUserId") ?? "35");
 
+
+
+ //Category API wrapper around backend endpoints.
+ //Provides list/create/update/delete/neglected calls.
 export const CategoriesAPI = {
   async list(): Promise<Category[]> {
     const data = await http<CategoryDTO[]>(`/users/${uid()}/categories`);

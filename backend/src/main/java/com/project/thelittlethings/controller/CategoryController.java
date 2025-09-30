@@ -46,14 +46,14 @@ public class CategoryController {
         return service.listByUser(userId);
     }
 
-    // Get single category (ownership check)
+    // Get single category
     @GetMapping("/{id}")
     public CategoryResponse get(@PathVariable Long userId,
                                 @PathVariable Long id) {
         return service.getOwned(id, userId);
     }
 
-    // Update
+    // Update 
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> update(@PathVariable Long userId,
                                                    @Valid @PathVariable Long id,
@@ -61,13 +61,15 @@ public class CategoryController {
         return ResponseEntity.ok(service.update(id, userId, req));
     }
 
-    // Delete
+    // Delete a category 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long userId, @PathVariable Long id) {
         service.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
     
+    // Get neglected categories (no wins in X days, default 14)
+    // Validations also put in place for days param
     @GetMapping("/neglected")
     public List<CategoryNeglectedView> neglected(
         @PathVariable @Positive(message = "userId must be a positive number") Long userId,

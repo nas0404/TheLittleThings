@@ -24,7 +24,7 @@ public class CategoryService {
   }
 
   
-
+   ///Create a new category for a user, while validating input.
   public CategoryResponse create(Long userId, CreateCategoryRequest r) {
     if (userId == null) throw new IllegalArgumentException("userId is required");
     if (r.getName() == null || r.getName().trim().isEmpty())
@@ -49,7 +49,7 @@ public class CategoryService {
     return toResponse(saved);
   }
 
-
+  //Finds all categories that belong to a specific user.
   public List<CategoryResponse> listByUser(long userId) {
     if (!userRepo.existsById(userId))
       throw new IllegalArgumentException("user not found");
@@ -59,7 +59,7 @@ public class CategoryService {
         .map(this::toResponse)
         .toList();
   }
-
+  //Fetches a specific category owned by a user, ensuring ownership.
   public CategoryResponse getOwned(Long categoryId, Long userId) {
     Category c = categoryRepo.findById(categoryId)
         .orElseThrow(() -> new IllegalArgumentException("category not found"));
@@ -68,6 +68,7 @@ public class CategoryService {
     return toResponse(c);
   }
 
+  //Updates a category's details, ensuring the user owns the category and validating input.
   public CategoryResponse update(Long categoryId, Long userId, UpdateCategoryRequest r) {
     Category c = categoryRepo.findById(categoryId)
         .orElseThrow(() -> new IllegalArgumentException("category not found"));
@@ -77,7 +78,7 @@ public class CategoryService {
     if (r.getName() != null) {
       String newName = r.getName().trim();
       if (newName.isEmpty())
-        throw new IllegalArgumentException("name cannot be blank");
+        throw new IllegalArgumentException("name cannot be blank");   //Validate name of category either doesn't exist or isn't just whitespace.
       if (!newName.equals(c.getName())
           && categoryRepo.existsByUser_UserIdAndName(userId, newName))
         throw new IllegalArgumentException("category name already exists for this user");
@@ -89,6 +90,7 @@ public class CategoryService {
     return toResponse(categoryRepo.save(c));
   }
 
+  //Deletes a category, ensuring the user owns it.
   public void delete(Long categoryId, Long userId) {
     Category c = categoryRepo.findById(categoryId)
         .orElseThrow(() -> new IllegalArgumentException("category not found"));
@@ -97,6 +99,7 @@ public class CategoryService {
     categoryRepo.delete(c);
   }
 
+  //Helper method to convert a Category entity to a CategoryResponse DTO.
   private CategoryResponse toResponse(Category c) {
     CategoryResponse res = new CategoryResponse();
     res.setCategoryId(c.getCategoryId());
@@ -108,6 +111,7 @@ public class CategoryService {
     return res;
   }
 
+  //Retrieves categories that have been neglected (no associated wins) for a specified number of days.
   public List<CategoryNeglectedView> getNeglectedCategories(Long userId, Integer days) {
     int lookback = (days == null || days < 1) ? 14 : days;
     return categoryRepo.findNeglectedCategories(userId, lookback);

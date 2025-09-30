@@ -54,14 +54,14 @@ class CategoryServiceTest {
   }
 
   @Test
-  void create_missingName_400() {
+  void invalidate_missingName() {
     var req = new CreateCategoryRequest("   ", null);
     var ex = assertThrows(IllegalArgumentException.class, () -> service.create(1L, req));
     assertTrue(ex.getMessage().toLowerCase().contains("name is required"));
   }
 
   @Test
-  void create_userNotFound_404() {
+  void create_userNotFound() {
     var req = new CreateCategoryRequest("X", null);
     when(userRepo.findById(999L)).thenReturn(Optional.empty());
 
@@ -70,7 +70,7 @@ class CategoryServiceTest {
   }
 
   @Test
-  void create_duplicate_409() {
+  void invalidate_duplicate() {
     var req = new CreateCategoryRequest("Fitness", null);
     var user = new User();
     user.setUserId(31L);
@@ -83,7 +83,7 @@ class CategoryServiceTest {
   }
 
   @Test
-  void getOwned_wrongOwner_404() {
+  void invalidate_wrongOwner() {
     var owner = new User();
     owner.setUserId(31L);
 
@@ -99,7 +99,7 @@ class CategoryServiceTest {
   }
 
   @Test
-  void update_rename_conflict_409() {
+  void rename_Conflict() {
     var owner = new User();
     owner.setUserId(31L);
 

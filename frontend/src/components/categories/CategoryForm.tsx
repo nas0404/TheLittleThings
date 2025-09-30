@@ -7,7 +7,7 @@ type Props = {
   initial?: Partial<Values>;
   submitText?: string;
   onSubmit: (values: Values) => Promise<void> | void;
-  onCancel?: () => void;              // <-- new (only show in edit mode)
+  onCancel?: () => void;              //This will show in edit mode
 };
 
 export default function CategoryForm({
@@ -45,11 +45,13 @@ export default function CategoryForm({
     return map;
   };
 
+   // Handle form submit (validation → call onSubmit → handle errors)
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     setFormErr(null);
     setFieldErrs({});
 
+     // Client-side validation to avoid unnecessary requests
     const trimmed = name.trim();
     if (!trimmed) return setFieldErrs({ name: "name is required" });
     if (trimmed.length > 100) return setFieldErrs({ name: "name must be ≤ 100 characters" });
@@ -59,11 +61,12 @@ export default function CategoryForm({
     setSubmitting(true);
     try {
       await onSubmit({ name: trimmed, description: description || null });
-      // if you want to auto-clear after successful create:
+      // auto-clear after successful create:
       if (!onCancel) {               // create mode
         setName("");
         setDescription("");
       }
+      // Handle API errors consistently (409 conflict, validation errors, others)
     } catch (err: any) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
@@ -80,7 +83,7 @@ export default function CategoryForm({
       setSubmitting(false);
     }
   };
-
+  
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>

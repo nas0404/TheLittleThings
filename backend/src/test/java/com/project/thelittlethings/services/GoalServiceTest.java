@@ -11,12 +11,11 @@ import com.project.thelittlethings.repositories.CategoryRepository;
 import com.project.thelittlethings.repositories.GoalRepository;
 import com.project.thelittlethings.repositories.UserRepository;
 import com.project.thelittlethings.repositories.WinRepository;
-import com.project.thelittlethings.services.GoalService;
-
 import org.junit.jupiter.api.*;
 import org.mockito.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -24,14 +23,11 @@ import static org.mockito.Mockito.*;
 
 class GoalServiceTest {
 
-  @Mock
-  GoalRepository goalRepo;
-  @Mock
-  UserRepository userRepo;
-  @Mock
-  CategoryRepository categoryRepo;
-  @Mock
-  WinRepository winRepo;
+  @Mock GoalRepository goalRepo;
+  @Mock UserRepository userRepo;
+  @Mock CategoryRepository categoryRepo;
+  @Mock WinRepository winRepo;
+
   GoalService service;
 
   @BeforeEach
@@ -40,15 +36,36 @@ class GoalServiceTest {
     service = new GoalService(goalRepo, userRepo, categoryRepo, winRepo);
   }
 
+  // --- helpers -----------------------------------------------------
+
+  private User CreateUserforGoal(long id) {
+    var u = new User();
+    u.setUserId(id);
+    return u;
+  }
+
+  private Category CreateCategoryForGoal(long id, User owner) {
+    var c = new Category();
+    c.setCategoryId(id);
+    c.setUser(owner);
+    return c;
+  }
+
+  private void seedUserAndCategory(long userId, long catId) {
+    var user = CreateUserforGoal(userId);
+    var cat = CreateCategoryForGoal(catId, user);
+    when(userRepo.findById(userId)).thenReturn(Optional.of(user));
+    when(categoryRepo.findById(catId)).thenReturn(Optional.of(cat));
+  }
+
+  // --- tests -------------------------------------------------------
+
   @Test
   void create_success() {
-    Long userId = 31L, catId = 4L;
+    long userId = 31L, catId = 4L;
 
-    var user = new User();
-    user.setUserId(userId);
-    var cat = new Category();
-    cat.setCategoryId(catId);
-    cat.setUser(user);
+    var user = CreateUserforGoal(userId);
+    var cat = CreateCategoryForGoal(catId, user);
 
     when(userRepo.findById(userId)).thenReturn(Optional.of(user));
     when(categoryRepo.findById(catId)).thenReturn(Optional.of(cat));
@@ -75,6 +92,9 @@ class GoalServiceTest {
 
   @Test
   void create_missingTitle_400() {
+    // Ensure we pass ownership checks and hit the title guard
+    seedUserAndCategory(31L, 4L);
+
     var ex = assertThrows(IllegalArgumentException.class,
         () -> service.createGoal(31L, 4L, new CreateGoalRequest(4L, "   ", "x", "HIGH")));
     assertTrue(ex.getMessage().toLowerCase().contains("title is required"));
@@ -82,6 +102,9 @@ class GoalServiceTest {
 
   @Test
   void create_badPriority_400() {
+    // Ensure we pass ownership checks and hit the priority guard
+    seedUserAndCategory(31L, 4L);
+
     var ex = assertThrows(IllegalArgumentException.class,
         () -> service.createGoal(31L, 4L, new CreateGoalRequest(4L, "t", "x", "WRONG")));
     assertTrue(ex.getMessage().toLowerCase().contains("priority must be"));
@@ -97,15 +120,11 @@ class GoalServiceTest {
 
   @Test
   void create_categoryWrongOwner_400() {
-    Long userId = 31L, catId = 4L;
-    var user = new User();
-    user.setUserId(userId);
+    long userId = 31L, catId = 4L;
 
-    var otherUser = new User();
-    otherUser.setUserId(99L);
-    var cat = new Category();
-    cat.setCategoryId(catId);
-    cat.setUser(otherUser);
+    var user = CreateUserforGoal(userId);
+    var other = CreateUserforGoal(99L);
+    var cat = CreateCategoryForGoal(catId, other);
 
     when(userRepo.findById(userId)).thenReturn(Optional.of(user));
     when(categoryRepo.findById(catId)).thenReturn(Optional.of(cat));
@@ -117,13 +136,11 @@ class GoalServiceTest {
 
   @Test
   void listByUser_success() {
-    when(userRepo.existsById(31L)).thenReturn(true);
+    // mustUser() uses userRepo.findById(...)
+    var user = CreateUserforGoal(31L);
+    when(userRepo.findById(31L)).thenReturn(Optional.of(user));
 
-    var user = new User();
-    user.setUserId(31L);
-    var cat = new Category();
-    cat.setCategoryId(4L);
-    cat.setUser(user);
+    var cat = CreateCategoryForGoal(4L, user);
 
     var g1 = new Goal();
     g1.setGoalId(1L);
@@ -131,6 +148,7 @@ class GoalServiceTest {
     g1.setCategory(cat);
     g1.setTitle("A");
     g1.setPriority("HIGH");
+
     var g2 = new Goal();
     g2.setGoalId(2L);
     g2.setUser(user);
@@ -143,36 +161,23 @@ class GoalServiceTest {
     var list = service.listGoalsByUser(31L);
     assertEquals(2, list.size());
     assertEquals("A", list.get(0).getTitle());
+    assertEquals("B", list.get(1).getTitle());
   }
 
   @Test
   void getOwnedGoal_wrongOwner_404() {
-    var owner = new User();
-    owner.setUserId(31L);
-    var other = new User();
-    other.setUserId(77L);
-    var cat = new Category();
-    cat.setCategoryId(4L);
-    cat.setUser(owner);
+    // mustGoalOwned() queries by goalId+userId together
+    when(goalRepo.findByGoalIdAndUser_UserId(9L, 77L)).thenReturn(Optional.empty());
 
-    var goal = new Goal();
-    goal.setGoalId(9L);
-    goal.setUser(owner);
-    goal.setCategory(cat);
-    goal.setTitle("t");
-    when(goalRepo.findById(9L)).thenReturn(Optional.of(goal));
-
-    var ex = assertThrows(IllegalArgumentException.class, () -> service.getOwnedGoal(9L, 77L));
+    var ex = assertThrows(IllegalArgumentException.class,
+        () -> service.getOwnedGoal(9L, 77L));
     assertTrue(ex.getMessage().toLowerCase().contains("not found"));
   }
 
   @Test
   void update_priorityValidation_400() {
-    var user = new User();
-    user.setUserId(31L);
-    var cat = new Category();
-    cat.setCategoryId(4L);
-    cat.setUser(user);
+    var user = CreateUserforGoal(31L);
+    var cat = CreateCategoryForGoal(4L, user);
 
     var goal = new Goal();
     goal.setGoalId(5L);
@@ -190,11 +195,9 @@ class GoalServiceTest {
 
   @Test
   void delete_success() {
-    var user = new User();
-    user.setUserId(31L);
-    var cat = new Category();
-    cat.setCategoryId(4L);
-    cat.setUser(user);
+    var user = CreateUserforGoal(31L);
+    var cat = CreateCategoryForGoal(4L, user);
+
     var goal = new Goal();
     goal.setGoalId(7L);
     goal.setUser(user);
