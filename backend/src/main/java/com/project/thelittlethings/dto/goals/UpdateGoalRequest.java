@@ -1,12 +1,27 @@
 package com.project.thelittlethings.dto.goals;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import jakarta.validation.constraints.*;
+
 @Data @NoArgsConstructor @AllArgsConstructor
 public class UpdateGoalRequest {
-  private String title;           // optional
-  private String description;     // optional
-  private String priority;        // optional
-  private Long categoryId;        // optional (move goal)
+
+  // Optional fields; if provided, must pass constraints.
+  @Size(max = 255, message = "title must be ≤ 255 characters")
+  private String title;          
+
+  @Size(max = 1000, message = "description must be ≤ 1000 characters")
+  private String description;     
+
+  @Pattern(regexp = "^(?i)(HIGH|MEDIUM|LOW)$",
+           message = "priority must be HIGH, MEDIUM, or LOW")
+  private String priority;        
+
+  @Positive(message = "categoryId must be a positive number")
+  private Long categoryId;        
 }
+
