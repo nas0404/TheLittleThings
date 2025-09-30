@@ -30,6 +30,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
+      console.log('Loading wins');
 
       const response = await fetch('http://localhost:8080/api/journals/wins', {
         headers: {
@@ -82,7 +83,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        setError('Please log in to create a journal entry');
+        setError('Please log in');
         return;
       }
 
@@ -172,7 +173,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
           ))}
         </select>
         <div className="mt-1 text-xs text-gray-500">
-          Connect this journal entry to one of your achievements
+          Link this journal entry to one of your wins
         </div>
       </div>
 

@@ -5,7 +5,7 @@ import com.project.thelittlethings.entities.User;
 import com.project.thelittlethings.dto.users.CreateUserRequest;
 import com.project.thelittlethings.dto.users.LoginRequest;
 import com.project.thelittlethings.repositories.UserRepository;
-import com.project.thelittlethings.security.TokenUtil;
+import com.project.thelittlethings.security.HMACtokens;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -23,7 +23,6 @@ public class UserService {
 		this.userRepository = userRepository;
 	}
 
-	// naive hashing for demo only
 	private String hash(String s) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -36,9 +35,6 @@ public class UserService {
 
 	@Transactional
 	public synchronized User register(CreateUserRequest req) {
-		if (req.getUsername() == null || req.getUsername().length() < 3) throw new IllegalArgumentException("Username too short, must be atelast 3 characters");
-		if (req.getEmail() == null || !req.getEmail().contains("@")) throw new IllegalArgumentException("Invalid email");
-		if (req.getPassword() == null || req.getPassword().length() < 8) throw new IllegalArgumentException("Password too short");
 		if (userRepository.existsByUsername(req.getUsername()) || userRepository.existsByEmail(req.getEmail())) throw new IllegalArgumentException("User already exists");
 
 		User u = new User();
@@ -86,7 +82,7 @@ public class UserService {
 		user.setLastLogin(java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC));
 		userRepository.save(user);
 
-		return TokenUtil.issueToken(user.getUsername(), 60 * 60 * 24);
+		return HMACtokens.issueToken(user.getUsername(), 60 * 60 * 24);
 	}
 
 	public User findByUsername(String username) {
@@ -102,7 +98,6 @@ public class UserService {
 	public void changePassword(Long userId, String oldPassword, String newPassword) {
 		User u = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
 		if (!u.getPassword().equals(hash(oldPassword))) throw new IllegalArgumentException("Invalid current password");
-		if (newPassword.length() < 8) throw new IllegalArgumentException("New password too short");
 		u.setPassword(hash(newPassword));
 		userRepository.save(u);
 	}
@@ -114,12 +109,11 @@ public class UserService {
 	}
 
 	public String changeUsername(Long userId, String newUsername) {
-		if (newUsername == null || newUsername.length() < 3) throw new IllegalArgumentException("Invalid username");
 		if (userRepository.existsByUsername(newUsername)) throw new IllegalArgumentException("Username already taken");
 		User u = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
 		u.setUsername(newUsername);
 		userRepository.save(u);
-		return TokenUtil.issueToken(u.getUsername(), 60 * 60 * 24);
+		return HMACtokens.issueToken(u.getUsername(), 60 * 60 * 24);
 	}
 
 	public boolean deleteUser(Long userId) {

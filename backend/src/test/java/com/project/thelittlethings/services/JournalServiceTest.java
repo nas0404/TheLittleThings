@@ -66,40 +66,40 @@
 //         testUserId = user.getUserId();
 //     }
 
-//     @Test
-//     void testCreateJournal_Success() {
-//         // Arrange
-//         CreateJournalRequest request = new CreateJournalRequest();
-//         request.setTitle("Test Entry");
-//         request.setContent("This is test content for the journal entry.");
-//         request.setReminderType(Journal.ReminderType.NONE);
-
-//         // Act
-//         JournalResponse response = journalService.createJournal(testUserId, request);
-
-//         // Assert
-//         assertNotNull(response);
-//         assertNotNull(response.getJournalId());
-//         assertEquals("Test Entry", response.getTitle());
-//         assertEquals("This is test content for the journal entry.", response.getContent());
-//         assertEquals(Journal.ReminderType.NONE, response.getReminderType());
-//     }
-
-//     @Test
-//     void testGetAllJournals_Success() {
-//         // Arrange - Create multiple journal entries
-//         CreateJournalRequest request1 = new CreateJournalRequest();
-//         request1.setTitle("First Entry");
-//         request1.setContent("First content");
-//         request1.setReminderType(Journal.ReminderType.DAILY);
+    @Test
+    void testCreateJournal_Success() {
+        // Arrange
+        CreateJournalRequest request = new CreateJournalRequest();
+        request.setTitle("Test Entry");
+        request.setContent("This is test content for the journal entry.");
         
-//         CreateJournalRequest request2 = new CreateJournalRequest();
-//         request2.setTitle("Second Entry");
-//         request2.setContent("Second content");
-//         request2.setReminderType(Journal.ReminderType.WEEKLY);
 
-//         journalService.createJournal(testUserId, request1);
-//         journalService.createJournal(testUserId, request2);
+        // Act
+        JournalResponse response = journalService.createJournal(testUserId, request);
+
+        // Assert
+        assertNotNull(response);
+        assertNotNull(response.getJournalId());
+        assertEquals("Test Entry", response.getTitle());
+        assertEquals("This is test content for the journal entry.", response.getContent());
+        
+    }
+
+    @Test
+    void testGetAllJournals_Success() {
+        // Arrange - Create multiple journal entries
+        CreateJournalRequest request1 = new CreateJournalRequest();
+        request1.setTitle("First Entry");
+        request1.setContent("First content");
+        
+        
+        CreateJournalRequest request2 = new CreateJournalRequest();
+        request2.setTitle("Second Entry");
+        request2.setContent("Second content");
+        
+
+        journalService.createJournal(testUserId, request1);
+        journalService.createJournal(testUserId, request2);
 
 //         // Act
 //         List<JournalResponse> journals = journalService.getAllJournals(testUserId, "date");
@@ -113,21 +113,21 @@
 //         assertTrue(journals.stream().anyMatch(j -> "Second Entry".equals(j.getTitle())));
 //     }
 
-//     @Test
-//     void testGetAllJournals_SortByTitle() {
-//         // Arrange - Create entries that will have different alphabetical vs date order
-//         CreateJournalRequest request1 = new CreateJournalRequest();
-//         request1.setTitle("Beta Entry");
-//         request1.setContent("Beta content");
-//         request1.setReminderType(Journal.ReminderType.NONE);
+    @Test
+    void testGetAllJournals_SortByTitle() {
+        // Arrange - Create entries that will have different alphabetical vs date order
+        CreateJournalRequest request1 = new CreateJournalRequest();
+        request1.setTitle("Beta Entry");
+        request1.setContent("Beta content");
         
-//         CreateJournalRequest request2 = new CreateJournalRequest();
-//         request2.setTitle("Alpha Entry");
-//         request2.setContent("Alpha content");
-//         request2.setReminderType(Journal.ReminderType.NONE);
+        
+        CreateJournalRequest request2 = new CreateJournalRequest();
+        request2.setTitle("Alpha Entry");
+        request2.setContent("Alpha content");
+        
 
-//         journalService.createJournal(testUserId, request1);
-//         journalService.createJournal(testUserId, request2);
+        journalService.createJournal(testUserId, request1);
+        journalService.createJournal(testUserId, request2);
 
 //         // Act
 //         List<JournalResponse> journals = journalService.getAllJournals(testUserId, "title");
@@ -141,26 +141,26 @@
 //         assertEquals("Beta Entry", journals.get(1).getTitle());
 //     }
 
-//     @Test
-//     void testGetJournal_Success() {
-//         // Arrange
-//         CreateJournalRequest request = new CreateJournalRequest();
-//         request.setTitle("Get Test Entry");
-//         request.setContent("Content for get test");
-//         request.setReminderType(Journal.ReminderType.ON_WIN_CREATED);
+    @Test
+    void testGetJournal_Success() {
+        // Arrange
+        CreateJournalRequest request = new CreateJournalRequest();
+        request.setTitle("Get Test Entry");
+        request.setContent("Content for get test");
+        
         
 //         JournalResponse created = journalService.createJournal(testUserId, request);
 
 //         // Act
 //         JournalResponse retrieved = journalService.getJournal(created.getJournalId(), testUserId);
 
-//         // Assert
-//         assertNotNull(retrieved);
-//         assertEquals(created.getJournalId(), retrieved.getJournalId());
-//         assertEquals("Get Test Entry", retrieved.getTitle());
-//         assertEquals("Content for get test", retrieved.getContent());
-//         assertEquals(Journal.ReminderType.ON_WIN_CREATED, retrieved.getReminderType());
-//     }
+        // Assert
+        assertNotNull(retrieved);
+        assertEquals(created.getJournalId(), retrieved.getJournalId());
+        assertEquals("Get Test Entry", retrieved.getTitle());
+        assertEquals("Content for get test", retrieved.getContent());
+        
+    }
 
 //     @Test
 //     void testGetJournal_NotFound() {
@@ -170,39 +170,39 @@
 //         });
 //     }
 
-//     @Test
-//     void testUpdateJournal_Success() {
-//         // Arrange
-//         CreateJournalRequest createRequest = new CreateJournalRequest();
-//         createRequest.setTitle("Original Title");
-//         createRequest.setContent("Original content");
-//         createRequest.setReminderType(Journal.ReminderType.NONE);
+    @Test
+    void testUpdateJournal_Success() {
+        // Arrange
+        CreateJournalRequest createRequest = new CreateJournalRequest();
+        createRequest.setTitle("Original Title");
+        createRequest.setContent("Original content");
         
-//         JournalResponse created = journalService.createJournal(testUserId, createRequest);
+        
+        JournalResponse created = journalService.createJournal(testUserId, createRequest);
 
-//         UpdateJournalRequest updateRequest = new UpdateJournalRequest();
-//         updateRequest.setTitle("Updated Title");
-//         updateRequest.setContent("Updated content");
-//         updateRequest.setReminderType(Journal.ReminderType.DAILY);
+        UpdateJournalRequest updateRequest = new UpdateJournalRequest();
+        updateRequest.setTitle("Updated Title");
+        updateRequest.setContent("Updated content");
+        
 
-//         // Act
-//         JournalResponse updated = journalService.updateJournal(created.getJournalId(), testUserId, updateRequest);
+        // Act
+        JournalResponse updated = journalService.updateJournal(created.getJournalId(), testUserId, updateRequest);
 
-//         // Assert
-//         assertNotNull(updated);
-//         assertEquals(created.getJournalId(), updated.getJournalId());
-//         assertEquals("Updated Title", updated.getTitle());
-//         assertEquals("Updated content", updated.getContent());
-//         assertEquals(Journal.ReminderType.DAILY, updated.getReminderType());
-//     }
+        // Assert
+        assertNotNull(updated);
+        assertEquals(created.getJournalId(), updated.getJournalId());
+        assertEquals("Updated Title", updated.getTitle());
+        assertEquals("Updated content", updated.getContent());
+        
+    }
 
-//     @Test
-//     void testDeleteJournal_Success() {
-//         // Arrange
-//         CreateJournalRequest request = new CreateJournalRequest();
-//         request.setTitle("Delete Test Entry");
-//         request.setContent("Content to be deleted");
-//         request.setReminderType(Journal.ReminderType.NONE);
+    @Test
+    void testDeleteJournal_Success() {
+        // Arrange
+        CreateJournalRequest request = new CreateJournalRequest();
+        request.setTitle("Delete Test Entry");
+        request.setContent("Content to be deleted");
+        
         
 //         JournalResponse created = journalService.createJournal(testUserId, request);
 
