@@ -1,5 +1,4 @@
 // src/components/categories/CategoryCard.tsx
-import React from "react";
 import type { Category } from "../../api/CategoryApi";
 
 type Props = {

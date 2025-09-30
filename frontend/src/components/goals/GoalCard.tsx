@@ -1,5 +1,3 @@
-import React from "react";
-
 type Priority = "HIGH" | "MEDIUM" | "LOW";
 
 type GoalLite = {
