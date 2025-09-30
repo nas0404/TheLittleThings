@@ -45,7 +45,7 @@ public class GoalController {
   @GetMapping
   public List<GoalResponse> list(@PathVariable @Positive(message = "userId must be positive") Long userId,
                                  @RequestParam(required = false)
-                                 @Positive(message = "categoryId must be a positive number")
+                                 @Positive(message = "category must be valid")
                                  Long categoryId) {
     return (categoryId == null)
         ? service.listGoalsByUser(userId)
@@ -56,7 +56,7 @@ public class GoalController {
   @GetMapping("/grouped")
   public Map<String, List<GoalResponse>> listGrouped(@PathVariable @Positive(message = "userId must be positive") Long userId,
                                                      @RequestParam(required = false)
-                                                     @Positive(message = "categoryId must be a positive number")
+                                                     @Positive(message = "category must be valid")
                                                      Long categoryId,
                                                      @RequestParam(required = false)
                                                      @Pattern(regexp = "^(?i)(HIGH|MEDIUM|LOW)$",
