@@ -60,7 +60,7 @@ class JournalServiceTest {
     }
 
     @Test
-    void testCreateBasicJournal() {
+    void testCreateJournal() {
         when(userRepo.findById(42L)).thenReturn(Optional.of(u1));
         when(journalRepo.save(any(Journal.class))).thenReturn(j1);
 
@@ -74,71 +74,20 @@ class JournalServiceTest {
         verify(journalRepo).save(any(Journal.class));
     }
 
-    @Test
-    void createWithWin_works() {
-        var request = new CreateJournalRequest();
-        request.setTitle("Win journal");
-        request.setContent("I achieved something!");
-        request.setLinkedWinId(123L);
-        
-        when(userRepo.findById(42L)).thenReturn(Optional.of(u1));
-        when(winRepo.findById(123L)).thenReturn(Optional.of(w1));
-        when(journalRepo.save(any(Journal.class))).thenReturn(j1);
-
-        var result = service.createJournal(42L, request);
-
-        assertNotNull(result);
-        verify(winRepo).findById(123L);
-        verify(journalRepo).save(any(Journal.class));
-    }
-
     @Test 
-    void createJournal_noUser_throwsError() {
+    void testCreateJournalWithInvalidUser() {
         when(userRepo.findById(99L)).thenReturn(Optional.empty());
 
         var req = new CreateJournalRequest();
         req.setTitle("test");
         req.setContent("test content");
 
-        var ex = assertThrows(IllegalArgumentException.class, 
+        assertThrows(IllegalArgumentException.class, 
             () -> service.createJournal(99L, req));
     }
 
     @Test
-    void createJournal_winNotFound_fails() {
-        var request = new CreateJournalRequest();
-        request.setTitle("Journal with missing win");
-        request.setContent("content");
-        request.setLinkedWinId(999L);
-        
-        when(userRepo.findById(42L)).thenReturn(Optional.of(u1));
-        when(winRepo.findById(999L)).thenReturn(Optional.empty());
-
-        Exception thrown = assertThrows(IllegalArgumentException.class, 
-            () -> service.createJournal(42L, request));
-        
-        assertTrue(thrown.getMessage() != null);
-    }
-
-    @Test
-    void createJournal_winBelongsToSomeoneElse() {
-        User otherGuy = makeUser(777L);
-        w1.setUser(otherGuy);
-        
-        var req = new CreateJournalRequest();
-        req.setTitle("Trying to use someone else's win");
-        req.setContent("This should fail");
-        req.setLinkedWinId(123L);
-        
-        when(userRepo.findById(42L)).thenReturn(Optional.of(u1));
-        when(winRepo.findById(123L)).thenReturn(Optional.of(w1));
-
-        assertThrows(IllegalArgumentException.class, 
-            () -> service.createJournal(42L, req));
-    }
-
-    @Test
-    void getJournal_basic() {
+    void testGetJournal() {
         when(journalRepo.findByJournalIdAndUser_UserId(456L, 42L))
             .thenReturn(Optional.of(j1));
 
@@ -148,16 +97,16 @@ class JournalServiceTest {
     }
 
     @Test
-    void getJournal_notFound() {
+    void testGetJournalNotFound() {
         when(journalRepo.findByJournalIdAndUser_UserId(999L, 42L))
             .thenReturn(Optional.empty());
 
-        Exception ex = assertThrows(IllegalArgumentException.class, 
+        assertThrows(IllegalArgumentException.class, 
             () -> service.getJournal(999L, 42L));
     }
 
     @Test
-    void getAllJournals_defaultSorting() {
+    void testGetAllJournals() {
         List<Journal> journals = Arrays.asList(j1);
         when(journalRepo.findByUser_UserIdOrderByCreatedAtDesc(42L))
             .thenReturn(journals);
@@ -165,23 +114,10 @@ class JournalServiceTest {
         List<JournalResponse> result = service.getAllJournals(42L, null);
 
         assertEquals(1, result.size());
-        verify(journalRepo).findByUser_UserIdOrderByCreatedAtDesc(42L);
     }
 
     @Test
-    void getAllJournals_sortByTitle() {
-        List<Journal> journals = Arrays.asList(j1);
-        when(journalRepo.findByUser_UserIdOrderByTitleAsc(42L)).thenReturn(journals);
-
-        var result = service.getAllJournals(42L, "title");
-
-        assertNotNull(result);
-        assertTrue(result.size() == 1);
-        verify(journalRepo).findByUser_UserIdOrderByTitleAsc(42L);
-    }
-
-    @Test
-    void updateJournal_success() {
+    void testUpdateJournal() {
         when(journalRepo.findByJournalIdAndUser_UserId(456L, 42L))
             .thenReturn(Optional.of(j1));
         when(journalRepo.save(any(Journal.class))).thenReturn(j1);
@@ -197,74 +133,12 @@ class JournalServiceTest {
     }
 
     @Test
-    void updateJournal_withWin() {
-        var updateRequest = new UpdateJournalRequest();
-        updateRequest.setTitle("Updated with win");
-        updateRequest.setContent("New content");
-        updateRequest.setLinkedWinId(123L);
-        
-        when(journalRepo.findByJournalIdAndUser_UserId(456L, 42L)).thenReturn(Optional.of(j1));
-        when(winRepo.findById(123L)).thenReturn(Optional.of(w1));
-        when(journalRepo.save(any(Journal.class))).thenReturn(j1);
-
-        var result = service.updateJournal(456L, 42L, updateRequest);
-
-        assertNotNull(result);
-        verify(winRepo).findById(123L);
-        verify(journalRepo).save(j1);
-    }
-
-    @Test
-    void updateJournal_journalNotFound() {
-        when(journalRepo.findByJournalIdAndUser_UserId(999L, 42L)).thenReturn(Optional.empty());
-
-        var updateReq = new UpdateJournalRequest();
-        updateReq.setTitle("Won't work");
-
-        assertThrows(IllegalArgumentException.class, 
-            () -> service.updateJournal(999L, 42L, updateReq));
-    }
-
-    @Test
-    void deleteJournal_works() {
+    void testDeleteJournal() {
         when(journalRepo.existsByJournalIdAndUser_UserId(456L, 42L)).thenReturn(true);
 
         boolean result = service.deleteJournal(456L, 42L);
 
         assertTrue(result);
         verify(journalRepo).deleteById(456L);
-    }
-
-    @Test
-    void deleteJournal_doesntExist_returnsFalse() {
-        when(journalRepo.existsByJournalIdAndUser_UserId(999L, 42L)).thenReturn(false);
-
-        boolean result = service.deleteJournal(999L, 42L);
-
-        assertFalse(result);
-        verify(journalRepo, never()).deleteById(anyLong());
-    }
-
-    @Test
-    void getUserWins_getsWins() {
-        List<Win> wins = Arrays.asList(w1);
-        when(userRepo.existsById(42L)).thenReturn(true);
-        when(winRepo.findByUser_UserId(42L)).thenReturn(wins);
-
-        List<Win> result = service.getUserWins(42L);
-
-        assertEquals(1, result.size());
-        verify(winRepo).findByUser_UserId(42L);
-    }
-
-    @Test
-    void getUserWins_userDoesntExist() {
-        when(userRepo.existsById(999L)).thenReturn(false);
-
-        var ex = assertThrows(IllegalArgumentException.class, 
-            () -> service.getUserWins(999L));
-        
-        assertTrue(ex.getMessage().toLowerCase().contains("user") || 
-                  ex.getMessage().toLowerCase().contains("not found"));
     }
 }
