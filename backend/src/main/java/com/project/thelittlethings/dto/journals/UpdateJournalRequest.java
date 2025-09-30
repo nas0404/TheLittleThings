@@ -8,10 +8,10 @@ public class UpdateJournalRequest {
 
     private String content;
 
-    // Optional linked win ID - can be set to null to unlink
+    
     private Long linkedWinId;
 
-    // Constructors
+   
     public UpdateJournalRequest() {}
 
     public UpdateJournalRequest(String title, String content, Long linkedWinId) {
@@ -20,7 +20,7 @@ public class UpdateJournalRequest {
         this.linkedWinId = linkedWinId;
     }
 
-    // Getters and setters
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 

@@ -11,10 +11,9 @@ public class CreateJournalRequest {
     @NotBlank(message = "Content is required")
     private String content;
 
-    // Optional linked win ID
     private Long linkedWinId;
 
-    // Constructors
+    
     public CreateJournalRequest() {}
 
     public CreateJournalRequest(String title, String content, Long linkedWinId) {
@@ -23,7 +22,7 @@ public class CreateJournalRequest {
         this.linkedWinId = linkedWinId;
     }
 
-    // Getters and setters
+    
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
