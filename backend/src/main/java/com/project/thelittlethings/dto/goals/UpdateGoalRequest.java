@@ -21,7 +21,7 @@ public class UpdateGoalRequest {
            message = "priority must be HIGH, MEDIUM, or LOW")
   private String priority;        
 
-  @Positive(message = "categoryId must be a positive number")
+  @Positive(message = "category must be valid")
   private Long categoryId;        
 }
 

@@ -20,7 +20,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users/{userId}/goals")
-@Validated // <- enables validation on method params (@RequestParam/@PathVariable)
+@Validated // enables validation on method params (@RequestParam/@PathVariable)
 public class GoalController {
 
   private final GoalService service;
@@ -29,7 +29,7 @@ public class GoalController {
     this.service = service;
   }
 
-  /** Create a goal; categoryId comes from the request body. */
+  //Create a goal and categoryId comes from the request body.
   @PostMapping
   public ResponseEntity<GoalResponse> create(@PathVariable @Positive(message = "userId must be positive") Long userId,
                                              @Valid @RequestBody CreateGoalRequest req,
@@ -41,22 +41,22 @@ public class GoalController {
     return ResponseEntity.created(location).body(created);
   }
 
-  /** List all goals for a user, or filter by categoryId. */
+  // List all goals for a user, or filter by categoryId. 
   @GetMapping
   public List<GoalResponse> list(@PathVariable @Positive(message = "userId must be positive") Long userId,
                                  @RequestParam(required = false)
-                                 @Positive(message = "categoryId must be a positive number")
+                                 @Positive(message = "category must be valid")
                                  Long categoryId) {
     return (categoryId == null)
         ? service.listGoalsByUser(userId)
         : service.listGoalsByUserAndCategory(userId, categoryId);
   }
 
-  /** Grouped listing by priority (HIGH/MEDIUM/LOW). Optional categoryId & priority filter. */
+  // Grouped listing by priority (HIGH/MEDIUM/LOW). Optional categoryId & priority filter.
   @GetMapping("/grouped")
   public Map<String, List<GoalResponse>> listGrouped(@PathVariable @Positive(message = "userId must be positive") Long userId,
                                                      @RequestParam(required = false)
-                                                     @Positive(message = "categoryId must be a positive number")
+                                                     @Positive(message = "category must be valid")
                                                      Long categoryId,
                                                      @RequestParam(required = false)
                                                      @Pattern(regexp = "^(?i)(HIGH|MEDIUM|LOW)$",
@@ -65,14 +65,14 @@ public class GoalController {
     return service.listGrouped(userId, categoryId, priority);
   }
 
-  /** Get a single goal (ownership checked). */
+  // Get a single goal
   @GetMapping("/{goalId}")
   public GoalResponse getOne(@PathVariable @Positive(message = "userId must be positive") Long userId,
                              @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
     return service.getOwnedGoal(goalId, userId);
   }
 
-  /** Update a goal (partial); can also move category. */
+  // Update a goal (fully or partially); can also move category.
   @PutMapping("/{goalId}")
   public ResponseEntity<GoalResponse> update(@PathVariable @Positive(message = "userId must be positive") Long userId,
                                              @PathVariable @Positive(message = "goalId must be positive") Long goalId,
@@ -80,7 +80,7 @@ public class GoalController {
     return ResponseEntity.ok(service.updateGoal(goalId, userId, req));
   }
 
-  /** Delete a goal. */
+  //Delete a goal. 
   @DeleteMapping("/{goalId}")
   public ResponseEntity<Void> delete(@PathVariable @Positive(message = "userId must be positive") Long userId,
                                      @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
@@ -88,6 +88,7 @@ public class GoalController {
     return ResponseEntity.noContent().build();
   }
 
+  // Mark a goal as complete, creating a Win.
   @PostMapping("/{id}/complete")
   public ResponseEntity<String> completeGoal(@PathVariable Long id) {
     service.completeGoal(id);
