@@ -8,7 +8,7 @@ import lombok.*;
 public class CreateGoalRequest {
 
   @NotNull(message = "categoryId is required")
-  @Positive(message = "categoryId must be a positive number")
+  @Positive(message = "category must be valid")
   private Long categoryId;
 
   @NotBlank(message = "title is required")

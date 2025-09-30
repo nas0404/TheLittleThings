@@ -1,5 +1,6 @@
 type Priority = "HIGH" | "MEDIUM" | "LOW";
 
+// Minimal goal info to show in the card
 type GoalLite = {
   goalId: number;
   title: string;
@@ -7,6 +8,7 @@ type GoalLite = {
   priority: Priority;
 };
 
+// Tailwind classes for each priority level
 const priClasses: Record<Priority, string> = {
   HIGH: "bg-red-100 text-red-700",
   MEDIUM: "bg-amber-100 text-amber-700",
@@ -19,6 +21,11 @@ type Props = {
   onRequestDelete: () => void;
 };
 
+/**
+ GoalCard component
+ Displays goal title, description, priority, and id
+ Provides Edit and Delete buttons
+ */
 export default function GoalCard({ goal, onEdit, onRequestDelete }: Props) {
   return (
     <div className="border rounded-xl p-4">

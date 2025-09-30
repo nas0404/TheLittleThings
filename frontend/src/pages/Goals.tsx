@@ -4,105 +4,18 @@ import ConfirmDialog from "../components/ui/ConfirmDialog";
 import GoalCard from "../components/goals/GoalCard";
 import EditGoalModal, { type UpdateGoalRequest } from "../components/goals/EditGoalModal";
 import { mapServerErrors } from "../lib/mapServerErrors";
-/* ---------- Types (same shapes you had) ---------- */
-type Priority = "HIGH" | "MEDIUM" | "LOW";
 
-export interface Category {
-  categoryId: number;
-  userId: number;
-  name: string;
-  description?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-export interface Goal {
-  goalId: number;
-  userId: number;
-  categoryId: number;
-  title: string;
-  description: string | null;
-  priority: Priority;
-  createdAt: string;
-  updatedAt: string;
-}
-export interface CreateGoalRequest {
-  categoryId?: number;
-  title?: string;
-  description?: string | null;
-  priority?: Priority;
-}
+// Use  existing API wrappers
+import { GoalsAPI, type GoalResponse, type Priority, type CreateGoalRequest } from "../api/GoalApi";
+import { CategoriesAPI, type Category as UICategory } from "../api/CategoryApi"; // UI model has `id`
 
-/* ---------- API helpers (unchanged) ---------- */
-const baseUrl = "/api";
-
-async function parseJsonSafe(res: Response) {
-  try { return await res.json(); } catch { return null; }
-}
-
-const CategoriesAPI = {
-  async list(userId: number): Promise<Category[]> {
-    const res = await fetch(`${baseUrl}/users/${userId}/categories`);
-    if (!res.ok) throw new Error("failed to load categories");
-    return res.json();
-  },
-};
-
-const GoalsAPI = {
-  async list(userId: number, opts?: { categoryId?: number }): Promise<Goal[]> {
-    const u = new URL(`${baseUrl}/users/${userId}/goals`, window.location.href);
-    if (opts?.categoryId != null) u.searchParams.set("categoryId", String(opts.categoryId));
-    const res = await fetch(u.toString());
-    if (!res.ok) throw new Error("failed to load goals");
-    return res.json();
-  },
-  async create(userId: number, body: CreateGoalRequest): Promise<Goal> {
-    const res = await fetch(`${baseUrl}/users/${userId}/goals`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const details = await parseJsonSafe(res);
-      const err = new Error(details?.message || "Create failed") as any;
-      err.status = res.status;
-      err.details = details;
-      throw err;
-    }
-    return res.json();
-  },
-  async update(userId: number, goalId: number, body: UpdateGoalRequest): Promise<Goal> {
-    const res = await fetch(`${baseUrl}/users/${userId}/goals/${goalId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const details = await parseJsonSafe(res);
-      const err = new Error(details?.message || "Update failed") as any;
-      err.status = res.status;
-      err.details = details;
-      throw err;
-    }
-    return res.json();
-  },
-  async remove(userId: number, goalId: number): Promise<void> {
-    const res = await fetch(`${baseUrl}/users/${userId}/goals/${goalId}`, { method: "DELETE" });
-    if (!res.ok) {
-      const details = await parseJsonSafe(res);
-      const err = new Error(details?.message || "Delete failed") as any;
-      err.status = res.status;
-      err.details = details;
-      throw err;
-    }
-  },
-};
-
-/* ---------- Page ---------- */
 export default function GoalsPage() {
-  const userId = Number(localStorage.getItem("devUserId") ?? 35);
+  // just for display in the header; APIs already infer this internally
+  const devUserId = localStorage.getItem("devUserId") ?? "—";
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
+  // data
+  const [categories, setCategories] = useState<UICategory[]>([]);
+  const [goals, setGoals] = useState<GoalResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -114,14 +27,12 @@ export default function GoalsPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newPriority, setNewPriority] = useState<Priority>("MEDIUM");
-  const [createErrors, setCreateErrors] = useState<{ [k: string]: string }>({});
+  const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
   const [creating, setCreating] = useState(false);
 
-  // edit modal
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-
-  // in-app delete confirm
-  const [toDelete, setToDelete] = useState<Goal | null>(null);
+  // edit / delete
+  const [editingGoal, setEditingGoal] = useState<GoalResponse | null>(null);
+  const [toDelete, setToDelete] = useState<GoalResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const selectedFilterCategoryId = useMemo(
@@ -130,11 +41,12 @@ export default function GoalsPage() {
   );
 
   async function refreshAll() {
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
     try {
       const [cats, goalsList] = await Promise.all([
-        CategoriesAPI.list(userId),
-        GoalsAPI.list(userId, { categoryId: selectedFilterCategoryId }),
+        CategoriesAPI.list(),                            // returns UI categories with `id`
+        GoalsAPI.list({ categoryId: selectedFilterCategoryId }), // filtered goals
       ]);
       setCategories(cats);
       setGoals(goalsList);
@@ -145,7 +57,9 @@ export default function GoalsPage() {
     }
   }
 
-  useEffect(() => { refreshAll(); /* eslint-disable-next-line */ }, [userId, selectedFilterCategoryId]);
+  useEffect(() => {
+    refreshAll();
+  }, [selectedFilterCategoryId]);
 
   // CREATE
   async function handleCreateGoal(e: React.FormEvent) {
@@ -153,15 +67,15 @@ export default function GoalsPage() {
     setCreating(true);
     setCreateErrors({});
 
-    const payload: CreateGoalRequest = {
-      priority: newPriority,
-      title: newTitle,
+    const payload: Required<CreateGoalRequest> = {
+      categoryId: Number(newCategoryIdStr),      // required by backend
+      title: newTitle.trim(),
       description: newDescription ? newDescription : null,
+      priority: newPriority,
     };
-    if (newCategoryIdStr) payload.categoryId = Number(newCategoryIdStr);
 
     try {
-      await GoalsAPI.create(userId, payload);
+      await GoalsAPI.create(payload);
       setNewCategoryIdStr(""); setNewTitle(""); setNewDescription(""); setNewPriority("MEDIUM");
       await refreshAll();
     } catch (e: any) {
@@ -174,17 +88,17 @@ export default function GoalsPage() {
 
   // UPDATE (called by modal)
   async function handleUpdateGoal(goalId: number, body: UpdateGoalRequest) {
-    await GoalsAPI.update(userId, goalId, body);
+    await GoalsAPI.update(goalId, body);
     await refreshAll();
   }
 
   // DELETE (in-app confirm)
-  function requestDelete(goal: Goal) { setToDelete(goal); }
+  function requestDelete(goal: GoalResponse) { setToDelete(goal); }
   async function confirmDelete() {
     if (!toDelete) return;
     setDeleting(true);
     try {
-      await GoalsAPI.remove(userId, toDelete.goalId);
+      await GoalsAPI.remove(toDelete.goalId);
       setToDelete(null);
       await refreshAll();
     } catch (e: any) {
@@ -200,7 +114,7 @@ export default function GoalsPage() {
       <div className="rounded-2xl border border-slate-200 p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-semibold">Goals</h2>
-          <span className="text-xs text-slate-500">dev user: {userId}</span>
+          <span className="text-xs text-slate-500">dev user: {devUserId}</span>
         </div>
 
         <div className="mb-4">
@@ -212,7 +126,7 @@ export default function GoalsPage() {
           >
             <option value="">All</option>
             {categories.map((c) => (
-              <option key={c.categoryId} value={String(c.categoryId)}>
+              <option key={c.id} value={String(c.id)}>
                 {c.name}
               </option>
             ))}
@@ -229,12 +143,17 @@ export default function GoalsPage() {
         <div className="space-y-3">
           {goals.map((g) => (
             <GoalCard
-              key={g.goalId}
-              goal={g}
-              onRequestDelete={() => requestDelete(g)}
-              onEdit={() => setEditingGoal(g)}
+                key={g.goalId}
+                goal={{
+                goalId: g.goalId,
+                title: g.title,
+                description: g.description ?? null,
+                priority: g.priority,
+                }}
+                onRequestDelete={() => requestDelete(g)}
+                onEdit={() => setEditingGoal(g)}
             />
-          ))}
+            ))}
         </div>
       </div>
 
@@ -254,7 +173,7 @@ export default function GoalsPage() {
             >
               <option value="" disabled>Select…</option>
               {categories.map((c) => (
-                <option key={c.categoryId} value={String(c.categoryId)}>
+                <option key={c.id} value={String(c.id)}>
                   {c.name}
                 </option>
               ))}
@@ -316,10 +235,17 @@ export default function GoalsPage() {
       {/* Edit modal */}
       {editingGoal && (
         <EditGoalModal
-          goal={editingGoal}
-          categories={categories}
+          goal={{
+            goalId: editingGoal.goalId,
+            title: editingGoal.title,
+            description: editingGoal.description ?? null,
+            priority: editingGoal.priority,
+            categoryId: editingGoal.categoryId,
+          }}
+          // Map UI categories (`id`) to the modal’s expected shape (`categoryId`)
+          categories={categories.map(c => ({ categoryId: c.id, name: c.name }))}
           onClose={() => setEditingGoal(null)}
-          onSave={async (payload: any) => {
+          onSave={async (payload: UpdateGoalRequest) => {
             try {
               await handleUpdateGoal(editingGoal.goalId, payload);
               setEditingGoal(null);

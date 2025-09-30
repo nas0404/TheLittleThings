@@ -30,7 +30,7 @@ public class GoalService {
   private final CategoryRepository categoryRepo;
   private final WinRepository winRepo;
 
-  // Flip to true if you want to prevent duplicate goal titles per user
+  // Flip to true  to prevent duplicate goal titles per user
   private static final boolean ENFORCE_UNIQUE_TITLES_PER_USER = false;
 
   public GoalService(GoalRepository g, UserRepository u, CategoryRepository c, WinRepository w) {
@@ -40,7 +40,7 @@ public class GoalService {
     this.winRepo = w;
   }
 
-  /* --------------------------- helpers --------------------------- */
+  //Helper functions which involve validations, conversions and fetching related entities.
 
   private static String trimOrNull(String s) {
     return s == null ? null : s.trim();
@@ -93,8 +93,7 @@ public class GoalService {
     return r;
   }
 
-  /* ----------------------------- API ----------------------------- */
-
+  //Service methods for creating, listing, updating, and deleting goals.
   public GoalResponse createGoal(Long userId, Long categoryId, CreateGoalRequest req) {
     if (userId == null) throw new IllegalArgumentException("userId is required");
     // require category & ownership
@@ -122,20 +121,21 @@ public class GoalService {
 
     Goal g = new Goal();
     g.setUser(user);
-    g.setCategory(category);            // non-null (DB + JPA)
+    g.setCategory(category);        
     g.setTitle(title);
     g.setDescription(description);
     g.setPriority(priority);
 
     Goal saved = goalRepo.saveAndFlush(g);
 
-    // if you rely on DB-generated timestamps, a re-read ensures they’re present
+    //a re-read ensures DB-generated timestamps present
     saved = goalRepo.findById(saved.getGoalId())
         .orElseThrow(() -> new IllegalArgumentException("goal missing after save"));
 
     return toResponse(saved);
   }
 
+  //List all goals for a user.
   @Transactional(readOnly = true)
   public List<GoalResponse> listGoalsByUser(long userId) {
     mustUser(userId);
@@ -143,6 +143,7 @@ public class GoalService {
         .map(this::toResponse).toList();
   }
 
+  //List all goals for a user within a specific category
   @Transactional(readOnly = true)
   public List<GoalResponse> listGoalsByUserAndCategory(long userId, long categoryId) {
     mustUser(userId);
@@ -153,10 +154,10 @@ public class GoalService {
         .map(this::toResponse).toList();
   }
 
-  /**
-   * Returns goals grouped by priority (HIGH/MEDIUM/LOW).
-   * If categoryId is provided, enforces ownership of that category.
-   * If priority is provided, returns a single-key map.
+  /*
+   Returns goals grouped by priority (HIGH/MEDIUM/LOW).
+   If categoryId is provided, enforces ownership of that category.
+   If priority is provided, returns a single-key map.
    */
   @Transactional(readOnly = true)
   public Map<String, List<GoalResponse>> listGrouped(Long userId, Long categoryId, String priority) {
@@ -187,6 +188,7 @@ public class GoalService {
     return grouped;
   }
 
+  //Fetches a specific goal owned by a user
   @Transactional(readOnly = true)
   public GoalResponse getOwnedGoal(Long goalId, Long userId) {
     return toResponse(mustGoalOwned(goalId, userId));
@@ -213,6 +215,7 @@ public void completeGoal(Long goalId) {
     // userRepo.save(user);
   }
 
+  //Updates a goal's details, ensuring the user owns the goal and validating input.
   public GoalResponse updateGoal(Long goalId, Long userId, UpdateGoalRequest r) {
     Goal g = mustGoalOwned(goalId, userId);
 
@@ -251,6 +254,7 @@ public void completeGoal(Long goalId) {
     return toResponse(goalRepo.save(g));
   }
 
+  //Deletes a goal owned by a user.
   public void delete(Long goalId, Long userId) {
     Goal g = mustGoalOwned(goalId, userId);
     goalRepo.delete(g);
