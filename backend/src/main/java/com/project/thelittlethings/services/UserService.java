@@ -23,7 +23,6 @@ public class UserService {
 		this.userRepository = userRepository;
 	}
 
-	// naive hashing for demo only
 	private String hash(String s) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
