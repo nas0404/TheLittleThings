@@ -9,7 +9,6 @@ interface JournalEntry {
   content: string;
   linkedWinId?: number;
   linkedWinTitle?: string;
-  reminderType: 'DAILY' | 'WEEKLY' | 'ON_WIN_CREATED' | 'NONE';
   createdAt: string;
   updatedAt: string;
 }
@@ -28,15 +27,17 @@ export default function Journal() {
   }, [view, sortBy]);
 
   const fetchEntries = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please log in to view your journal entries');
-        return;
-      }
+    setLoading(true);
+    setError(null);
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('Please log in first');
+      setLoading(false);
+      return;
+    }
 
+    try {
       const response = await fetch(`http://localhost:8080/api/journals?sort=${sortBy}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -48,12 +49,10 @@ export default function Journal() {
         const data = await response.json();
         setEntries(data);
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to fetch entries' }));
-        setError(errorData.error || 'Failed to fetch entries');
+        setError('Failed to load entries');
       }
     } catch (err) {
-      setError('Failed to fetch journal entries');
-      console.error('Error fetching entries:', err);
+      setError('Network error');
     } finally {
       setLoading(false);
     }

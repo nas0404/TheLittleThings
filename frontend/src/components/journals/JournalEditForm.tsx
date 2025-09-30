@@ -12,7 +12,6 @@ interface JournalEntry {
   content: string;
   linkedWinId?: number;
   linkedWinTitle?: string;
-  reminderType: 'DAILY' | 'WEEKLY' | 'ON_WIN_CREATED' | 'NONE';
   createdAt: string;
   updatedAt: string;
 }
@@ -27,8 +26,7 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
   const [formData, setFormData] = useState({
     title: entry.title,
     content: entry.content,
-    linkedWinId: entry.linkedWinId?.toString() || '',
-    reminderType: entry.reminderType
+    linkedWinId: entry.linkedWinId?.toString() || ''
   });
   
   const [wins, setWins] = useState<Win[]>([]);
@@ -104,7 +102,6 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
       const requestBody = {
         title: formData.title,
         content: formData.content,
-        reminderType: formData.reminderType,
         linkedWinId: formData.linkedWinId ? parseInt(formData.linkedWinId) : null
       };
 
@@ -189,25 +186,6 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
               {win.title}
             </option>
           ))}
-        </select>
-      </div>
-
-      {/* Reminder Type Field */}
-      <div>
-        <label htmlFor="edit-reminderType" className="block text-sm font-medium text-gray-700 mb-1">
-          Reminder Setting
-        </label>
-        <select
-          id="edit-reminderType"
-          name="reminderType"
-          value={formData.reminderType}
-          onChange={handleInputChange}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          <option value="NONE">No reminders</option>
-          <option value="DAILY">Daily reminder</option>
-          <option value="WEEKLY">Weekly reminder</option>
-          <option value="ON_WIN_CREATED">Remind me when I achieve a win</option>
         </select>
       </div>
 

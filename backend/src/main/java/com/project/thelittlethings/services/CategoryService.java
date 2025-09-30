@@ -108,7 +108,9 @@ public class CategoryService {
     return res;
   }
 
-  public List<CategoryNeglectedView> getNeglectedCategories(Long userId, int days) {
-    return categoryRepo.findNeglectedCategories(userId, days);
+  public List<CategoryNeglectedView> getNeglectedCategories(Long userId, Integer days) {
+    int lookback = (days == null || days < 1) ? 14 : days;
+    return categoryRepo.findNeglectedCategories(userId, lookback);
   }
+
 }

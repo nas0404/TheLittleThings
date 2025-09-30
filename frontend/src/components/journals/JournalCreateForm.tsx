@@ -14,8 +14,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    linkedWinId: '',
-    reminderType: 'NONE' as 'DAILY' | 'WEEKLY' | 'ON_WIN_CREATED' | 'NONE'
+    linkedWinId: ''
   });
   
   const [wins, setWins] = useState<Win[]>([]);
@@ -58,11 +57,11 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
 
   const validateForm = () => {
     if (!formData.title.trim()) {
-      setError('Title is required');
+      setError('Title required');
       return false;
     }
     if (!formData.content.trim()) {
-      setError('Content is required');
+      setError('Content required');
       return false;
     }
     if (formData.title.length > 255) {
@@ -74,8 +73,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
+    if (!validateForm()) return; // don't submit if invalid
 
     setLoading(true);
     setError(null);
@@ -88,10 +86,9 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         return;
       }
 
-      const requestBody = {
+      const body = {
         title: formData.title,
         content: formData.content,
-        reminderType: formData.reminderType,
         ...(formData.linkedWinId && { linkedWinId: parseInt(formData.linkedWinId) })
       };
 
@@ -101,18 +98,17 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
         onSuccess();
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to create journal entry' }));
-        setServerError(errorData.error || 'Failed to create journal entry');
+        const error = await response.text();
+        setServerError(error || 'Failed to create entry');
       }
     } catch (err) {
-      setServerError('Failed to create journal entry');
-      console.error('Error creating journal entry:', err);
+      setServerError('Network error');
     } finally {
       setLoading(false);
     }
@@ -177,28 +173,6 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         </select>
         <div className="mt-1 text-xs text-gray-500">
           Connect this journal entry to one of your achievements
-        </div>
-      </div>
-
-      {/* Reminder Type Field */}
-      <div>
-        <label htmlFor="reminderType" className="block text-sm font-medium text-gray-700 mb-1">
-          Reminder Setting
-        </label>
-        <select
-          id="reminderType"
-          name="reminderType"
-          value={formData.reminderType}
-          onChange={handleInputChange}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          <option value="NONE">No reminders</option>
-          <option value="DAILY">Daily reminder</option>
-          <option value="WEEKLY">Weekly reminder</option>
-          <option value="ON_WIN_CREATED">Remind me when I achieve a win</option>
-        </select>
-        <div className="mt-1 text-xs text-gray-500">
-          Choose when you'd like to be reminded to journal
         </div>
       </div>
 

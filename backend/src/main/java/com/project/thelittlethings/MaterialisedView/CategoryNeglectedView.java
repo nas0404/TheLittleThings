@@ -4,6 +4,9 @@ import java.time.Instant;
 
 public interface CategoryNeglectedView {
     Long getCategoryId();
+    Long getUserId();
     String getName();
-    Instant getLastWinAt(); // can be null
+    String getDescription();
+    Instant getLastWinAt(); // may be the created_at when no wins
+    Long getNeglectDays();  // computed days since last activity
 }
