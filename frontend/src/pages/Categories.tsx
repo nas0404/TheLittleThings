@@ -21,6 +21,7 @@ export default function CategoriesPage() {
   const [pageErr, setPageErr] = useState<string | null>(null);
 
   // create form
+  // Create initial form state (right column)
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [creating, setCreating] = useState(false);
@@ -33,6 +34,7 @@ export default function CategoriesPage() {
   const [toDelete, setToDelete] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Load categories from API
   async function refresh() {
     setLoading(true);
     setPageErr(null);
@@ -50,6 +52,12 @@ export default function CategoriesPage() {
     refresh();
   }, []);
 
+
+  /*All the functions below are calling an API
+   and handling the results/errors appropriately.
+  */
+
+  // Handle create form submission
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setCreating(true);
@@ -75,7 +83,7 @@ export default function CategoriesPage() {
   function requestDelete(category: Category) {
     setToDelete(category);
   }
-
+  // confirm delete from ConfirmDialog
   async function confirmDelete() {
     if (!toDelete) return;
     setDeleting(true);
