@@ -52,7 +52,7 @@ class JournalServiceTest {
         j1.setUser(u1);
     }
 
-    // helper method I made
+    // helper method
     private User makeUser(long id) {
         var user = new User();
         user.setUserId(id);
