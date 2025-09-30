@@ -112,7 +112,7 @@ export default function Register() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-4">
-              <Field label="Date of birth" id="dob" hint={age ? `You’ll be registered as ${age}` : undefined}>
+              <Field label="Date of birth" id="dob" hint={age ? `You are ${age} years old` : undefined}>
                 <input
                   id="dob" name="dob" type="date" required
                   className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
