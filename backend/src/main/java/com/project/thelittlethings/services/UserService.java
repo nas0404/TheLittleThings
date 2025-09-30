@@ -67,22 +67,33 @@ public class UserService {
 		return LocalDate.now().getYear() - dob.getYear();
 	}
 
-	public String login(LoginRequest req) {
-		Optional<User> userOpt = req.getUsernameOrEmail().contains("@") 
-			? userRepository.findByEmail(req.getUsernameOrEmail())
-			: userRepository.findByUsername(req.getUsernameOrEmail());
-		
-		if (userOpt.isEmpty()) throw new IllegalArgumentException("User not found");
-		
-		User user = userOpt.get();
-		if (!user.getPassword().equals(hash(req.getPassword()))) {
-			throw new IllegalArgumentException("Wrong password");
-		}
+    public String login(LoginRequest req) {
+        // basic validation to avoid null pointer exceptions
+        if (req == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
+        if (req.getUsernameOrEmail() == null || req.getUsernameOrEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Username or email is required");
+        }
+        if (req.getPassword() == null || req.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password is required");
+        }
+        
+        Optional<User> userOpt = req.getUsernameOrEmail().contains("@") 
+            ? userRepository.findByEmail(req.getUsernameOrEmail())
+            : userRepository.findByUsername(req.getUsernameOrEmail());
+        
+        if (userOpt.isEmpty()) throw new IllegalArgumentException("User not found");
+        
+        User user = userOpt.get();
+        if (!user.getPassword().equals(hash(req.getPassword()))) {
+            throw new IllegalArgumentException("Wrong password");
+        }
 
-		user.setLastLogin(java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC));
-		userRepository.save(user);
+        user.setLastLogin(java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC));
+        userRepository.save(user);
 
-		return HMACtokens.issueToken(user.getUsername(), 60 * 60 * 24);
+        return HMACtokens.issueToken(user.getUsername(), 60 * 60 * 24);
 	}
 
 	public User findByUsername(String username) {
@@ -95,14 +106,23 @@ public class UserService {
 
 	public boolean isTokenBlacklisted(String token) { return blacklistedTokens.contains(token); }
 
-	public void changePassword(Long userId, String oldPassword, String newPassword) {
-		User u = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
-		if (!u.getPassword().equals(hash(oldPassword))) throw new IllegalArgumentException("Invalid current password");
-		u.setPassword(hash(newPassword));
-		userRepository.save(u);
-	}
-
-	public void resetPassword(String email, String newPassword) {
+    public void changePassword(Long userId, String oldPassword, String newPassword) {
+        // check inputs to prevent crashes
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
+        if (oldPassword == null || newPassword == null) {
+            throw new IllegalArgumentException("Passwords cannot be null");
+        }
+        if (newPassword.length() < 6) {
+            throw new IllegalArgumentException("New password must be at least 6 characters");
+        }
+        
+        User u = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!u.getPassword().equals(hash(oldPassword))) throw new IllegalArgumentException("Invalid current password");
+        u.setPassword(hash(newPassword));
+        userRepository.save(u);
+    }	public void resetPassword(String email, String newPassword) {
 		User u = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
 		u.setPassword(hash(newPassword));
 		userRepository.save(u);

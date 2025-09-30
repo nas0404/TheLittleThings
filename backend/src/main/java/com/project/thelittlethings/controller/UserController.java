@@ -22,6 +22,20 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody CreateUserRequest req) {
         try {
+            // validate request to prevent crashes
+            if (req == null) {
+                return ResponseEntity.badRequest().body("Request cannot be empty");
+            }
+            if (req.getUsername() == null || req.getUsername().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Username is required");
+            }
+            if (req.getEmail() == null || req.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Email is required");
+            }
+            if (req.getPassword() == null || req.getPassword().length() < 6) {
+                return ResponseEntity.badRequest().body("Password must be at least 6 characters");
+            }
+            
             User u = userService.register(req);
             String token = HMACtokens.issueToken(u.getUsername(), 60 * 60 * 24);
             return ResponseEntity.ok(new AuthResponse(token, u.getUserId(), u.getUsername()));
@@ -33,6 +47,17 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         try {
+            // basic checks
+            if (req == null) {
+                return ResponseEntity.badRequest().body("Request cannot be empty");
+            }
+            if (req.getUsernameOrEmail() == null || req.getUsernameOrEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Username or email is required");
+            }
+            if (req.getPassword() == null || req.getPassword().isEmpty()) {
+                return ResponseEntity.badRequest().body("Password is required");
+            }
+            
             String token = userService.login(req);
             String username = HMACtokens.extractUsername(token);
             User u = userService.findByUsername(username);
@@ -71,6 +96,13 @@ public class UserController {
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String auth, @RequestBody ChangePasswordRequest req) {
         try {
+            if (req == null || req.getOldPassword() == null || req.getNewPassword() == null) {
+                return ResponseEntity.badRequest().body("Old and new passwords are required");
+            }
+            if (req.getNewPassword().length() < 6) {
+                return ResponseEntity.badRequest().body("New password must be at least 6 characters");
+            }
+            
             String token = auth.replaceFirst("Bearer ", "");
             if (!HMACtokens.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
             String username = HMACtokens.extractUsername(token);
