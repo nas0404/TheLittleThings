@@ -9,6 +9,9 @@ import com.project.thelittlethings.dto.categories.UpdateCategoryRequest;
 import com.project.thelittlethings.services.CategoryService;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,7 +56,7 @@ public class CategoryController {
     // Update
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> update(@PathVariable Long userId,
-                                                   @PathVariable Long id,
+                                                   @Valid @PathVariable Long id,
                                                    @RequestBody UpdateCategoryRequest req) {
         return ResponseEntity.ok(service.update(id, userId, req));
     }
@@ -64,10 +67,15 @@ public class CategoryController {
         service.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
+    
     @GetMapping("/neglected")
-    public List<CategoryNeglectedView> neglected(@PathVariable Long userId,
-                                                @RequestParam(required = false) Integer days) {
-    return service.getNeglectedCategories(userId, days);
+    public List<CategoryNeglectedView> neglected(
+        @PathVariable @Positive(message = "userId must be a positive number") Long userId,
+        @RequestParam(defaultValue = "14")
+        @Min(value = 1, message = "days must be at least 1")
+        @Max(value = 3650, message = "days must be ≤ 3650") Integer days) {
+        return service.getNeglectedCategories(userId, days);
     }
 }
+
 

@@ -6,6 +6,9 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 // Category.java
@@ -19,16 +22,22 @@ public class Category {
   @Column(name="category_id")
   private Long categoryId;
 
+
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name="user_id", foreignKey=@ForeignKey(name="fk_categories_user"))
+  @NotNull(message = "user is required")
   private User user;
 
   @Column(nullable = false, length = 100)
+  @NotBlank(message = "name is required")
+  @Size(max = 100, message = "name must be ≤ 100 characters")
   private String name;
 
   @Column(columnDefinition = "text")
+  @Size(max = 100, message = "description must be ≤ 100 characters")
   private String description;
 
+  
   @org.hibernate.annotations.CreationTimestamp
   @Column(name="created_at", updatable = false)   // remove insertable=false
   private Instant createdAt;

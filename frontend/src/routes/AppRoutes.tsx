@@ -8,8 +8,7 @@ import Landing from '../pages/Landing';
 import Register from '../pages/Register';
 import SignIn from '../pages/SignIn';
 import UserProfile from '../pages/UserProfile';
-import CategoryPage from '../pages/CategoriesPage.tsx';
-import CategoryGoalsPage from '../pages/CategoryGoalsPage';
+import CategoryPage from '../pages/Categories.tsx';
 import Leaderboard from '../pages/Leaderboard.tsx';
 import Wins from '../pages/Wins.tsx';
 import Goals from '../pages/Goals.tsx';
@@ -28,11 +27,10 @@ export default function AppRoutes() {
       <Route path="/about" element={<About />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/categories" element={<CategoryPage />} />
-      <Route path="/categories/:id" element={<CategoryGoalsPage />} />
+      <Route path="/goals" element={<Goals />} />
       <Route path="/wins" element={<Wins />} />
       <Route path="/journal" element={<Journal />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
-      <Route path="/goals" element={<Goals />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
