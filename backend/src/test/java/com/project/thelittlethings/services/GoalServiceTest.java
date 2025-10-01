@@ -1,7 +1,6 @@
 package com.project.thelittlethings.services;
 
-import com.project.thelittlethings.dto.categories.CategoryResponse;
-import com.project.thelittlethings.dto.categories.CreateCategoryRequest;
+
 import com.project.thelittlethings.dto.goals.CreateGoalRequest;
 import com.project.thelittlethings.dto.goals.GoalResponse;
 import com.project.thelittlethings.dto.goals.UpdateGoalRequest;
@@ -15,7 +14,6 @@ import com.project.thelittlethings.repositories.WinRepository;
 import org.junit.jupiter.api.*;
 import org.mockito.*;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,14 +49,6 @@ class GoalServiceTest {
     c.setUser(owner);
     return c;
   }
-
-  private void seedUserAndCategory(long userId, long catId) {
-    var user = CreateUserforGoal(userId);
-    var cat = CreateCategoryForGoal(catId, user);
-    when(userRepo.findById(userId)).thenReturn(Optional.of(user));
-    when(categoryRepo.findById(catId)).thenReturn(Optional.of(cat));
-  }
-
 
  @Test
   void create_success() {
@@ -136,5 +126,4 @@ class GoalServiceTest {
     service.delete(7L, 31L);
     verify(goalRepo).delete(goal);
   }
-  
 }
