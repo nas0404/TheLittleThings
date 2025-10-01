@@ -1,33 +1,42 @@
+# Trigger this pipeline whenever code is pushed to the 'main' branch
 trigger:
   - main
 
+# Use a hosted Ubuntu virtual machine provided by Azure DevOps
 pool:
   vmImage: ubuntu-latest
 
 steps:
   # ---------- FRONTEND ----------
+
+  # Ensure Node.js 20.x is installed (needed for React/TypeScript build)
   - task: UseNode@1
     displayName: "Use Node.js 20.x"
     inputs:
       version: '20.19.0'
 
+  # Cache frontend dependencies to speed up pipeline runs
   - task: Cache@2
     displayName: Cache npm (frontend)
     inputs:
-      key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
+      key: 'npm | "$(Agent.OS)" | frontend/package-lock.json' # Cache key depends on OS + lockfile
       path: frontend/node_modules
       restoreKeys: |
         npm | "$(Agent.OS)"
 
+  # Install frontend dependencies from package-lock.json
   - script: npm ci
     displayName: "Install dependencies (frontend)"
     workingDirectory: frontend
 
+  # Build the frontend into a production-ready bundle
   - script: npm run build
     displayName: "Build frontend"
     workingDirectory: frontend
 
   # ---------- BACKEND ----------
+
+  # Make sure Java 17 is installed (needed for Spring Boot + Maven)
   - task: JavaToolInstaller@0
     displayName: "Set up Java 17"
     inputs:
@@ -35,7 +44,13 @@ steps:
       jdkArchitectureOption: 'x64'
       jdkSourceOption: 'PreInstalled'
 
-  # Run backend unit tests with clear console output
+  # Run backend unit tests with Maven
+  # Flags explained:
+  # -B = batch mode (non-interactive)
+  # -DskipITs = skip integration tests (run only unit tests)
+  # -Dsurefire.printSummary=true = show test summary in console
+  # -Dsurefire.useFile=false = stream test results to console instead of a file
+  # --no-transfer-progress = hides Maven dependency download spam
   - script: >
       mvn -B clean test -DskipITs
       -Dsurefire.printSummary=true
@@ -44,7 +59,8 @@ steps:
     displayName: "Run backend unit tests"
     workingDirectory: backend
 
-  # Publish JUnit results so they appear in the "Tests" tab
+  # Publish JUnit test results to Azure DevOps
+  # This makes tests appear in the "Tests" tab with pass/fail status
   - task: PublishTestResults@2
     displayName: "Publish JUnit results"
     inputs:
