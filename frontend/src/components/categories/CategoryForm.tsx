@@ -15,12 +15,15 @@ export default function CategoryForm({
   onSubmit,
   onCancel,
 }: Props) {
+
+  // Form state for fields, errors, and submission status
   const [name, setName] = React.useState(initial?.name ?? "");
   const [description, setDescription] = React.useState(initial?.description ?? "");
   const [fieldErrs, setFieldErrs] = React.useState<Record<string, string>>({});
   const [formErr, setFormErr] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
+  // When `initial` changes (e.g., switching from create → edit), reset form state
   React.useEffect(() => {
     setName(initial?.name ?? "");
     setDescription(initial?.description ?? "");
@@ -30,6 +33,7 @@ export default function CategoryForm({
 
   const canSubmit = name.trim().length > 0;
 
+  // Map backend validation errors into { [field]: message } shape
   const mapServerErrors = (details?: any) => {
     const map: Record<string, string> = {};
     const arr = details?.errors;
@@ -43,17 +47,20 @@ export default function CategoryForm({
     return map;
   };
 
+  // Handle form submission
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     setFormErr(null);
     setFieldErrs({});
 
+    // Client-side validation
     const trimmed = name.trim();
     if (!trimmed) return setFieldErrs({ name: "name is required" });
     if (trimmed.length > 100) return setFieldErrs({ name: "name must be ≤ 100 characters" });
     if ((description || "").length > 100)
       return setFieldErrs({ description: "description must be ≤ 100 characters" });
 
+    //Pass Payload to parent onSubmit handler
     setSubmitting(true);
     try {
       await onSubmit({ name: trimmed, description: description || null });
@@ -61,11 +68,14 @@ export default function CategoryForm({
         setName("");
         setDescription("");
       }
-    } catch (err: any) {
+    }
+    // Standardized error handling from our http() helper
+    catch (err: any) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
           setFieldErrs({ name: err.details?.message || "Category name already exists for this user" });
         } else {
+          // Try to map field-level errors; fallback to a form-level error
           const mapped = mapServerErrors(err.details);
           if (Object.keys(mapped).length) setFieldErrs(mapped);
           else setFormErr(err.details?.message || err.message || "Request failed");
@@ -77,7 +87,7 @@ export default function CategoryForm({
       setSubmitting(false);
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>

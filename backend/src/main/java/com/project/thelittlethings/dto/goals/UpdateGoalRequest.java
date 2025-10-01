@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.*;
 
+// DTO class for updating an existing goal
 @Data @NoArgsConstructor @AllArgsConstructor
 public class UpdateGoalRequest {
 

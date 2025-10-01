@@ -7,13 +7,14 @@ import com.project.thelittlethings.dto.users.LoginRequest;
 import com.project.thelittlethings.repositories.UserRepository;
 import com.project.thelittlethings.security.HMACtokens;
 
-import java.time.LocalDate;
+
 import java.util.*;
 import java.security.MessageDigest;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+// handles user business logic - registration, auth, etc
 @Service
 public class UserService {
 	private final UserRepository userRepository;
@@ -23,6 +24,7 @@ public class UserService {
 		this.userRepository = userRepository;
 	}
 
+	// hashes passwords using SHA-256
 	private String hash(String s) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -33,6 +35,7 @@ public class UserService {
 		} catch (Exception e) { throw new RuntimeException(e); }
 	}
 
+	// creates new user account
 	@Transactional
 	public synchronized User register(CreateUserRequest req) {
 		if (userRepository.existsByUsername(req.getUsername()) || userRepository.existsByEmail(req.getEmail())) throw new IllegalArgumentException("User already exists");
@@ -67,6 +70,7 @@ public class UserService {
 		return LocalDate.now().getYear() - dob.getYear();
 	}
 
+    // authenticates user and returns token
     public String login(LoginRequest req) {
         // basic validation to avoid null pointer exceptions
         if (req == null) {
@@ -102,10 +106,12 @@ public class UserService {
 
 	public User findById(Long id) { return userRepository.findById(id).orElse(null); }
 
+	
 	public void logout(String token) { blacklistedTokens.add(token); }
 
 	public boolean isTokenBlacklisted(String token) { return blacklistedTokens.contains(token); }
 
+    // changes user password
     public void changePassword(Long userId, String oldPassword, String newPassword) {
         // check inputs to prevent crashes
         if (userId == null || userId <= 0) {
@@ -122,12 +128,16 @@ public class UserService {
         if (!u.getPassword().equals(hash(oldPassword))) throw new IllegalArgumentException("Invalid current password");
         u.setPassword(hash(newPassword));
         userRepository.save(u);
-    }	public void resetPassword(String email, String newPassword) {
+    }
+    
+    // resets password by finding emal
+    public void resetPassword(String email, String newPassword) {
 		User u = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
 		u.setPassword(hash(newPassword));
 		userRepository.save(u);
 	}
 
+	// changes username and issues new token
 	public String changeUsername(Long userId, String newUsername) {
 		if (userRepository.existsByUsername(newUsername)) throw new IllegalArgumentException("Username already taken");
 		User u = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -136,6 +146,9 @@ public class UserService {
 		return HMACtokens.issueToken(u.getUsername(), 60 * 60 * 24);
 	}
 
+	
+
+	// deletes user account
 	public boolean deleteUser(Long userId) {
 		if (!userRepository.existsById(userId)) return false;
 		userRepository.deleteById(userId);

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Card from "../ui/Card";
 import { CategoriesAPI } from "../../api/CategoryApi";
 
+// Shape of neglected category item returned by the API
 type NeglectedItem = {
   categoryId: number;
   name: string;
@@ -10,12 +11,15 @@ type NeglectedItem = {
   neglectDays?: number | null;
 };
 
+// Constants for input validation and debounce timing
 const MIN_DAYS = 1;
 const MAX_DAYS = 3650;
 const DEBOUNCE_MS = 400;
 
 
 export default function CategoryNeglected() {
+
+  // State for the days input, parsed value, validation, items, loading, and errors
   const [daysInput, setDaysInput] = React.useState("14");
   const parsedDays = React.useMemo(() => parseInt(daysInput, 10), [daysInput]);
   const isValid =
@@ -27,6 +31,7 @@ export default function CategoryNeglected() {
   const [loading, setLoading] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
 
+  // Clamp the days input to valid range on blur
   const clampOnBlur = () => {
     if (!Number.isFinite(parsedDays)) {
       setDaysInput(String(MIN_DAYS));
@@ -36,6 +41,7 @@ export default function CategoryNeglected() {
     setDaysInput(String(clamped));
   };
 
+  // Effect to fetch neglected categories when parsedDays changes and is valid
   React.useEffect(() => {
     if (!isValid) return;
 
@@ -43,7 +49,10 @@ export default function CategoryNeglected() {
     setLoading(true);
     setErr(null);
 
+    // Debounce the API call to avoid excessive requests
     const t = setTimeout(async () => {
+
+      // Fetch neglected categories from the API
       try {
         const data = await CategoriesAPI.neglected(parsedDays);
         if (alive) setItems(data as NeglectedItem[]);
@@ -63,6 +72,7 @@ export default function CategoryNeglected() {
     };
   }, [parsedDays, isValid]);
 
+  // Helper to format ISO date strings into a readable format
   const fmtDate = (iso?: string | null) =>
     iso ? new Date(iso).toLocaleDateString() : "no wins yet";
 
@@ -85,9 +95,8 @@ export default function CategoryNeglected() {
           value={daysInput}
           onChange={(e) => setDaysInput(e.target.value)}
           onBlur={clampOnBlur}
-          className={`w-24 rounded border px-2 py-1 text-sm ${
-            isValid ? "" : "border-red-400"
-          }`}
+          className={`w-24 rounded border px-2 py-1 text-sm ${isValid ? "" : "border-red-400"
+            }`}
           placeholder="14"
           aria-invalid={!isValid}
         />

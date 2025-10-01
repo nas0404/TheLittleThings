@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { mapServerErrors } from  "../../lib/mapServerErrors";
 
+// Type for goal priority levels
 type Priority = "HIGH" | "MEDIUM" | "LOW";
 
+// Lightweight category type for the dropdown
 type CategoryLite = {
   categoryId: number;
   name: string;
 };
 
+// Type for goal data being edited
 type GoalForEdit = {
   goalId: number;
   title: string;
@@ -16,6 +19,7 @@ type GoalForEdit = {
   categoryId: number;
 };
 
+// Type for the update request sent to the server
 export type UpdateGoalRequest = Partial<{
   title: string;
   description: string | null;
@@ -23,20 +27,23 @@ export type UpdateGoalRequest = Partial<{
   categoryId: number;
 }>;
 
+// Props for the EditGoalModal component
 type Props = {
-  goal: GoalForEdit;                  
-  categories: CategoryLite[];         
-  onClose: () => void;               
-  onSave: (payload: UpdateGoalRequest) => Promise<void>;
+  goal: GoalForEdit;                   // Current goal data
+  categories: CategoryLite[];          // Available categories for selection
+  onClose: () => void;                // Callback when modal is closed
+  onSave: (payload: UpdateGoalRequest) => Promise<void>; // Callback to save changes
 };
 
 
+// Modal component for editing an existing goal
 export default function EditGoalModal({
   goal,
   categories,
   onClose,
   onSave,
 }: Props) {
+  // Form state management using React hooks
   const [title, setTitle] = useState<string>(goal.title);
   const [description, setDescription] = useState<string>(goal.description ?? "");
   const [priority, setPriority] = useState<Priority>(goal.priority);
@@ -44,11 +51,13 @@ export default function EditGoalModal({
   const [saving, setSaving] = useState(false);
   const [errs, setErrs] = useState<Record<string, string>>({});
 
+  // Handle form submission
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setErrs({});
 
+    // Prepare the update request payload
     const payload: UpdateGoalRequest = {
       title,
       description: description ? description : null,
@@ -57,8 +66,10 @@ export default function EditGoalModal({
     };
 
     try {
+      // Attempt to save the changes
       await onSave(payload);
     } catch (e: any) {
+      // Map server validation errors to form fields
       const mapped = mapServerErrors(e?.details);
       setErrs(Object.keys(mapped).length ? mapped : { form: e?.message || "Update failed" });
     } finally {

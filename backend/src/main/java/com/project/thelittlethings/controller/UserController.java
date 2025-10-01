@@ -8,9 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
+// handles user authentication and account managment
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173") // frontend connection
 public class UserController {
 
     private final UserService userService;
@@ -19,6 +20,7 @@ public class UserController {
         this.userService = userService;
     }
 
+    // creates new user account and returns auth token
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody CreateUserRequest req) {
         try {
@@ -44,6 +46,7 @@ public class UserController {
         }
     }
 
+    // authenticates user and returns token
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         try {
@@ -74,6 +77,7 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    // gets current user info from token
     @GetMapping("/me")
     public ResponseEntity<?> me(@RequestHeader("Authorization") String auth) {
         try {
@@ -93,6 +97,7 @@ public class UserController {
         }
     }
 
+    // allows user to change their password
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String auth, @RequestBody ChangePasswordRequest req) {
         try {
@@ -113,7 +118,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
-
+// allows user to change their username
     @PostMapping("/change-username")
     public ResponseEntity<?> changeUsername(@RequestHeader("Authorization") String auth, @RequestBody ChangeUsernameRequest req) {
         try {
@@ -131,7 +136,7 @@ public class UserController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
-    }
+    }// allows user to delete their account
 
     @DeleteMapping("/")
     public ResponseEntity<?> deleteAccount(@RequestHeader("Authorization") String auth) {
@@ -152,6 +157,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
+    // allows user to reset their password
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest req) {

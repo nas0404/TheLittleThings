@@ -2,6 +2,7 @@ package com.project.thelittlethings.dto.users;
 
 import java.time.LocalDate;
 
+// request data for user registration
 public class CreateUserRequest {
 	private String username;
 	private String email;
@@ -12,6 +13,7 @@ public class CreateUserRequest {
 	private String gender;
 	private String region;
 
+	// all the getters and setters for form data
 	public String getUsername() { return username; }
 	public void setUsername(String username) { this.username = username; }
 

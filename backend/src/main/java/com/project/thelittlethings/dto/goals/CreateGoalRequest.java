@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 
 import lombok.*;
 
+// DTO class for creating a new goal
 @Data @NoArgsConstructor @AllArgsConstructor
 public class CreateGoalRequest {
 

@@ -4,6 +4,7 @@ import com.project.thelittlethings.entities.User;
 
 import java.time.LocalDate;
 
+// user data sent back to frontend
 public class UserResponse {
     private Long userId;
     private String username;
@@ -17,6 +18,7 @@ public class UserResponse {
     private String region;
     private String lastLogin; 
 
+    // converts user entity to response DTO
     public static UserResponse fromUser(User u) {
         UserResponse r = new UserResponse();
         r.userId = u.getUserId();
@@ -39,7 +41,7 @@ public class UserResponse {
         return r;
     }
 
-   
+   // getters and setters
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
 
