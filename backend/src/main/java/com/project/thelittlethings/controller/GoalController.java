@@ -135,7 +135,7 @@ public class GoalController {
   public ResponseEntity<?> complete(@RequestHeader("Authorization") String auth,
       @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
     try {
-      long userId = userIdFromAuth(auth);
+      Long userId = userIdFromAuth(auth);
       goalService.getOwnedGoal(goalId, userId);
       goalService.completeGoal(goalId);
       return ResponseEntity.ok("Goal completed and Win recorded.");
