@@ -25,25 +25,31 @@ public class CategoryService {
     this.userRepo = userRepo;
   }
 
+  // Create a new category for a user
   @Transactional
   public CategoryResponse create(Long userId, CreateCategoryRequest r) {
-    if (userId == null) throw new IllegalArgumentException("userId is required");
+    if (userId == null)
+      throw new IllegalArgumentException("userId is required");
     if (r.getName() == null || r.getName().trim().isEmpty())
       throw new IllegalArgumentException("name is required");
 
+    // Validate and sanitize inputs
     final String name = r.getName().trim();
     final String description = r.getDescription() == null ? null : r.getDescription().trim();
 
-    if (name.length() > 100) throw new IllegalArgumentException("name must be ≤ 100 characters");
+    if (name.length() > 100)
+      throw new IllegalArgumentException("name must be ≤ 100 characters");
     if (description != null && description.length() > 100)
       throw new IllegalArgumentException("description must be ≤ 100 characters");
 
+    // Check if user exists
     User user = userRepo.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException("user not found"));
 
     if (categoryRepo.existsByUser_UserIdAndName(user.getUserId(), name))
       throw new IllegalArgumentException("category name already exists for this user");
 
+    // Create and save the new category
     Category c = new Category();
     c.setUser(user);
     c.setName(name);
@@ -57,6 +63,7 @@ public class CategoryService {
     }
   }
 
+  // List all categories for a given user
   public List<CategoryResponse> listByUser(long userId) {
     if (!userRepo.existsById(userId))
       throw new IllegalArgumentException("user not found");
@@ -65,30 +72,37 @@ public class CategoryService {
         .stream().map(this::toResponse).toList();
   }
 
+  // Get details of a specific category owned by a user
   public CategoryResponse getOwned(Long categoryId, Long userId) {
     Category c = categoryRepo.findByCategoryIdAndUser_UserId(categoryId, userId)
         .orElseThrow(() -> new IllegalArgumentException("category not found"));
     return toResponse(c);
   }
 
+  // Update an existing category owned by a user
   @Transactional
   public CategoryResponse update(Long categoryId, Long userId, UpdateCategoryRequest r) {
     Category c = categoryRepo.findByCategoryIdAndUser_UserId(categoryId, userId)
         .orElseThrow(() -> new IllegalArgumentException("category not found"));
 
+    // Validation of fields
     if (r.getName() != null) {
       String newName = r.getName().trim();
-      if (newName.isEmpty()) throw new IllegalArgumentException("name cannot be blank");
-      if (newName.length() > 100) throw new IllegalArgumentException("name must be ≤ 100 characters");
+      if (newName.isEmpty())
+        throw new IllegalArgumentException("name cannot be blank");
+      if (newName.length() > 100)
+        throw new IllegalArgumentException("name must be ≤ 100 characters");
       if (!newName.equalsIgnoreCase(c.getName())
           && categoryRepo.existsByUser_UserIdAndName(userId, newName))
         throw new IllegalArgumentException("category name already exists for this user");
       c.setName(newName);
     }
 
+    // Description is optional and can be null
     if (r.getDescription() != null) {
       String newDesc = r.getDescription().trim();
-      if (newDesc.length() > 100) throw new IllegalArgumentException("description must be ≤ 100 characters");
+      if (newDesc.length() > 100)
+        throw new IllegalArgumentException("description must be ≤ 100 characters");
       c.setDescription(newDesc);
     }
 
@@ -99,6 +113,7 @@ public class CategoryService {
     }
   }
 
+  // Delete a category owned by a user
   @Transactional
   public void delete(Long categoryId, Long userId) {
     Category c = categoryRepo.findByCategoryIdAndUser_UserId(categoryId, userId)
@@ -106,11 +121,13 @@ public class CategoryService {
     categoryRepo.delete(c);
   }
 
+  // Get neglected categories for a user
   public List<CategoryNeglectedView> getNeglectedCategories(Long userId, Integer days) {
     int lookback = (days == null || days < 1) ? 14 : days;
     return categoryRepo.findNeglectedCategories(userId, lookback);
   }
 
+  // Helper to convert Category entity to CategoryResponse DTO
   private CategoryResponse toResponse(Category c) {
     CategoryResponse res = new CategoryResponse();
     res.setCategoryId(c.getCategoryId());

@@ -4,8 +4,14 @@ import com.project.thelittlethings.entities.Category;
 import lombok.*;
 import java.time.Instant;
 
-@Getter @Setter @AllArgsConstructor @NoArgsConstructor
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class CategoryResponse {
+
+  // DTO returned to clients when fetching category detail
+
   private Long categoryId;
   private Long userId;
   private String name;
@@ -15,12 +21,11 @@ public class CategoryResponse {
 
   public static CategoryResponse from(Category c) {
     return new CategoryResponse(
-      c.getCategoryId(),
-      c.getUser().getUserId(),
-      c.getName(),
-      c.getDescription(),
-      c.getCreatedAt(),
-      c.getUpdatedAt()
-    );
+        c.getCategoryId(),
+        c.getUser().getUserId(),
+        c.getName(),
+        c.getDescription(),
+        c.getCreatedAt(),
+        c.getUpdatedAt());
   }
 }

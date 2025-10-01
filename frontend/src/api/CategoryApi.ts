@@ -1,5 +1,7 @@
 import { http } from "./http";
 
+
+// Shape of category data returned by backend (DTO = Data Transfer Object)
 type CategoryDTO = {
   categoryId: number;
   name: string;
@@ -8,6 +10,7 @@ type CategoryDTO = {
   updatedAt?: string;
 };
 
+// Shape of category data used in frontend application
 export type Category = {
   id: number;
   name: string;
@@ -16,15 +19,19 @@ export type Category = {
   updatedAt?: string;
 };
 
+// Shape of request body when creating or updating a category
 export type CreateCategoryRequest = {
   name: string;
   description?: string | null;
 };
+
+// Shape of request body when updating a category
 export type UpdateCategoryRequest = {
   name?: string;
   description?: string | null;
 };
 
+//Conversion functions between DTO and frontend Category
 const toCategory = (d: CategoryDTO): Category => ({
   id: d.categoryId,
   name: d.name,
@@ -32,8 +39,11 @@ const toCategory = (d: CategoryDTO): Category => ({
   createdAt: d.createdAt,
   updatedAt: d.updatedAt,
 });
+
+// Convert array of CategoryDTO to array of Category
 const toCategoryArray = (arr: CategoryDTO[]): Category[] => arr.map(toCategory);
 
+// API functions for categories
 export const CategoriesAPI = {
   async list(): Promise<Category[]> {
     const data = await http<CategoryDTO[]>(`/api/categories`);

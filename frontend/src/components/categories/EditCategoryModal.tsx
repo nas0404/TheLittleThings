@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { Category, UpdateCategoryRequest } from "../../api/CategoryApi";
 import { mapServerErrors } from "../../lib/mapServerErrors";
 
+// Props expected by the EditCategoryModal
 type Props = {
   category: Category;
   onClose: () => void;
@@ -10,15 +11,20 @@ type Props = {
 
 
 export default function EditCategoryModal({ category, onClose, onSaved }: Props) {
+
+  // Form state for fields, errors, and submission status
   const [name, setName] = useState(category.name);
   const [description, setDescription] = useState(category.description ?? "");
   const [saving, setSaving] = useState(false);
   const [errs, setErrs] = useState<Record<string, string>>({});
 
+  // Handle form submission
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setErrs({});
+
+    // Client-side validation
     try {
       await onSaved({ name, description: description ? description : null });
     } catch (e: any) {

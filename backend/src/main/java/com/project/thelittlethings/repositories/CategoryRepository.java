@@ -14,8 +14,13 @@ import java.util.Optional;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
+    // Returns all categories for a given user
     List<Category> findByUser_UserId(Long userId);
+
+    // Checks if a category with the given name exists for the specified user
     boolean existsByUser_UserIdAndName(Long userId, String name);
+
+    // Checks if the user has any categories
     boolean existsByUser_UserId(Long userId);
 
 

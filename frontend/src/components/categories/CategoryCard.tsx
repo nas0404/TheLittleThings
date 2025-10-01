@@ -1,11 +1,13 @@
 import type { Category } from "../../api/CategoryApi";
 
+// Props expected by the CategoryCard
 type Props = {
-  category: Category;        
-  onEdit: () => void;         
+  category: Category;
+  onEdit: () => void;
   onRequestDelete: () => void;
 };
 
+// Component to render a single category card
 export default function CategoryCard({ category, onEdit, onRequestDelete }: Props) {
   return (
     <div className="border rounded-xl p-4">

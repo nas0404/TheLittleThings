@@ -7,14 +7,14 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import java.time.Instant;
 
+// Represents a category created by a user (e.g. Health, Work, Study)
 @Entity
-@Table(name = "categories",
-  uniqueConstraints = @UniqueConstraint(
-    name = "uq_categories_user_name",
-    columnNames = {"user_id", "name"}
-  )
-)
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Table(name = "categories", uniqueConstraints = @UniqueConstraint(name = "uq_categories_user_name", columnNames = {
+    "user_id", "name" }))
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Category {
 
   @Id
@@ -23,11 +23,7 @@ public class Category {
   private Long categoryId;
 
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
-  @JoinColumn(
-    name = "user_id",
-    nullable = false,
-    foreignKey = @ForeignKey(name = "fk_categories_user")
-  )
+  @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_categories_user"))
   @NotNull(message = "user is required")
   private User user;
 
