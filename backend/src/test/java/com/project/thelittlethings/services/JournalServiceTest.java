@@ -1,229 +1,144 @@
 package com.project.thelittlethings.services;
-// package com.project.thelittlethings.Service;
 
-// import com.project.thelittlethings.dto.journals.CreateJournalRequest;
-// import com.project.thelittlethings.dto.journals.UpdateJournalRequest;
-// import com.project.thelittlethings.dto.journals.JournalResponse;
-// import com.project.thelittlethings.dto.users.CreateUserRequest;
-// import com.project.thelittlethings.entities.User;
-// import com.project.thelittlethings.entities.Journal;
-// import com.project.thelittlethings.repositories.JournalRepository;
-// import com.project.thelittlethings.repositories.UserRepository;
-// import com.project.thelittlethings.services.JournalService;
-// import com.project.thelittlethings.services.UserService;
+import com.project.thelittlethings.entities.Journal;
+import com.project.thelittlethings.entities.User;
+import com.project.thelittlethings.entities.Win;
+import com.project.thelittlethings.dto.journals.CreateJournalRequest;
+import com.project.thelittlethings.dto.journals.UpdateJournalRequest;
+import com.project.thelittlethings.dto.journals.JournalResponse;
+import com.project.thelittlethings.repositories.JournalRepository;
+import com.project.thelittlethings.repositories.UserRepository;
+import com.project.thelittlethings.repositories.WinRepository;
 
-// import org.junit.jupiter.api.Test;
-// import org.junit.jupiter.api.BeforeEach;
-// import org.springframework.boot.test.context.SpringBootTest;
-// import org.springframework.test.context.TestPropertySource;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.*;
+import org.mockito.*;
 
-// import java.time.LocalDate;
-// import java.util.List;
+import java.util.List;
+import java.util.Optional;
+import java.util.Arrays;
 
-// import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-// @SpringBootTest
-// @TestPropertySource(properties = {
-//     "spring.datasource.url=jdbc:h2:mem:testdb",
-//     "spring.jpa.hibernate.ddl-auto=create-drop"
-// })
-// @Transactional
-// class JournalServiceTest {
+class JournalServiceTest {
 
-//     @Autowired
-//     private JournalService journalService;
-    
-//     @Autowired
-//     private UserService userService;
-    
-//     @Autowired
-//     private JournalRepository journalRepository;
-    
-//     @Autowired
-//     private UserRepository userRepository;
+    @Mock JournalRepository journalRepo;
+    @Mock UserRepository userRepo;
+    @Mock WinRepository winRepo;
 
-//     private Long testUserId;
+    JournalService service;
 
-//     @BeforeEach
-//     void setUp() {
-//         journalRepository.deleteAll();
-//         userRepository.deleteAll();
+    User u1;
+    Journal j1;
+    Win w1;
+
+    @BeforeEach
+    void setup() {
+        MockitoAnnotations.openMocks(this);
+        service = new JournalService(journalRepo, userRepo, winRepo);
         
-//         // Create test user
-//         CreateUserRequest userRequest = new CreateUserRequest();
-//         userRequest.setUsername("journaluser");
-//         userRequest.setEmail("journal@example.com");
-//         userRequest.setPassword("password123");
-//         userRequest.setFirstName("Journal");
-//         userRequest.setLastName("User");
-//         userRequest.setDob(LocalDate.of(1990, 1, 1));
-//         userRequest.setGender("Male");
-//         userRequest.setRegion("TestRegion");
-        
-//         User user = userService.register(userRequest);
-//         testUserId = user.getUserId();
-//     }
+        u1 = new User();
+        u1.setUserId(42L);
 
-//     @Test
-//     void testCreateJournal_Success() {
-//         // Arrange
-//         CreateJournalRequest request = new CreateJournalRequest();
-//         request.setTitle("Test Entry");
-//         request.setContent("This is test content for the journal entry.");
-//         request.setReminderType(Journal.ReminderType.NONE);
+        w1 = new Win();
+        w1.setWinId(123L);
+        w1.setUser(u1);
 
-//         // Act
-//         JournalResponse response = journalService.createJournal(testUserId, request);
+        j1 = new Journal();
+        j1.setJournalId(456L);
+        j1.setTitle("My coding journey");
+        j1.setContent("Today I learned about testing...");
+        j1.setUser(u1);
+    }
 
-//         // Assert
-//         assertNotNull(response);
-//         assertNotNull(response.getJournalId());
-//         assertEquals("Test Entry", response.getTitle());
-//         assertEquals("This is test content for the journal entry.", response.getContent());
-//         assertEquals(Journal.ReminderType.NONE, response.getReminderType());
-//     }
+    // helper method
+    private User makeUser(long id) {
+        var user = new User();
+        user.setUserId(id);
+        return user;
+    }
 
-//     @Test
-//     void testGetAllJournals_Success() {
-//         // Arrange - Create multiple journal entries
-//         CreateJournalRequest request1 = new CreateJournalRequest();
-//         request1.setTitle("First Entry");
-//         request1.setContent("First content");
-//         request1.setReminderType(Journal.ReminderType.DAILY);
-        
-//         CreateJournalRequest request2 = new CreateJournalRequest();
-//         request2.setTitle("Second Entry");
-//         request2.setContent("Second content");
-//         request2.setReminderType(Journal.ReminderType.WEEKLY);
+    @Test
+    void testCreateJournal() {
+        when(userRepo.findById(42L)).thenReturn(Optional.of(u1));
+        when(journalRepo.save(any(Journal.class))).thenReturn(j1);
 
-//         journalService.createJournal(testUserId, request1);
-//         journalService.createJournal(testUserId, request2);
+        var req = new CreateJournalRequest();
+        req.setTitle("New entry");
+        req.setContent("Some content here");
 
-//         // Act
-//         List<JournalResponse> journals = journalService.getAllJournals(testUserId, "date");
+        JournalResponse result = service.createJournal(42L, req);
 
-//         // Assert
-//         assertNotNull(journals);
-//         assertEquals(2, journals.size());
-        
-//         // Should contain both entries
-//         assertTrue(journals.stream().anyMatch(j -> "First Entry".equals(j.getTitle())));
-//         assertTrue(journals.stream().anyMatch(j -> "Second Entry".equals(j.getTitle())));
-//     }
+        assertNotNull(result);
+        verify(journalRepo).save(any(Journal.class));
+    }
 
-//     @Test
-//     void testGetAllJournals_SortByTitle() {
-//         // Arrange - Create entries that will have different alphabetical vs date order
-//         CreateJournalRequest request1 = new CreateJournalRequest();
-//         request1.setTitle("Beta Entry");
-//         request1.setContent("Beta content");
-//         request1.setReminderType(Journal.ReminderType.NONE);
-        
-//         CreateJournalRequest request2 = new CreateJournalRequest();
-//         request2.setTitle("Alpha Entry");
-//         request2.setContent("Alpha content");
-//         request2.setReminderType(Journal.ReminderType.NONE);
+    @Test 
+    void testCreateJournalWithInvalidUser() {
+        when(userRepo.findById(99L)).thenReturn(Optional.empty());
 
-//         journalService.createJournal(testUserId, request1);
-//         journalService.createJournal(testUserId, request2);
+        var req = new CreateJournalRequest();
+        req.setTitle("test");
+        req.setContent("test content");
 
-//         // Act
-//         List<JournalResponse> journals = journalService.getAllJournals(testUserId, "title");
+        assertThrows(IllegalArgumentException.class, 
+            () -> service.createJournal(99L, req));
+    }
 
-//         // Assert
-//         assertNotNull(journals);
-//         assertEquals(2, journals.size());
-        
-//         // When sorted alphabetically, "Alpha Entry" should come first
-//         assertEquals("Alpha Entry", journals.get(0).getTitle());
-//         assertEquals("Beta Entry", journals.get(1).getTitle());
-//     }
+    @Test
+    void testGetJournal() {
+        when(journalRepo.findByJournalIdAndUser_UserId(456L, 42L))
+            .thenReturn(Optional.of(j1));
 
-//     @Test
-//     void testGetJournal_Success() {
-//         // Arrange
-//         CreateJournalRequest request = new CreateJournalRequest();
-//         request.setTitle("Get Test Entry");
-//         request.setContent("Content for get test");
-//         request.setReminderType(Journal.ReminderType.ON_WIN_CREATED);
-        
-//         JournalResponse created = journalService.createJournal(testUserId, request);
+        var result = service.getJournal(456L, 42L);
 
-//         // Act
-//         JournalResponse retrieved = journalService.getJournal(created.getJournalId(), testUserId);
+        assertNotNull(result);
+    }
 
-//         // Assert
-//         assertNotNull(retrieved);
-//         assertEquals(created.getJournalId(), retrieved.getJournalId());
-//         assertEquals("Get Test Entry", retrieved.getTitle());
-//         assertEquals("Content for get test", retrieved.getContent());
-//         assertEquals(Journal.ReminderType.ON_WIN_CREATED, retrieved.getReminderType());
-//     }
+    @Test
+    void testGetJournalNotFound() {
+        when(journalRepo.findByJournalIdAndUser_UserId(999L, 42L))
+            .thenReturn(Optional.empty());
 
-//     @Test
-//     void testGetJournal_NotFound() {
-//         // Act & Assert
-//         assertThrows(IllegalArgumentException.class, () -> {
-//             journalService.getJournal(999L, testUserId);
-//         });
-//     }
+        assertThrows(IllegalArgumentException.class, 
+            () -> service.getJournal(999L, 42L));
+    }
 
-//     @Test
-//     void testUpdateJournal_Success() {
-//         // Arrange
-//         CreateJournalRequest createRequest = new CreateJournalRequest();
-//         createRequest.setTitle("Original Title");
-//         createRequest.setContent("Original content");
-//         createRequest.setReminderType(Journal.ReminderType.NONE);
-        
-//         JournalResponse created = journalService.createJournal(testUserId, createRequest);
+    @Test
+    void testGetAllJournals() {
+        List<Journal> journals = Arrays.asList(j1);
+        when(journalRepo.findByUser_UserIdOrderByCreatedAtDesc(42L))
+            .thenReturn(journals);
 
-//         UpdateJournalRequest updateRequest = new UpdateJournalRequest();
-//         updateRequest.setTitle("Updated Title");
-//         updateRequest.setContent("Updated content");
-//         updateRequest.setReminderType(Journal.ReminderType.DAILY);
+        List<JournalResponse> result = service.getAllJournals(42L, null);
 
-//         // Act
-//         JournalResponse updated = journalService.updateJournal(created.getJournalId(), testUserId, updateRequest);
+        assertEquals(1, result.size());
+    }
 
-//         // Assert
-//         assertNotNull(updated);
-//         assertEquals(created.getJournalId(), updated.getJournalId());
-//         assertEquals("Updated Title", updated.getTitle());
-//         assertEquals("Updated content", updated.getContent());
-//         assertEquals(Journal.ReminderType.DAILY, updated.getReminderType());
-//     }
+    @Test
+    void testUpdateJournal() {
+        when(journalRepo.findByJournalIdAndUser_UserId(456L, 42L))
+            .thenReturn(Optional.of(j1));
+        when(journalRepo.save(any(Journal.class))).thenReturn(j1);
 
-//     @Test
-//     void testDeleteJournal_Success() {
-//         // Arrange
-//         CreateJournalRequest request = new CreateJournalRequest();
-//         request.setTitle("Delete Test Entry");
-//         request.setContent("Content to be deleted");
-//         request.setReminderType(Journal.ReminderType.NONE);
-        
-//         JournalResponse created = journalService.createJournal(testUserId, request);
+        var updateReq = new UpdateJournalRequest();
+        updateReq.setTitle("Updated title");
+        updateReq.setContent("Updated content");
 
-//         // Act
-//         boolean deleted = journalService.deleteJournal(created.getJournalId(), testUserId);
+        JournalResponse result = service.updateJournal(456L, 42L, updateReq);
 
-//         // Assert
-//         assertTrue(deleted);
-        
-//         // Should throw exception when trying to get deleted journal
-//         assertThrows(IllegalArgumentException.class, () -> {
-//             journalService.getJournal(created.getJournalId(), testUserId);
-//         });
-//     }
+        assertNotNull(result);
+        verify(journalRepo).save(j1);
+    }
 
-//     @Test
-//     void testDeleteJournal_NotFound() {
-//         // Act
-//         boolean deleted = journalService.deleteJournal(999L, testUserId);
+    @Test
+    void testDeleteJournal() {
+        when(journalRepo.existsByJournalIdAndUser_UserId(456L, 42L)).thenReturn(true);
 
-//         // Assert
-//         assertFalse(deleted);
-//     }
-// }
+        boolean result = service.deleteJournal(456L, 42L);
+
+        assertTrue(result);
+        verify(journalRepo).deleteById(456L);
+    }
+}

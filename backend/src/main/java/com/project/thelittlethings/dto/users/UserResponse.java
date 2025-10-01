@@ -15,7 +15,7 @@ public class UserResponse {
     private String gender;
     private Integer streaks;
     private String region;
-    private String lastLogin; // ISO-8601 string or null
+    private String lastLogin; 
 
     public static UserResponse fromUser(User u) {
         UserResponse r = new UserResponse();
@@ -29,7 +29,7 @@ public class UserResponse {
         r.gender = u.getGender();
         r.streaks = u.getStreaks();
         r.region = u.getRegion();
-        // Read lastLogin OffsetDateTime directly from the entity (new dedicated field)
+       
         java.time.OffsetDateTime ll = u.getLastLogin();
         if (ll != null) {
             r.lastLogin = ll.toString();
@@ -39,7 +39,7 @@ public class UserResponse {
         return r;
     }
 
-    // getters and setters
+   
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
 

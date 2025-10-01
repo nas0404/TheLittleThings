@@ -1,12 +1,13 @@
-// src/components/categories/CategoryCard.tsx
 import type { Category } from "../../api/CategoryApi";
 
+// Props expected by the CategoryCard
 type Props = {
   category: Category;
   onEdit: () => void;
   onRequestDelete: () => void;
 };
 
+// Component to render a single category card
 export default function CategoryCard({ category, onEdit, onRequestDelete }: Props) {
   return (
     <div className="border rounded-xl p-4">
@@ -14,7 +15,6 @@ export default function CategoryCard({ category, onEdit, onRequestDelete }: Prop
         <div>
           <div className="flex items-center gap-2">
             <div className="font-semibold">{category.name}</div>
-            {/* UI model uses `id` now */}
             <span className="text-2xs text-slate-400">#{category.id}</span>
           </div>
           {category.description && (

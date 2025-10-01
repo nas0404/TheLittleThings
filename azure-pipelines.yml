@@ -1,15 +1,19 @@
-# azure-pipelines.yml
+# Trigger this pipeline whenever code is pushed to the 'main' branch
+trigger:
+  - main
+
+# Use a hosted Ubuntu virtual machine provided by Azure DevOps
 pool:
   vmImage: ubuntu-latest
 
 steps:
+  # Ensure Node.js 20.x is installed which is what is need for the frontend
   - task: UseNode@1
     displayName: "Use Node.js 20.x"
     inputs:
       version: '20.19.0'
 
-
-  # Optional: cache npm to speed up CI
+  # Cache frontend dependencies to speed up pipeline runs
   - task: Cache@2
     displayName: Cache npm (frontend)
     inputs:
@@ -17,19 +21,45 @@ steps:
       path: frontend/node_modules
       restoreKeys: |
         npm | "$(Agent.OS)"
-    # Cache only helps if node_modules already exists from a previous run;
-    # npm ci will still run and update as needed.
 
+  # Install frontend dependencies from package-lock.json file
   - script: npm ci
     displayName: "Install dependencies (frontend)"
     workingDirectory: frontend
 
-  # Unit test step(s) should go here, after install and before build.
-  # Example later: npm run test or npm run test:ci
-  # workingDirectory: frontend
-
+  # Build the frontend for ready production deployment
   - script: npm run build
     displayName: "Build frontend"
     workingDirectory: frontend
 
-    
+
+  # Make sure Java 17 is installed  which is needed for springboot and maven compliation
+  - task: JavaToolInstaller@0
+    displayName: "Set up Java 17"
+    inputs:
+      versionSpec: '17'
+      jdkArchitectureOption: 'x64'
+      jdkSourceOption: 'PreInstalled'
+
+  # Run backend unit tests with Maven
+  # Flags explained:
+  # -Dsurefire.printSummary=true = show test summary in console
+  # -Dsurefire.useFile=false = stream test results to console instead of a file
+  # --no-transfer-progress = hides Maven dependency download spam
+  - script: >
+      mvn -B clean test
+      -Dsurefire.printSummary=true
+      -Dsurefire.useFile=false
+      --no-transfer-progress
+    displayName: "Run backend unit tests"
+    workingDirectory: backend
+
+  # Publish JUnit test results to Azure DevOps
+  # This makes tests appear in the "Tests" tab with pass/fail status
+  - task: PublishTestResults@2
+    displayName: "Publish JUnit results"
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'backend/target/surefire-reports/*.xml'
+      mergeTestResults: true
+      testRunTitle: 'Backend Unit Tests'

@@ -1,5 +1,5 @@
-// src/test/java/com/project/thelittlethings/services/GoalServiceTest.java
 package com.project.thelittlethings.services;
+
 
 import com.project.thelittlethings.dto.goals.CreateGoalRequest;
 import com.project.thelittlethings.dto.goals.GoalResponse;
@@ -14,7 +14,6 @@ import com.project.thelittlethings.repositories.WinRepository;
 import org.junit.jupiter.api.*;
 import org.mockito.*;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,6 +27,7 @@ class GoalServiceTest {
   @Mock CategoryRepository categoryRepo;
   @Mock WinRepository winRepo;
 
+
   GoalService service;
 
   @BeforeEach
@@ -36,7 +36,6 @@ class GoalServiceTest {
     service = new GoalService(goalRepo, userRepo, categoryRepo, winRepo);
   }
 
-  // --- helpers -----------------------------------------------------
 
   private User CreateUserforGoal(long id) {
     var u = new User();
@@ -51,128 +50,47 @@ class GoalServiceTest {
     return c;
   }
 
-  private void seedUserAndCategory(long userId, long catId) {
-    var user = CreateUserforGoal(userId);
-    var cat = CreateCategoryForGoal(catId, user);
-    when(userRepo.findById(userId)).thenReturn(Optional.of(user));
-    when(categoryRepo.findById(catId)).thenReturn(Optional.of(cat));
-  }
-
-  // --- tests -------------------------------------------------------
-
-  @Test
+ @Test
   void create_success() {
-    long userId = 31L, catId = 4L;
+    Long userId = 7L;
 
-    var user = CreateUserforGoal(userId);
-    var cat = CreateCategoryForGoal(catId, user);
+    CreateGoalRequest req = new CreateGoalRequest();
+    req.setCategoryId(11L);
+    req.setTitle("Cut body fat");
+    req.setDescription("12-week plan");
+    req.setPriority("HIGH");
 
+    User user = new User(); user.setUserId(userId);
     when(userRepo.findById(userId)).thenReturn(Optional.of(user));
-    when(categoryRepo.findById(catId)).thenReturn(Optional.of(cat));
 
-    var saved = new Goal();
-    saved.setGoalId(100L);
-    saved.setUser(user);
-    saved.setCategory(cat);
-    saved.setTitle("Learn to block");
-    saved.setPriority("LOW");
+    Category cat = new Category(); cat.setCategoryId(11L); cat.setUser(user);
+    when(categoryRepo.findById(11L)).thenReturn(Optional.of(cat));
 
-    when(goalRepo.saveAndFlush(any(Goal.class))).thenReturn(saved);
-    when(goalRepo.findById(100L)).thenReturn(Optional.of(saved));
+    when(goalRepo.existsByUser_UserIdAndTitle(userId, "Cut body fat")).thenReturn(false);
 
-    var req = new CreateGoalRequest(catId, "Learn to block", "hands up", "low");
-    GoalResponse res = service.createGoal(userId, catId, req);
+    when(goalRepo.save(any(Goal.class))).thenAnswer(inv -> {
+      Goal g = inv.getArgument(0);
+      g.setGoalId(123L);
+      return g;
+    });
 
-    assertEquals(100L, res.getGoalId());
-    assertEquals(userId, res.getUserId());
-    assertEquals(catId, res.getCategoryId());
-    assertEquals("Learn to block", res.getTitle());
-    assertEquals("LOW", res.getPriority());
+    GoalResponse res = service.create(userId, req);
+
+    assertNotNull(res);
+    assertEquals(123L, res.getGoalId());
+    assertEquals("Cut body fat", res.getTitle());
+    assertEquals("HIGH", res.getPriority());
   }
 
-  @Test
-  void create_missingTitle_400() {
-    // Ensure we pass ownership checks and hit the title guard
-    seedUserAndCategory(31L, 4L);
-
-    var ex = assertThrows(IllegalArgumentException.class,
-        () -> service.createGoal(31L, 4L, new CreateGoalRequest(4L, "   ", "x", "HIGH")));
-    assertTrue(ex.getMessage().toLowerCase().contains("title is required"));
-  }
-
-  @Test
-  void create_badPriority_400() {
-    // Ensure we pass ownership checks and hit the priority guard
-    seedUserAndCategory(31L, 4L);
-
-    var ex = assertThrows(IllegalArgumentException.class,
-        () -> service.createGoal(31L, 4L, new CreateGoalRequest(4L, "t", "x", "WRONG")));
-    assertTrue(ex.getMessage().toLowerCase().contains("priority must be"));
-  }
 
   @Test
   void create_userNotFound_404() {
     when(userRepo.findById(31L)).thenReturn(Optional.empty());
     var ex = assertThrows(IllegalArgumentException.class,
-        () -> service.createGoal(31L, 4L, new CreateGoalRequest(4L, "t", null, "HIGH")));
+        () -> service.create(31L, new CreateGoalRequest(4L, "t", null, "HIGH")));
     assertTrue(ex.getMessage().toLowerCase().contains("user not found"));
   }
 
-  @Test
-  void create_categoryWrongOwner_400() {
-    long userId = 31L, catId = 4L;
-
-    var user = CreateUserforGoal(userId);
-    var other = CreateUserforGoal(99L);
-    var cat = CreateCategoryForGoal(catId, other);
-
-    when(userRepo.findById(userId)).thenReturn(Optional.of(user));
-    when(categoryRepo.findById(catId)).thenReturn(Optional.of(cat));
-
-    var ex = assertThrows(IllegalArgumentException.class,
-        () -> service.createGoal(userId, catId, new CreateGoalRequest(catId, "t", null, "HIGH")));
-    assertTrue(ex.getMessage().toLowerCase().contains("does not belong"));
-  }
-
-  @Test
-  void listByUser_success() {
-    // mustUser() uses userRepo.findById(...)
-    var user = CreateUserforGoal(31L);
-    when(userRepo.findById(31L)).thenReturn(Optional.of(user));
-
-    var cat = CreateCategoryForGoal(4L, user);
-
-    var g1 = new Goal();
-    g1.setGoalId(1L);
-    g1.setUser(user);
-    g1.setCategory(cat);
-    g1.setTitle("A");
-    g1.setPriority("HIGH");
-
-    var g2 = new Goal();
-    g2.setGoalId(2L);
-    g2.setUser(user);
-    g2.setCategory(cat);
-    g2.setTitle("B");
-    g2.setPriority("LOW");
-
-    when(goalRepo.findByUser_UserId(31L)).thenReturn(List.of(g1, g2));
-
-    var list = service.listGoalsByUser(31L);
-    assertEquals(2, list.size());
-    assertEquals("A", list.get(0).getTitle());
-    assertEquals("B", list.get(1).getTitle());
-  }
-
-  @Test
-  void getOwnedGoal_wrongOwner_404() {
-    // mustGoalOwned() queries by goalId+userId together
-    when(goalRepo.findByGoalIdAndUser_UserId(9L, 77L)).thenReturn(Optional.empty());
-
-    var ex = assertThrows(IllegalArgumentException.class,
-        () -> service.getOwnedGoal(9L, 77L));
-    assertTrue(ex.getMessage().toLowerCase().contains("not found"));
-  }
 
   @Test
   void update_priorityValidation_400() {

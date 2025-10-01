@@ -1,83 +1,134 @@
 package com.project.thelittlethings.controller;
 
-
-import com.project.thelittlethings.MaterialisedView.CategoryNeglectedView;
-import com.project.thelittlethings.View.CategoryNeglectView;
 import com.project.thelittlethings.dto.categories.CategoryResponse;
 import com.project.thelittlethings.dto.categories.CreateCategoryRequest;
 import com.project.thelittlethings.dto.categories.UpdateCategoryRequest;
+import com.project.thelittlethings.entities.User;
+import com.project.thelittlethings.security.HMACtokens;
 import com.project.thelittlethings.services.CategoryService;
+import com.project.thelittlethings.services.UserService;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Positive;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users/{userId}/categories")
+@RequestMapping("/api/categories")
 public class CategoryController {
 
-    private final CategoryService service;
+  private final CategoryService categoryService;
+  private final UserService userService;
 
-    public CategoryController(CategoryService service) {
-        this.service = service;
-    }
-
-    // Create
-  @PostMapping
-  public ResponseEntity<CategoryResponse> create(@PathVariable Long userId,
-                                                 @Valid @RequestBody CreateCategoryRequest req,
-                                                 UriComponentsBuilder uri) {
-    CategoryResponse created = service.create(userId, req);
-    URI location = uri.path("/api/users/{userId}/categories/{id}").buildAndExpand(userId, created.getCategoryId()).toUri();
-    return ResponseEntity.created(location).body(created);
+  public CategoryController(CategoryService categoryService, UserService userService) {
+    this.categoryService = categoryService;
+    this.userService = userService;
   }
 
-    // List all categories for a users
-    @GetMapping
-    public List<CategoryResponse> list(@PathVariable Long userId) {
-        return service.listByUser(userId);
-    }
+  // Extract userId from Authorization header
+  private Long userIdFromAuth(String authHeader) {
+    final String token = authHeader != null && authHeader.startsWith("Bearer ")
+        ? authHeader.substring(7)
+        : authHeader;
 
-    // Get single category
-    @GetMapping("/{id}")
-    public CategoryResponse get(@PathVariable Long userId,
-                                @PathVariable Long id) {
-        return service.getOwned(id, userId);
+    if (!HMACtokens.validateToken(token)) {
+      throw new IllegalArgumentException("Invalid or expired token");
     }
+    final String username = HMACtokens.extractUsername(token);
+    if (username == null)
+      throw new IllegalArgumentException("Invalid token");
 
-    // Update 
-    @PutMapping("/{id}")
-    public ResponseEntity<CategoryResponse> update(@PathVariable Long userId,
-                                                   @Valid @PathVariable Long id,
-                                                   @RequestBody UpdateCategoryRequest req) {
-        return ResponseEntity.ok(service.update(id, userId, req));
-    }
+    User u = userService.findByUsername(username);
+    if (u == null)
+      throw new IllegalArgumentException("User not found");
+    return u.getUserId();
+  }
 
-    // Delete a category 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long userId, @PathVariable Long id) {
-        service.delete(id, userId);
-        return ResponseEntity.noContent().build();
+  // List all categories for the authenticated user
+  @GetMapping
+  public ResponseEntity<?> list(@RequestHeader("Authorization") String auth) {
+    try {
+      Long userId = userIdFromAuth(auth);
+      List<CategoryResponse> categories = categoryService.listByUser(userId);
+      return ResponseEntity.ok(categories);
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
     }
-    
-    // Get neglected categories (no wins in X days, default 14)
-    // Validations also put in place for days param
-    @GetMapping("/neglected")
-    public List<CategoryNeglectedView> neglected(
-        @PathVariable @Positive(message = "userId must be a positive number") Long userId,
-        @RequestParam(defaultValue = "14")
-        @Min(value = 1, message = "days must be at least 1")
-        @Max(value = 3650, message = "days must be ≤ 3650") Integer days) {
-        return service.getNeglectedCategories(userId, days);
+  }
+
+  // Create a new category for the authenticated user
+  @PostMapping
+  public ResponseEntity<?> create(@RequestHeader("Authorization") String auth,
+      @Valid @RequestBody CreateCategoryRequest req) {
+    try {
+      Long userId = userIdFromAuth(auth);
+      CategoryResponse created = categoryService.create(userId, req);
+      return ResponseEntity
+          .created(URI.create("/api/categories/" + created.getCategoryId()))
+          .body(created);
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
     }
+  }
+
+  // Get details of a specific category owned by the authenticated user
+  @GetMapping("/{id}")
+  public ResponseEntity<?> get(@RequestHeader("Authorization") String auth,
+      @PathVariable("id") Long id) {
+    try {
+      Long userId = userIdFromAuth(auth);
+      CategoryResponse cat = categoryService.getOwned(id, userId);
+      return ResponseEntity.ok(cat);
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+  }
+
+  // Update an existing category owned by the authenticated user
+  @PutMapping("/{id}")
+  public ResponseEntity<?> update(@RequestHeader("Authorization") String auth,
+      @PathVariable("id") Long id,
+      @Valid @RequestBody UpdateCategoryRequest req) {
+    try {
+      Long userId = userIdFromAuth(auth);
+      CategoryResponse updated = categoryService.update(id, userId, req);
+      return ResponseEntity.ok(updated);
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+  }
+
+  // Delete a category owned by the authenticated user
+  @DeleteMapping("/{id}")
+  public ResponseEntity<?> delete(@RequestHeader("Authorization") String auth,
+      @PathVariable("id") Long id) {
+    try {
+      Long userId = userIdFromAuth(auth);
+      categoryService.delete(id, userId);
+      return ResponseEntity.noContent().build();
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+  }
+
+  // Get neglected categories for the authenticated user
+  @GetMapping("/neglected")
+  public ResponseEntity<?> neglected(@RequestHeader("Authorization") String auth,
+      @RequestParam(value = "days", required = false) Integer days) {
+    try {
+      Long userId = userIdFromAuth(auth);
+      return ResponseEntity.ok(categoryService.getNeglectedCategories(userId, days));
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+  }
+
+  // @PostMapping("/{id}/complete")
+  // public ResponseEntity<String> completeGoal(@PathVariable Long id) {
+  // service.completeGoal(id);
+  // return ResponseEntity.ok("Goal completed and Win recorded.");
+  // }
 }
-
-

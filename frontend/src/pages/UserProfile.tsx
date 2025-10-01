@@ -8,9 +8,9 @@ export default function UserProfile() {
 	const [newPass, setNewPass] = useState('');
 
 	useEffect(() => {
-		const t = localStorage.getItem('token');
-		if (!t) return;
-		fetch('http://localhost:8080/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+		const token = localStorage.getItem('token');
+		if (!token) return;
+		fetch('http://localhost:8080/api/users/me', { headers: { Authorization: `Bearer ${token}` } })
 			.then((r) => r.json())
 			.then(data => {
 				console.log('User data received:', data);
@@ -22,10 +22,10 @@ export default function UserProfile() {
 	}, []);
 
 	const change = async () => {
-		const t = localStorage.getItem('token');
+		const token = localStorage.getItem('token');
 		try {
 			const res = await fetch('http://localhost:8080/api/users/change-password', {
-				method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+				method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass })
 			});
 			if (!res.ok) {
@@ -40,10 +40,10 @@ export default function UserProfile() {
 
 	const [newUsername, setNewUsername] = useState('');
 	const changeUsername = async () => {
-		const t = localStorage.getItem('token');
+		const token = localStorage.getItem('token');
 		try {
 			const res = await fetch('http://localhost:8080/api/users/change-username', {
-				method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+				method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ newUsername })
 			});
 			if (!res.ok) {
@@ -64,8 +64,8 @@ export default function UserProfile() {
 	};
 
 	const logout = async () => {
-		const t = localStorage.getItem('token');
-		await fetch('http://localhost:8080/api/users/logout', { method: 'POST', headers: { Authorization: `Bearer ${t}` } });
+		const token = localStorage.getItem('token');
+		await fetch('http://localhost:8080/api/users/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
 		localStorage.removeItem('token');
 		window.location.href = '/';
 	};
@@ -83,7 +83,7 @@ export default function UserProfile() {
 						<div><strong>Date of Birth:</strong> {user.dob ? new Date(user.dob).toLocaleDateString() : 'Not specified'}</div>
 						<div><strong>Gender:</strong> {user.gender || 'Not specified'}</div>
 						<div><strong>Region:</strong> {user.region || 'Not specified'}</div>
-						<div><strong>Streaks:</strong> {user.streaks !== null && user.streaks !== undefined ? user.streaks : 0}</div>
+						<div><strong>Streak:</strong> {user.streaks !== null && user.streaks !== undefined ? user.streaks : 0}</div>
 						<div><strong>Last login:</strong> {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}</div>
 					</div>
 
@@ -105,9 +105,9 @@ export default function UserProfile() {
 						<div className="mt-3">
 							<Button onClick={async () => {
 								if (!confirm('Delete your account? This is irreversible.')) return;
-								const t = localStorage.getItem('token');
+								const token = localStorage.getItem('token');
 								try {
-									const res = await fetch('http://localhost:8080/api/users/', { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+									const res = await fetch('http://localhost:8080/api/users/', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
 									if (!res.ok) { setError('Delete failed'); return; }
 									localStorage.removeItem('token');
 									window.location.href = '/';

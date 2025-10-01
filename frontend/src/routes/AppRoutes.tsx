@@ -13,7 +13,6 @@ import Leaderboard from '../pages/Leaderboard.tsx';
 import Wins from '../pages/Wins.tsx';
 import Goals from '../pages/Goals.tsx';
 import Journal from '../pages/Journal';
-import DevUser from "../pages/DevUser.tsx";
 
 export default function AppRoutes() {
   return (
@@ -21,7 +20,6 @@ export default function AppRoutes() {
       <Route path="/" element={<Landing />} />
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<SignIn />} />
-      <Route path="/dev-user" element={<DevUser />} />
       <Route path="/user" element={<UserProfile />} />
       <Route path="/home" element={<Home />} />
       <Route path="/about" element={<About />} />

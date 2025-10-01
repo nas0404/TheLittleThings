@@ -95,7 +95,7 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        setError('Please log in to update the journal entry');
+        setError('Please log in');
         return;
       }
 

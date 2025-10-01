@@ -3,7 +3,10 @@ package com.project.thelittlethings.controller;
 import com.project.thelittlethings.dto.goals.CreateGoalRequest;
 import com.project.thelittlethings.dto.goals.GoalResponse;
 import com.project.thelittlethings.dto.goals.UpdateGoalRequest;
+import com.project.thelittlethings.entities.User;
+import com.project.thelittlethings.security.HMACtokens;
 import com.project.thelittlethings.services.GoalService;
+import com.project.thelittlethings.services.UserService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
@@ -21,76 +24,123 @@ import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/api/users/{userId}/goals")
-@Validated // enables validation on method params (@RequestParam/@PathVariable)
+@RequestMapping("/api/goals")
+@Validated
 public class GoalController {
 
-  private final GoalService service;
+  private final GoalService goalService;
+  private final UserService userService;
 
-  public GoalController(GoalService service) {
-    this.service = service;
+  public GoalController(GoalService goalService, UserService userService) {
+    this.goalService = goalService;
+    this.userService = userService;
   }
 
-  // Create a goal and categoryId comes from the request body.
+  private Long userIdFromAuth(String authHeader) {
+    final String token = (authHeader != null && authHeader.startsWith("Bearer "))
+        ? authHeader.substring(7)
+        : authHeader;
+
+    if (!HMACtokens.validateToken(token)) {
+      throw new IllegalArgumentException("Invalid or expired token");
+    }
+    final String username = HMACtokens.extractUsername(token);
+    if (username == null)
+      throw new IllegalArgumentException("Invalid token");
+    User u = userService.findByUsername(username);
+    if (u == null)
+      throw new IllegalArgumentException("User not found");
+    return u.getUserId();
+  }
+
   @PostMapping
-  public ResponseEntity<GoalResponse> create(@PathVariable @Positive(message = "userId must be positive") Long userId,
+  public ResponseEntity<?> create(@RequestHeader("Authorization") String auth,
       @Valid @RequestBody CreateGoalRequest req,
       UriComponentsBuilder uri) {
-    var created = service.createGoal(userId, req.getCategoryId(), req);
-    URI location = uri.path("/api/users/{userId}/goals/{goalId}")
-        .buildAndExpand(userId, created.getGoalId())
-        .toUri();
-    return ResponseEntity.created(location).body(created);
+    try {
+      Long userId = userIdFromAuth(auth);
+      GoalResponse created = goalService.create(userId, req);
+      URI location = uri.path("/api/goals/{goalId}")
+          .buildAndExpand(created.getGoalId())
+          .toUri();
+      return ResponseEntity.created(location).body(created);
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
   }
 
-  // List all goals for a user, or filter by categoryId.
   @GetMapping
-  public List<GoalResponse> list(@PathVariable @Positive(message = "userId must be positive") Long userId,
+  public ResponseEntity<?> list(@RequestHeader("Authorization") String auth,
       @RequestParam(required = false) @Positive(message = "category must be valid") Long categoryId) {
-    return (categoryId == null)
-        ? service.listGoalsByUser(userId)
-        : service.listGoalsByUserAndCategory(userId, categoryId);
+    try {
+      Long userId = userIdFromAuth(auth);
+      List<GoalResponse> out = (categoryId == null)
+          ? goalService.listGoalsByUser(userId)
+          : goalService.listGoalsByUserAndCategory(userId, categoryId);
+      return ResponseEntity.ok(out);
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
   }
 
-  // Grouped listing by priority (HIGH/MEDIUM/LOW). Optional categoryId & priority
-  // filter.
   @GetMapping("/grouped")
-  public Map<String, List<GoalResponse>> listGrouped(
-      @PathVariable @Positive(message = "userId must be positive") Long userId,
+  public ResponseEntity<?> listGrouped(@RequestHeader("Authorization") String auth,
       @RequestParam(required = false) @Positive(message = "category must be valid") Long categoryId,
       @RequestParam(required = false) @Pattern(regexp = "^(?i)(HIGH|MEDIUM|LOW)$", message = "priority must be HIGH, MEDIUM, or LOW") String priority) {
-    return service.listGrouped(userId, categoryId, priority);
+    try {
+      Long userId = userIdFromAuth(auth);
+      Map<String, List<GoalResponse>> grouped = goalService.listGrouped(userId, categoryId, priority);
+      return ResponseEntity.ok(grouped);
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
   }
 
-  // Get a single goal
   @GetMapping("/{goalId}")
-  public GoalResponse getOne(@PathVariable @Positive(message = "userId must be positive") Long userId,
+  public ResponseEntity<?> getOne(@RequestHeader("Authorization") String auth,
       @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
-    return service.getOwnedGoal(goalId, userId);
+    try {
+      Long userId = userIdFromAuth(auth);
+      return ResponseEntity.ok(goalService.getOwnedGoal(goalId, userId));
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
   }
 
-  // Update a goal (fully or partially); can also move category.
   @PutMapping("/{goalId}")
-  public ResponseEntity<GoalResponse> update(@PathVariable @Positive(message = "userId must be positive") Long userId,
+  public ResponseEntity<?> update(@RequestHeader("Authorization") String auth,
       @PathVariable @Positive(message = "goalId must be positive") Long goalId,
       @Valid @RequestBody UpdateGoalRequest req) {
-    return ResponseEntity.ok(service.updateGoal(goalId, userId, req));
+    try {
+      Long userId = userIdFromAuth(auth);
+      return ResponseEntity.ok(goalService.updateGoal(goalId, userId, req));
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
   }
 
-  // Delete a goal.
   @DeleteMapping("/{goalId}")
-  public ResponseEntity<Void> delete(@PathVariable @Positive(message = "userId must be positive") Long userId,
+  public ResponseEntity<?> delete(@RequestHeader("Authorization") String auth,
       @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
-    service.delete(goalId, userId);
-    return ResponseEntity.noContent().build();
+    try {
+      Long userId = userIdFromAuth(auth);
+      goalService.delete(goalId, userId);
+      return ResponseEntity.noContent().build();
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
   }
 
   @PostMapping("/{goalId}/complete")
-  public ResponseEntity<String> completeGoal(
-      @PathVariable("userId") @Positive(message = "userId must be positive") Long userId,
-      @PathVariable("goalId") @Positive(message = "goalId must be positive") Long goalId) {
-
-    service.completeGoal(goalId);
-    return ResponseEntity.ok("Goal completed and Win recorded.");
+  public ResponseEntity<?> complete(@RequestHeader("Authorization") String auth,
+      @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
+    try {
+      long userId = userIdFromAuth(auth);
+      goalService.getOwnedGoal(goalId, userId);
+      goalService.completeGoal(goalId);
+      return ResponseEntity.ok("Goal completed and Win recorded.");
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    }
   }
 }

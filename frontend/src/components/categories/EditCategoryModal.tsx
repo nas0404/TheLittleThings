@@ -1,26 +1,31 @@
-// src/components/categories/EditCategoryModal.tsx
 import React, { useState } from "react";
 import type { Category, UpdateCategoryRequest } from "../../api/CategoryApi";
 import { mapServerErrors } from "../../lib/mapServerErrors";
 
+// Props expected by the EditCategoryModal
 type Props = {
   category: Category;
   onClose: () => void;
   onSaved: (payload: UpdateCategoryRequest) => Promise<void>;
 };
 
+
 export default function EditCategoryModal({ category, onClose, onSaved }: Props) {
+
+  // Form state for fields, errors, and submission status
   const [name, setName] = useState(category.name);
   const [description, setDescription] = useState(category.description ?? "");
   const [saving, setSaving] = useState(false);
   const [errs, setErrs] = useState<Record<string, string>>({});
 
+  // Handle form submission
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setErrs({});
+
+    // Client-side validation
     try {
-      // both fields are fine; backend can treat them as full or partial update
       await onSaved({ name, description: description ? description : null });
     } catch (e: any) {
       const mapped = mapServerErrors(e?.details);

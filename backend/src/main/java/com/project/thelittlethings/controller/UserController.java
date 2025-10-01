@@ -3,7 +3,7 @@ package com.project.thelittlethings.controller;
 import com.project.thelittlethings.entities.User;
 import com.project.thelittlethings.dto.users.*;
 import com.project.thelittlethings.services.UserService;
-import com.project.thelittlethings.security.TokenUtil;
+import com.project.thelittlethings.security.HMACtokens;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,8 +22,22 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody CreateUserRequest req) {
         try {
+            // validate request to prevent crashes
+            if (req == null) {
+                return ResponseEntity.badRequest().body("Request cannot be empty");
+            }
+            if (req.getUsername() == null || req.getUsername().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Username is required");
+            }
+            if (req.getEmail() == null || req.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Email is required");
+            }
+            if (req.getPassword() == null || req.getPassword().length() < 6) {
+                return ResponseEntity.badRequest().body("Password must be at least 6 characters");
+            }
+            
             User u = userService.register(req);
-            String token = TokenUtil.issueToken(u.getUsername(), 60 * 60 * 24);
+            String token = HMACtokens.issueToken(u.getUsername(), 60 * 60 * 24);
             return ResponseEntity.ok(new AuthResponse(token, u.getUserId(), u.getUsername()));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
@@ -33,8 +47,19 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         try {
+            // basic checks
+            if (req == null) {
+                return ResponseEntity.badRequest().body("Request cannot be empty");
+            }
+            if (req.getUsernameOrEmail() == null || req.getUsernameOrEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Username or email is required");
+            }
+            if (req.getPassword() == null || req.getPassword().isEmpty()) {
+                return ResponseEntity.badRequest().body("Password is required");
+            }
+            
             String token = userService.login(req);
-            String username = TokenUtil.extractUsername(token);
+            String username = HMACtokens.extractUsername(token);
             User u = userService.findByUsername(username);
             return ResponseEntity.ok(new AuthResponse(token, u.getUserId(), u.getUsername()));
         } catch (IllegalArgumentException ex) {
@@ -53,11 +78,11 @@ public class UserController {
     public ResponseEntity<?> me(@RequestHeader("Authorization") String auth) {
         try {
             String token = auth.replaceFirst("Bearer ", "");
-            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) {
+            if (!HMACtokens.validateToken(token) || userService.isTokenBlacklisted(token)) {
                 return ResponseEntity.status(401).build();
             }
             
-            String username = TokenUtil.extractUsername(token);
+            String username = HMACtokens.extractUsername(token);
             User user = userService.findByUsername(username);
             if (user == null) return ResponseEntity.status(404).build();
             
@@ -71,9 +96,16 @@ public class UserController {
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String auth, @RequestBody ChangePasswordRequest req) {
         try {
+            if (req == null || req.getOldPassword() == null || req.getNewPassword() == null) {
+                return ResponseEntity.badRequest().body("Old and new passwords are required");
+            }
+            if (req.getNewPassword().length() < 6) {
+                return ResponseEntity.badRequest().body("New password must be at least 6 characters");
+            }
+            
             String token = auth.replaceFirst("Bearer ", "");
-            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
-            String username = TokenUtil.extractUsername(token);
+            if (!HMACtokens.validateToken(token) || userService.isTokenBlacklisted(token)) return ResponseEntity.status(401).build();
+            String username = HMACtokens.extractUsername(token);
             User u = userService.findByUsername(username);
             userService.changePassword(u.getUserId(), req.getOldPassword(), req.getNewPassword());
             return ResponseEntity.ok().build();
@@ -86,11 +118,11 @@ public class UserController {
     public ResponseEntity<?> changeUsername(@RequestHeader("Authorization") String auth, @RequestBody ChangeUsernameRequest req) {
         try {
             String token = auth.replaceFirst("Bearer ", "");
-            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) {
+            if (!HMACtokens.validateToken(token) || userService.isTokenBlacklisted(token)) {
                 return ResponseEntity.status(401).build();
             }
             
-            String username = TokenUtil.extractUsername(token);
+            String username = HMACtokens.extractUsername(token);
             User user = userService.findByUsername(username);
             if (user == null) return ResponseEntity.status(404).build();
             
@@ -105,11 +137,11 @@ public class UserController {
     public ResponseEntity<?> deleteAccount(@RequestHeader("Authorization") String auth) {
         try {
             String token = auth.replaceFirst("Bearer ", "");
-            if (!TokenUtil.validateToken(token) || userService.isTokenBlacklisted(token)) {
+            if (!HMACtokens.validateToken(token) || userService.isTokenBlacklisted(token)) {
                 return ResponseEntity.status(401).build();
             }
             
-            String username = TokenUtil.extractUsername(token);
+            String username = HMACtokens.extractUsername(token);
             User user = userService.findByUsername(username);
             if (user == null) return ResponseEntity.status(404).build();
             

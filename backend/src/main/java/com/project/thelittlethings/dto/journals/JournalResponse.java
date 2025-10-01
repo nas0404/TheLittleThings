@@ -8,11 +8,11 @@ public class JournalResponse {
     private String title;
     private String content;
     private Long linkedWinId;
-    private String linkedWinTitle; // For convenience in UI
+    private String linkedWinTitle; 
     private String createdAt;
     private String updatedAt;
 
-    // Constructors
+   
     public JournalResponse() {}
 
     public JournalResponse(Long journalId, String title, String content, Long linkedWinId, 
@@ -26,7 +26,6 @@ public class JournalResponse {
         this.updatedAt = updatedAt;
     }
 
-    // Static factory method to create from Journal entity
     public static JournalResponse fromJournal(Journal journal) {
         JournalResponse response = new JournalResponse();
         response.journalId = journal.getJournalId();
@@ -34,15 +33,12 @@ public class JournalResponse {
         response.content = journal.getContent();
         response.linkedWinId = journal.getLinkedWin() != null ? journal.getLinkedWin().getWinId() : null;
         response.linkedWinTitle = journal.getLinkedWin() != null ? journal.getLinkedWin().getTitle() : null;
-        
         DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
         response.createdAt = journal.getCreatedAt() != null ? journal.getCreatedAt().format(formatter) : null;
         response.updatedAt = journal.getUpdatedAt() != null ? journal.getUpdatedAt().format(formatter) : null;
-        
-        return response;
-    }
+        return response; }
 
-    // Getters and setters
+   
     public Long getJournalId() { return journalId; }
     public void setJournalId(Long journalId) { this.journalId = journalId; }
 

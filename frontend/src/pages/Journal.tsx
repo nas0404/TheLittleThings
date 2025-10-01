@@ -31,8 +31,9 @@ export default function Journal() {
     setError(null);
     
     const token = localStorage.getItem('token');
+    console.log('Fetching journl entries');
     if (!token) {
-      setError('Please log in first');
+      setError('Please log in frist');
       setLoading(false);
       return;
     }

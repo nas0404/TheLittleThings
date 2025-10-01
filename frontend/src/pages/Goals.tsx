@@ -1,28 +1,25 @@
-// src/pages/GoalsPage.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import GoalCard from "../components/goals/GoalCard";
 import EditGoalModal, { type UpdateGoalRequest } from "../components/goals/EditGoalModal";
 import { mapServerErrors } from "../lib/mapServerErrors";
 
-// Use  existing API wrappers
 import { GoalsAPI, type GoalResponse, type Priority, type CreateGoalRequest } from "../api/GoalApi";
-import { CategoriesAPI, type Category as UICategory } from "../api/CategoryApi"; // UI model has `id`
+import { CategoriesAPI, type Category as UICategory } from "../api/CategoryApi";
+
+type SortKey = "createdAt_desc" | "priority_desc";
 
 export default function GoalsPage() {
-  // just for display in the header; APIs already infer this internally
-  const devUserId = localStorage.getItem("devUserId") ?? "—";
 
-  // data
   const [categories, setCategories] = useState<UICategory[]>([]);
   const [goals, setGoals] = useState<GoalResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // filter (left)
   const [filterCategoryIdStr, setFilterCategoryIdStr] = useState<string>("");
 
-  // create (right)
+  const [sortBy, setSortBy] = useState<SortKey>("createdAt_desc");
+
   const [newCategoryIdStr, setNewCategoryIdStr] = useState<string>("");
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -30,7 +27,6 @@ export default function GoalsPage() {
   const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
   const [creating, setCreating] = useState(false);
 
-  // edit / delete
   const [editingGoal, setEditingGoal] = useState<GoalResponse | null>(null);
   const [toDelete, setToDelete] = useState<GoalResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -45,8 +41,8 @@ export default function GoalsPage() {
     setError(null);
     try {
       const [cats, goalsList] = await Promise.all([
-        CategoriesAPI.list(),                            // returns UI categories with `id`
-        GoalsAPI.list({ categoryId: selectedFilterCategoryId }), // filtered goals
+        CategoriesAPI.list(),
+        GoalsAPI.list({ categoryId: selectedFilterCategoryId }),
       ]);
       setCategories(cats);
       setGoals(goalsList);
@@ -61,14 +57,28 @@ export default function GoalsPage() {
     refreshAll();
   }, [selectedFilterCategoryId]);
 
-  // CREATE
+  const sortedGoals = useMemo(() => {
+    const byNewest = (a: GoalResponse, b: GoalResponse) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+
+    if (sortBy === "createdAt_desc") return [...goals].sort(byNewest);
+
+    const weight: Record<Priority, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+    return [...goals].sort((a, b) => {
+      const wa = weight[a.priority] ?? 3;
+      const wb = weight[b.priority] ?? 3;
+      if (wa !== wb) return wa - wb;
+      return byNewest(a, b);
+    });
+  }, [goals, sortBy]);
+
   async function handleCreateGoal(e: React.FormEvent) {
     e.preventDefault();
     setCreating(true);
     setCreateErrors({});
 
     const payload: Required<CreateGoalRequest> = {
-      categoryId: Number(newCategoryIdStr),      // required by backend
+      categoryId: Number(newCategoryIdStr),
       title: newTitle.trim(),
       description: newDescription ? newDescription : null,
       priority: newPriority,
@@ -76,7 +86,10 @@ export default function GoalsPage() {
 
     try {
       await GoalsAPI.create(payload);
-      setNewCategoryIdStr(""); setNewTitle(""); setNewDescription(""); setNewPriority("MEDIUM");
+      setNewCategoryIdStr("");
+      setNewTitle("");
+      setNewDescription("");
+      setNewPriority("MEDIUM");
       await refreshAll();
     } catch (e: any) {
       const mapped = mapServerErrors(e?.details);
@@ -86,14 +99,14 @@ export default function GoalsPage() {
     }
   }
 
-  // UPDATE (called by modal)
   async function handleUpdateGoal(goalId: number, body: UpdateGoalRequest) {
     await GoalsAPI.update(goalId, body);
     await refreshAll();
   }
 
-  // DELETE (in-app confirm)
-  function requestDelete(goal: GoalResponse) { setToDelete(goal); }
+  function requestDelete(goal: GoalResponse) {
+    setToDelete(goal);
+  }
   async function confirmDelete() {
     if (!toDelete) return;
     setDeleting(true);
@@ -141,63 +154,64 @@ export default function GoalsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Left: list & filter */}
       <div className="rounded-2xl border border-slate-200 p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-semibold">Goals</h2>
-          <span className="text-xs text-slate-500">dev user: {devUserId}</span>
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Filter by category</label>
+            <select
+              className="w-full rounded-lg border px-3 py-2"
+              value={filterCategoryIdStr}
+              onChange={(e) => setFilterCategoryIdStr(e.target.value)}
+            >
+              <option value="">All</option>
+              {categories.map((c) => (
+                <option key={c.id} value={String(c.id)}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Filter by category</label>
-          <select
-            className="w-40 rounded-lg border px-3 py-2"
-            value={filterCategoryIdStr}
-            onChange={(e) => setFilterCategoryIdStr(e.target.value)}
-          >
-            <option value="">All</option>
-            {categories.map((c) => (
-              <option key={c.id} value={String(c.id)}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm font-medium mb-1">Sort by</label>
+            <select
+              className="w-full rounded-lg border px-3 py-2"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortKey)}
+            >
+              <option value="createdAt_desc">Newest first</option>
+              <option value="priority_desc">Priority (HIGH → LOW)</option>
+            </select>
+          </div>
         </div>
 
         {loading && <div className="text-sm text-slate-500">Loading…</div>}
         {error && <div className="text-sm text-red-600">{error}</div>}
 
-        {!loading && !error && goals.length === 0 && (
+        {!loading && !error && sortedGoals.length === 0 && (
           <div className="text-sm text-slate-500">No goals yet. Add one on the right.</div>
         )}
 
         <div className="space-y-3">
-          {goals.map((g) => (
-            <div key={g.goalId} className="flex items-center justify-between">
-              <GoalCard
-                key={g.goalId}
-                goal={{
-                  goalId: g.goalId,
-                  title: g.title,
-                  description: g.description ?? null,
-                  priority: g.priority,
-                }}
-                onRequestDelete={() => requestDelete(g)}
-                onEdit={() => setEditingGoal(g)}
-              />
-              <button
-                onClick={() => completeGoal(g.goalId)}
-                className="ml-4 px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                type="button"
-              >
-                Complete Goal
-              </button>
-            </div>
+          {sortedGoals.map((g) => (
+            <GoalCard
+              key={g.goalId}
+              goal={{
+                goalId: g.goalId,
+                title: g.title,
+                description: g.description ?? null,
+                priority: g.priority,
+              }}
+              onRequestDelete={() => requestDelete(g)}
+              onEdit={() => setEditingGoal(g)}
+            />
           ))}
         </div>
       </div>
 
-      {/* Right: New Goal */}
       <div className="rounded-2xl border border-slate-200 p-5">
         <h2 className="text-xl font-semibold mb-3">New Goal</h2>
 
@@ -211,7 +225,9 @@ export default function GoalsPage() {
               value={newCategoryIdStr}
               onChange={(e) => setNewCategoryIdStr(e.target.value)}
             >
-              <option value="" disabled>Select…</option>
+              <option value="" disabled>
+                Select…
+              </option>
               {categories.map((c) => (
                 <option key={c.id} value={String(c.id)}>
                   {c.name}
@@ -231,9 +247,7 @@ export default function GoalsPage() {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
             />
-            {createErrors.title && (
-              <p className="text-xs text-red-600 mt-1">{createErrors.title}</p>
-            )}
+            {createErrors.title && <p className="text-xs text-red-600 mt-1">{createErrors.title}</p>}
           </div>
 
           <div>
@@ -271,7 +285,6 @@ export default function GoalsPage() {
         </form>
       </div>
 
-      {/* Edit modal */}
       {editingGoal && (
         <EditGoalModal
           goal={{
@@ -281,21 +294,19 @@ export default function GoalsPage() {
             priority: editingGoal.priority,
             categoryId: editingGoal.categoryId,
           }}
-          // Map UI categories (`id`) to the modal’s expected shape (`categoryId`)
-          categories={categories.map(c => ({ categoryId: c.id, name: c.name }))}
+          categories={categories.map((c) => ({ categoryId: c.id, name: c.name }))}
           onClose={() => setEditingGoal(null)}
           onSave={async (payload: UpdateGoalRequest) => {
             try {
               await handleUpdateGoal(editingGoal.goalId, payload);
               setEditingGoal(null);
             } catch (e) {
-              throw e; // handled inside modal
+              throw e;
             }
           }}
         />
       )}
 
-      {/* In-app confirm dialog for delete */}
       <ConfirmDialog
         open={!!toDelete}
         title="Delete goal"

@@ -7,7 +7,7 @@ type Props = {
   onConfirm: () => void | Promise<void>;
   onCancel: () => void;
 };
-
+//Dynamic Popup Confirmation Dialog Component 
 export default function ConfirmDialog({
   open,
   title = "Are you sure?",

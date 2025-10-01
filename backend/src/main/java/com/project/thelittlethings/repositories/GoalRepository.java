@@ -9,26 +9,22 @@ import java.util.Optional;
 
 public interface GoalRepository extends JpaRepository<Goal, Long> {
 
-    // Listing
-    List<Goal> findByUser_UserId(Long userId);  // all goals for a user
+    List<Goal> findByUser_UserId(Long userId);
 
-    List<Goal> findByUser_UserIdAndCategory_CategoryId(Long userId, Long categoryId); // goals in a category
+    List<Goal> findByUser_UserIdAndCategory_CategoryId(Long userId, Long categoryId);
 
-    // “View details” with ownership of goals
     Optional<Goal> findByGoalIdAndUser_UserId(Long goalId, Long userId);
 
-    // Booleans / existence checks
     boolean existsByGoalIdAndUser_UserId(Long goalId, Long userId);
     boolean existsByUser_UserId(Long userId);
     boolean existsByCategory_CategoryId(Long categoryId);
-    boolean existsByUser_UserIdAndTitle(Long userId, String title); // duplicate title per user (optional)
+    boolean existsByUser_UserIdAndTitle(Long userId, String title); 
 
-    // Counters
     long countByUser_UserId(Long userId);
     long countByCategory_CategoryId(Long categoryId);
 
     // ---- Sorting by priority (HIGH > MEDIUM > LOW) ----
-    // If you want the repository to return sorted results by priority weight:
+    // return sorted results by priority weight:
     List<Goal> findByUser_UserIdAndPriorityOrderByCreatedAtDesc(Long userId, String priority);
      List<Goal> findByUser_UserIdAndCategory_CategoryIdAndPriorityOrderByCreatedAtDesc(Long userId, Long categoryId, String priority);
 }

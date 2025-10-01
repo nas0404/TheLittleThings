@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class JournalService {
@@ -32,8 +32,17 @@ public class JournalService {
 
     @Transactional
     public JournalResponse createJournal(Long userId, CreateJournalRequest request) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        // prevent null pointer crashes
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
+        
+        var userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) throw new IllegalArgumentException("User not found");
+        User user = userOpt.get();
 
         Journal journal = new Journal();
         journal.setUser(user);
@@ -54,9 +63,9 @@ public class JournalService {
     }
 
     public JournalResponse getJournal(Long journalId, Long userId) {
-        Journal journal = journalRepository.findByJournalIdAndUser_UserId(journalId, userId)
-            .orElseThrow(() -> new IllegalArgumentException("Journal entry not found or access denied"));
-        return JournalResponse.fromJournal(journal);
+        var journalOpt = journalRepository.findByJournalIdAndUser_UserId(journalId, userId);
+        if (journalOpt.isEmpty()) throw new IllegalArgumentException("Journal not found");
+        return JournalResponse.fromJournal(journalOpt.get());
     }
 
     public List<JournalResponse> getAllJournals(Long userId, String sortBy) {
@@ -69,22 +78,32 @@ public class JournalService {
             journals = journalRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
         }
 
-        return journals.stream()
-            .map(JournalResponse::fromJournal)
-            .collect(Collectors.toList());
+        List<JournalResponse> result = new ArrayList<>();
+        for (Journal j : journals) {
+            result.add(JournalResponse.fromJournal(j));
+        }
+        return result;
     }
 
     @Transactional
     public JournalResponse updateJournal(Long journalId, Long userId, UpdateJournalRequest request) {
-        Journal journal = journalRepository.findByJournalIdAndUser_UserId(journalId, userId)
-            .orElseThrow(() -> new IllegalArgumentException("Journal entry not found or access denied"));
+        // basic validation
+        if (journalId == null || journalId <= 0) {
+            throw new IllegalArgumentException("Invalid journal ID");
+        }
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
+        
+        var journalOpt = journalRepository.findByJournalIdAndUser_UserId(journalId, userId);
+        if (journalOpt.isEmpty()) throw new IllegalArgumentException("Journal not found");
+        Journal journal = journalOpt.get();
 
-        if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
-            journal.setTitle(request.getTitle());
-        }
-        if (request.getContent() != null) {
-            journal.setContent(request.getContent());
-        }
+        journal.setTitle(request.getTitle());
+        journal.setContent(request.getContent());
 
         if (request.getLinkedWinId() != null) {
             Optional<Win> win = winRepository.findById(request.getLinkedWinId());
@@ -101,6 +120,14 @@ public class JournalService {
 
     @Transactional
     public boolean deleteJournal(Long journalId, Long userId) {
+        // check for null IDs to avoid crashes
+        if (journalId == null || journalId <= 0) {
+            throw new IllegalArgumentException("Invalid journal ID");
+        }
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
+        
         if (!journalRepository.existsByJournalIdAndUser_UserId(journalId, userId)) {
             return false;
         }

@@ -25,7 +25,7 @@ public class Goal {
     @JoinColumn(name="category_id", nullable = false,
         foreignKey=@ForeignKey(name="fk_goals_category"))
     @NotNull(message = "category is required")
-    private Category category; // now required
+    private Category category; 
 
     @Column(nullable = false, length = 255)
     @NotBlank(message = "title is required")
@@ -33,12 +33,11 @@ public class Goal {
     private String title;
 
     @Column(columnDefinition = "text")
-    @Size(max = 1000, message = "description must be ≤ 1000 characters")
+    @Size(max = 100, message = "description must be ≤ 100 characters")
     private String description;
 
     @Column(nullable = false, length = 10)
     @NotBlank(message = "priority is required")
-    // case-insensitive HIGH|MEDIUM|LOW
     @Pattern(regexp = "^(?i)(HIGH|MEDIUM|LOW)$",
              message = "priority must be HIGH, MEDIUM, or LOW")
     private String priority;
