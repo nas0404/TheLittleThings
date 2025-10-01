@@ -1,42 +1,11 @@
-# # azure-pipelines.yml
-# pool:
-#   vmImage: ubuntu-latest
-
-# steps:
-#   - task: UseNode@1
-#     displayName: "Use Node.js 20.x"
-#     inputs:
-#       version: '20.19.0'
-
-
-#   # Optional: cache npm to speed up CI
-#   - task: Cache@2
-#     displayName: Cache npm (frontend)
-#     inputs:
-#       key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
-#       path: frontend/node_modules
-#       restoreKeys: |
-#         npm | "$(Agent.OS)"
-#     # Cache only helps if node_modules already exists from a previous run;
-#     # npm ci will still run and update as needed.
-
-#   - script: npm ci
-#     displayName: "Install dependencies (frontend)"
-#     workingDirectory: frontend
-
-#   # Unit test step(s) should go here, after install and before build.
-#   # Example later: npm run test or npm run test:ci
-#   # workingDirectory: frontend
-
-#   - script: npm run build
-#     displayName: "Build frontend"
-#     workingDirectory: frontend
+trigger:
+  - main
 
 pool:
   vmImage: ubuntu-latest
 
 steps:
-  # frontend
+  # ---------- FRONTEND ----------
   - task: UseNode@1
     displayName: "Use Node.js 20.x"
     inputs:
@@ -58,7 +27,7 @@ steps:
     displayName: "Build frontend"
     workingDirectory: frontend
 
-    # backend
+  # ---------- BACKEND ----------
   - task: JavaToolInstaller@0
     displayName: "Set up Java 17"
     inputs:
@@ -66,6 +35,32 @@ steps:
       jdkArchitectureOption: 'x64'
       jdkSourceOption: 'PreInstalled'
 
-  - script: mvn -B -q clean test
+  # Run backend unit tests with clear console output
+  - script: >
+      mvn -B clean test -DskipITs
+      -Dsurefire.printSummary=true
+      -Dsurefire.useFile=false
+      --no-transfer-progress
     displayName: "Run backend unit tests"
     workingDirectory: backend
+
+  # Publish JUnit results so they appear in the "Tests" tab
+  - task: PublishTestResults@2
+    displayName: "Publish JUnit results"
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'backend/target/surefire-reports/*.xml'
+      mergeTestResults: true
+      testRunTitle: 'Backend Unit Tests'
+
+  # (Optional) package JAR for deployment
+  - script: mvn -B -q -DskipTests package
+    displayName: "Package backend JAR"
+    workingDirectory: backend
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish backend artifact"
+    inputs:
+      pathToPublish: 'backend/target/*.jar'
+      artifactName: 'backend-dist'
+      publishLocation: 'Container'
