@@ -121,19 +121,25 @@ export default function GoalsPage() {
     }
   }
 
-  // COMPLETE GOAL
   async function completeGoal(goalId: number) {
-    localStorage.setItem("userId", "1");
     const userId = localStorage.getItem("userId");
-    if (!userId) {
-      alert("User ID not found.");
+    const token = localStorage.getItem("token");
+
+    if (!userId || !token) {
+      alert("User ID or token not found.");
       return;
     }
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/users/${userId}/goals/${goalId}/complete`,
-        { method: "POST" }
+        `http://localhost:8080/api/goals/${goalId}/complete`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
       );
 
       if (!response.ok) {
@@ -141,7 +147,6 @@ export default function GoalsPage() {
         throw new Error(errorText);
       }
 
-      // Read plain text response, NOT json
       const message = await response.text();
       alert(message);
 
@@ -151,6 +156,7 @@ export default function GoalsPage() {
       alert(`Error completing goal: ${err.message}`);
     }
   }
+
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-2 gap-6">

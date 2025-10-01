@@ -22,7 +22,7 @@ export default function Wins() {
     const [error, setError] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState<Partial<Win>>({});
-    localStorage.setItem("userId", "3");
+    localStorage.setItem("userId", "11");
     const userId = localStorage.getItem("userId");
 
     useEffect(() => {
