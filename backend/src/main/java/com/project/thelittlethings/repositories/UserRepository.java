@@ -18,4 +18,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
   List<User> findByRegionOrderByTrophiesDesc(String region, Pageable pageable);
 
   List<User> findAllByOrderByTrophiesDesc(Pageable pageable);
+
+  Optional<User> findByUsernameIgnoreCase(String username);
+  
+  boolean existsByUsernameIgnoreCase(String username);
 }

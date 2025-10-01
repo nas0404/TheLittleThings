@@ -13,6 +13,7 @@ import Leaderboard from '../pages/Leaderboard.tsx';
 import Wins from '../pages/Wins.tsx';
 import Goals from '../pages/Goals.tsx';
 import Journal from '../pages/Journal';
+import FriendsPage from "../pages/FriendsPage";
 
 export default function AppRoutes() {
   return (
@@ -30,6 +31,7 @@ export default function AppRoutes() {
       <Route path="/journal" element={<Journal />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="*" element={<NotFound />} />
+      <Route path="/friends" element={<FriendsPage />} />
     </Routes>
   );
 }
