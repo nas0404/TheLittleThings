@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { CategoriesAPI } from "../api/CategoryApi";
 import type {
   Category,
@@ -9,7 +9,6 @@ import type {
 import CategoryCard from "../components/categories/CategoryCard";
 import EditCategoryModal from "../components/categories/EditCategoryModal";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
-import { mapServerErrors } from "../lib/mapServerErrors";
 import CategoryNeglected from "../components/categories/CategoryNeglected";
 import CategoryForm from "../components/categories/CategoryForm";
 

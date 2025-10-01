@@ -10,7 +10,6 @@ import { CategoriesAPI, type Category as UICategory } from "../api/CategoryApi";
 type SortKey = "createdAt_desc" | "priority_desc";
 
 export default function GoalsPage() {
-  const devUserId = localStorage.getItem("devUserId") ?? "—";
 
   const [categories, setCategories] = useState<UICategory[]>([]);
   const [goals, setGoals] = useState<GoalResponse[]>([]);
