@@ -22,7 +22,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:5173")
+// REST Controller for handling goal-related HTTP requests
+// @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/goals")
 @Validated
@@ -36,6 +37,7 @@ public class GoalController {
     this.userService = userService;
   }
 
+  // Extract and validate user ID from JWT token in Authorization header
   private Long userIdFromAuth(String authHeader) {
     final String token = (authHeader != null && authHeader.startsWith("Bearer "))
         ? authHeader.substring(7)
@@ -53,6 +55,7 @@ public class GoalController {
     return u.getUserId();
   }
 
+  // POST /api/goals - Create a new goal
   @PostMapping
   public ResponseEntity<?> create(@RequestHeader("Authorization") String auth,
       @Valid @RequestBody CreateGoalRequest req,
@@ -69,6 +72,7 @@ public class GoalController {
     }
   }
 
+  // GET /api/goals - List all goals or goals in a category
   @GetMapping
   public ResponseEntity<?> list(@RequestHeader("Authorization") String auth,
       @RequestParam(required = false) @Positive(message = "category must be valid") Long categoryId) {
@@ -83,6 +87,7 @@ public class GoalController {
     }
   }
 
+  // GET /api/goals/grouped - List goals grouped by priority
   @GetMapping("/grouped")
   public ResponseEntity<?> listGrouped(@RequestHeader("Authorization") String auth,
       @RequestParam(required = false) @Positive(message = "category must be valid") Long categoryId,
@@ -96,6 +101,7 @@ public class GoalController {
     }
   }
 
+  // GET /api/goals/{goalId} - Get details of a specific goal
   @GetMapping("/{goalId}")
   public ResponseEntity<?> getOne(@RequestHeader("Authorization") String auth,
       @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
@@ -107,6 +113,7 @@ public class GoalController {
     }
   }
 
+  // PUT /api/goals/{goalId} - Update an existing goal
   @PutMapping("/{goalId}")
   public ResponseEntity<?> update(@RequestHeader("Authorization") String auth,
       @PathVariable @Positive(message = "goalId must be positive") Long goalId,
@@ -119,6 +126,7 @@ public class GoalController {
     }
   }
 
+  // DELETE /api/goals/{goalId} - Delete a specific goal
   @DeleteMapping("/{goalId}")
   public ResponseEntity<?> delete(@RequestHeader("Authorization") String auth,
       @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
@@ -131,6 +139,7 @@ public class GoalController {
     }
   }
 
+  // POST /api/goals/{goalId}/complete - Mark a goal as complete
   @PostMapping("/{goalId}/complete")
   public ResponseEntity<?> complete(@RequestHeader("Authorization") String auth,
       @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
