@@ -7,19 +7,25 @@ import { mapServerErrors } from "../lib/mapServerErrors";
 import { GoalsAPI, type GoalResponse, type Priority, type CreateGoalRequest } from "../api/GoalApi";
 import { CategoriesAPI, type Category as UICategory } from "../api/CategoryApi";
 
+// Type for sorting options
 type SortKey = "createdAt_desc" | "priority_desc";
 
+// Main Goals page component
 export default function GoalsPage() {
 
+  // State for data management
   const [categories, setCategories] = useState<UICategory[]>([]);
   const [goals, setGoals] = useState<GoalResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Filtering state
   const [filterCategoryIdStr, setFilterCategoryIdStr] = useState<string>("");
 
+  // Sorting state
   const [sortBy, setSortBy] = useState<SortKey>("createdAt_desc");
 
+  // New goal form state
   const [newCategoryIdStr, setNewCategoryIdStr] = useState<string>("");
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -27,19 +33,23 @@ export default function GoalsPage() {
   const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
   const [creating, setCreating] = useState(false);
 
+  // Edit/Delete modal state
   const [editingGoal, setEditingGoal] = useState<GoalResponse | null>(null);
   const [toDelete, setToDelete] = useState<GoalResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Computed value for selected category filter
   const selectedFilterCategoryId = useMemo(
     () => (filterCategoryIdStr === "" ? undefined : Number(filterCategoryIdStr)),
     [filterCategoryIdStr]
   );
 
+  // Fetch all categories and goals data
   async function refreshAll() {
     setLoading(true);
     setError(null);
     try {
+      // Parallel API calls for better performance
       const [cats, goalsList] = await Promise.all([
         CategoriesAPI.list(),
         GoalsAPI.list({ categoryId: selectedFilterCategoryId }),
@@ -57,16 +67,22 @@ export default function GoalsPage() {
     refreshAll();
   }, [selectedFilterCategoryId]);
 
+  // Memoized sorted goals list based on current sort criteria
   const sortedGoals = useMemo(() => {
+    // Sort function for newest first
     const byNewest = (a: GoalResponse, b: GoalResponse) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 
+    // If sorting by creation date, just sort by newest
     if (sortBy === "createdAt_desc") return [...goals].sort(byNewest);
 
+    // Priority weights for sorting (HIGH = 0, MEDIUM = 1, LOW = 2)
     const weight: Record<Priority, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
     return [...goals].sort((a, b) => {
+      // Get weights, default to 3 for unknown priorities
       const wa = weight[a.priority] ?? 3;
       const wb = weight[b.priority] ?? 3;
+      // Sort by priority first, then by creation date
       if (wa !== wb) return wa - wb;
       return byNewest(a, b);
     });
