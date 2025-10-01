@@ -138,7 +138,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         </div>
       </div>
 
-      // Content Field
+      
       <div>
         <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
           Content *
@@ -154,7 +154,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         />
       </div>
 
-      // Linked Win Field
+      
       <div>
         <label htmlFor="linkedWinId" className="block text-sm font-medium text-gray-700 mb-1">
           Link to Win (Optional)
@@ -178,7 +178,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         </div>
       </div>
 
-      // Error Messages
+      
       {error && (
         <div className="rounded-md bg-red-50 border border-red-200 p-3">
           <p className="text-sm text-red-700">{error}</p>
@@ -191,7 +191,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         </div>
       )}
 
-      // Submit Button
+      
       <div className="flex justify-end">
         <button
           type="submit"
