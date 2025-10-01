@@ -36,7 +36,7 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-  # ---------- FRONTEND ----------
+  # frontend
   - task: UseNode@1
     displayName: "Use Node.js 20.x"
     inputs:
@@ -58,12 +58,13 @@ steps:
     displayName: "Build frontend"
     workingDirectory: frontend
 
-  # ---------- BACKEND ----------
-  - task: UseJavaVersion@1
+    # backend
+  - task: JavaToolInstaller@0
     displayName: "Set up Java 17"
     inputs:
       versionSpec: '17'
       jdkArchitectureOption: 'x64'
+      jdkSourceOption: 'PreInstalled'
 
   - script: mvn -B -q clean test
     displayName: "Run backend unit tests"
