@@ -52,15 +52,3 @@ steps:
       testResultsFiles: 'backend/target/surefire-reports/*.xml'
       mergeTestResults: true
       testRunTitle: 'Backend Unit Tests'
-
-  # (Optional) package JAR for deployment
-  - script: mvn -B -q -DskipTests package
-    displayName: "Package backend JAR"
-    workingDirectory: backend
-
-  - task: PublishBuildArtifacts@1
-    displayName: "Publish backend artifact"
-    inputs:
-      pathToPublish: 'backend/target/*.jar'
-      artifactName: 'backend-dist'
-      publishLocation: 'Container'
