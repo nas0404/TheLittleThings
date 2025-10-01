@@ -28,6 +28,7 @@ public class CategoryController {
     this.userService = userService;
   }
 
+  // Extract userId from Authorization header
   private Long userIdFromAuth(String authHeader) {
     final String token = authHeader != null && authHeader.startsWith("Bearer ")
         ? authHeader.substring(7)
@@ -37,14 +38,16 @@ public class CategoryController {
       throw new IllegalArgumentException("Invalid or expired token");
     }
     final String username = HMACtokens.extractUsername(token);
-    if (username == null) throw new IllegalArgumentException("Invalid token");
+    if (username == null)
+      throw new IllegalArgumentException("Invalid token");
 
     User u = userService.findByUsername(username);
-    if (u == null) throw new IllegalArgumentException("User not found");
+    if (u == null)
+      throw new IllegalArgumentException("User not found");
     return u.getUserId();
   }
 
-
+  // List all categories for the authenticated user
   @GetMapping
   public ResponseEntity<?> list(@RequestHeader("Authorization") String auth) {
     try {
@@ -56,9 +59,10 @@ public class CategoryController {
     }
   }
 
+  // Create a new category for the authenticated user
   @PostMapping
   public ResponseEntity<?> create(@RequestHeader("Authorization") String auth,
-                                  @Valid @RequestBody CreateCategoryRequest req) {
+      @Valid @RequestBody CreateCategoryRequest req) {
     try {
       Long userId = userIdFromAuth(auth);
       CategoryResponse created = categoryService.create(userId, req);
@@ -70,9 +74,10 @@ public class CategoryController {
     }
   }
 
+  // Get details of a specific category owned by the authenticated user
   @GetMapping("/{id}")
   public ResponseEntity<?> get(@RequestHeader("Authorization") String auth,
-                               @PathVariable("id") Long id) {
+      @PathVariable("id") Long id) {
     try {
       Long userId = userIdFromAuth(auth);
       CategoryResponse cat = categoryService.getOwned(id, userId);
@@ -82,10 +87,11 @@ public class CategoryController {
     }
   }
 
+  // Update an existing category owned by the authenticated user
   @PutMapping("/{id}")
   public ResponseEntity<?> update(@RequestHeader("Authorization") String auth,
-                                  @PathVariable("id") Long id,
-                                  @Valid @RequestBody UpdateCategoryRequest req) {
+      @PathVariable("id") Long id,
+      @Valid @RequestBody UpdateCategoryRequest req) {
     try {
       Long userId = userIdFromAuth(auth);
       CategoryResponse updated = categoryService.update(id, userId, req);
@@ -95,9 +101,10 @@ public class CategoryController {
     }
   }
 
+  // Delete a category owned by the authenticated user
   @DeleteMapping("/{id}")
   public ResponseEntity<?> delete(@RequestHeader("Authorization") String auth,
-                                  @PathVariable("id") Long id) {
+      @PathVariable("id") Long id) {
     try {
       Long userId = userIdFromAuth(auth);
       categoryService.delete(id, userId);
@@ -107,9 +114,10 @@ public class CategoryController {
     }
   }
 
+  // Get neglected categories for the authenticated user
   @GetMapping("/neglected")
   public ResponseEntity<?> neglected(@RequestHeader("Authorization") String auth,
-                                     @RequestParam(value = "days", required = false) Integer days) {
+      @RequestParam(value = "days", required = false) Integer days) {
     try {
       Long userId = userIdFromAuth(auth);
       return ResponseEntity.ok(categoryService.getNeglectedCategories(userId, days));
@@ -118,9 +126,9 @@ public class CategoryController {
     }
   }
 
-//   @PostMapping("/{id}/complete")
-//   public ResponseEntity<String> completeGoal(@PathVariable Long id) {
-//     service.completeGoal(id);
-//     return ResponseEntity.ok("Goal completed and Win recorded.");
-//   }
+  // @PostMapping("/{id}/complete")
+  // public ResponseEntity<String> completeGoal(@PathVariable Long id) {
+  // service.completeGoal(id);
+  // return ResponseEntity.ok("Goal completed and Win recorded.");
+  // }
 }

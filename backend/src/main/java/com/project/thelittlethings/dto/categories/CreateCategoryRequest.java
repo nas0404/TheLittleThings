@@ -6,7 +6,8 @@ import jakarta.validation.constraints.Size;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 public class CreateCategoryRequest {
-
+  // DTO received from clients when creating a new category
+  
   @NotBlank(message = "name is required")
   @Size(max = 100, message = "name must be ≤ 100 characters")
   private String name;

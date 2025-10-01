@@ -8,7 +8,7 @@ import java.time.Instant;
 
 public class HMACtokens {
     private static final String HMAC = "HmacSHA256";
-  
+
     private static final String SECRET = "thelittlethingsASD";
 
     // token format: base64(username:expiry):signature
@@ -23,13 +23,16 @@ public class HMACtokens {
     public static boolean validateToken(String token) {
         try {
             String[] parts = token.split(":");
-            if (parts.length != 2) return false;
+            if (parts.length != 2)
+                return false;
             String b64 = parts[0];
             String sig = parts[1];
-            if (!hmac(b64).equals(sig)) return false;
+            if (!hmac(b64).equals(sig))
+                return false;
             String payload = new String(Base64.getUrlDecoder().decode(b64), StandardCharsets.UTF_8);
-            String[] p = payload.split(":" );
-            if (p.length != 2) return false;
+            String[] p = payload.split(":");
+            if (p.length != 2)
+                return false;
             long expiry = Long.parseLong(p[1]);
             return Instant.now().getEpochSecond() <= expiry;
         } catch (Exception e) {

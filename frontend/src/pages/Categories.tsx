@@ -13,6 +13,8 @@ import CategoryNeglected from "../components/categories/CategoryNeglected";
 import CategoryForm from "../components/categories/CategoryForm";
 
 export default function CategoriesPage() {
+
+  // State for categories, loading, errors, editing, deleting, and creating
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageErr, setPageErr] = useState<string | null>(null);
@@ -24,6 +26,7 @@ export default function CategoriesPage() {
 
   const [creating, setCreating] = useState(false);
 
+  // Fetch categories from the API
   async function refresh() {
     setLoading(true);
     setPageErr(null);
@@ -41,6 +44,7 @@ export default function CategoriesPage() {
     refresh();
   }, []);
 
+  // Handle creation of a new category
   async function handleCreate(values: { name: string; description?: string | null }) {
     setCreating(true);
     const payload: CreateCategoryRequest = {
@@ -50,16 +54,18 @@ export default function CategoriesPage() {
     try {
       await CategoriesAPI.create(payload);
       await refresh();
-    } 
+    }
     finally {
       setCreating(false);
     }
   }
 
+  // Request deletion of a category
   function requestDelete(category: Category) {
     setToDelete(category);
   }
 
+  // Confirm deletion of the selected category
   async function confirmDelete() {
     if (!toDelete) return;
     setDeleting(true);
@@ -122,7 +128,7 @@ export default function CategoriesPage() {
               setEditing(null);
               await refresh();
             } catch (e) {
-              throw e; 
+              throw e;
             }
           }}
         />
@@ -133,7 +139,7 @@ export default function CategoriesPage() {
         title="Delete category"
         message={toDelete ? `Delete “${toDelete.name}”? This cannot be undone.` : ""}
         confirmText={deleting ? "Deleting…" : "Delete"}
-        onConfirm={deleting ? () => {} : confirmDelete}
+        onConfirm={deleting ? () => { } : confirmDelete}
         onCancel={() => (deleting ? null : setToDelete(null))}
       />
     </div>
