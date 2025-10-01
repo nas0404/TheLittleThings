@@ -14,6 +14,7 @@ interface JournalEntry {
 }
 
 export default function Journal() {
+  // manage view state, either showing list or create form
   const [view, setView] = useState<'list' | 'create'>('list');
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [sortBy, setSortBy] = useState<'date' | 'title'>('date');
@@ -97,7 +98,6 @@ export default function Journal() {
         </button>
       </div>
 
-      {/* Sorting Options */}
       <div className="mb-4 flex items-center gap-4">
         <span className="text-sm font-medium text-gray-700">Sort by:</span>
         <button
@@ -122,7 +122,6 @@ export default function Journal() {
         </button>
       </div>
 
-      {/* Error Display */}
       {error && (
         <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4">
           <p className="text-red-700">{error}</p>
@@ -134,14 +133,12 @@ export default function Journal() {
         </div>
       )}
 
-      {/* Loading State */}
       {loading && (
         <div className="flex justify-center py-8">
           <div className="text-gray-500">Loading journal entries...</div>
         </div>
       )}
 
-      {/* Journal Entries List */}
       {!loading && !error && (
         <div>
           {entries.length === 0 ? (

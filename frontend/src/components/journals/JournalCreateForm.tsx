@@ -11,6 +11,7 @@ interface JournalCreateFormProps {
 }
 
 export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps) {
+  // form data state for title, content and optional win link
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -56,6 +57,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
     }));
   };
 
+  // basic form validation for checkng required fields and length
   const validateForm = () => {
     if (!formData.title.trim()) {
       setError('Title required');
@@ -117,7 +119,6 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
-      {/* Title Field */}
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
           Title *
@@ -137,7 +138,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         </div>
       </div>
 
-      {/* Content Field */}
+      // Content Field
       <div>
         <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
           Content *
@@ -153,7 +154,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         />
       </div>
 
-      {/* Linked Win Field */}
+      // Linked Win Field
       <div>
         <label htmlFor="linkedWinId" className="block text-sm font-medium text-gray-700 mb-1">
           Link to Win (Optional)
@@ -177,7 +178,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         </div>
       </div>
 
-      {/* Error Messages */}
+      // Error Messages
       {error && (
         <div className="rounded-md bg-red-50 border border-red-200 p-3">
           <p className="text-sm text-red-700">{error}</p>
@@ -190,7 +191,7 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
         </div>
       )}
 
-      {/* Submit Button */}
+      // Submit Button
       <div className="flex justify-end">
         <button
           type="submit"

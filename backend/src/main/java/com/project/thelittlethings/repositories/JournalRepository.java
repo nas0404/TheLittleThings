@@ -8,10 +8,13 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+// database operations for journals
 public interface JournalRepository extends JpaRepository<Journal, Long> {
 
-    
+    // finds journal that belongs to specific user
     Optional<Journal> findByJournalIdAndUser_UserId(Long journalId, Long userId);
+    
+    // custom queries for sorting journals
     @Query("SELECT j FROM Journal j WHERE j.user.userId = :userId ORDER BY j.createdAt DESC")
     List<Journal> findByUser_UserIdOrderByCreatedAtDesc(@Param("userId") Long userId);
 
@@ -20,7 +23,7 @@ public interface JournalRepository extends JpaRepository<Journal, Long> {
 
     List<Journal> findByUser_UserId(Long userId);
 
+    // check if records exist
     boolean existsByUser_UserId(Long userId);
-
     boolean existsByJournalIdAndUser_UserId(Long journalId, Long userId);
 }

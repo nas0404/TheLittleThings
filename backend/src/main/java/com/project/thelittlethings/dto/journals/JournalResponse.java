@@ -3,6 +3,8 @@ package com.project.thelittlethings.dto.journals;
 import com.project.thelittlethings.entities.Journal;
 import java.time.format.DateTimeFormatter;
 
+// response DTO that gets sent back to frontend
+// includes all journal data plus linked win info
 public class JournalResponse {
     private Long journalId;
     private String title;
@@ -26,6 +28,7 @@ public class JournalResponse {
         this.updatedAt = updatedAt;
     }
 
+    // factory method to convert entity to DTO - makes code cleaner
     public static JournalResponse fromJournal(Journal journal) {
         JournalResponse response = new JournalResponse();
         response.journalId = journal.getJournalId();

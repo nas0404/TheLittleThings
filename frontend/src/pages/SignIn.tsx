@@ -11,6 +11,7 @@ export default function SignIn() {
 		setForm({ ...form, [e.target.name]: e.target.value });
 	};
 
+	// handle login form submision
 	const submit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError(null);

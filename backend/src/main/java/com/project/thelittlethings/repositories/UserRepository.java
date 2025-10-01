@@ -17,7 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
   boolean existsByUsername(String username);
   boolean existsByEmail(String email);
   
-  // Leaderboard methods
+  // Leaderboard methods for Ilkash
   List<User> findByRegionOrderByTrophiesDesc(String region, PageRequest pageRequest);
   List<User> findAllByOrderByTrophiesDesc(PageRequest pageRequest);
 }
