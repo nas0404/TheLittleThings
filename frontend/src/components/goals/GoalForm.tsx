@@ -6,35 +6,43 @@ import type {
   UpdateGoalRequest,
 } from "../../api/GoalApi";
 
+// Type for category selection options
 type CategoryOpt = { id: number; name: string };
 
+// Base props shared between create and edit modes
 type BaseProps = {
   initial?: Partial<CreateGoalRequest & UpdateGoalRequest>;
   categoryOptions: CategoryOpt[];
   lockCategoryId?: number;
 };
 
+// Props specific to create mode
 type CreateProps = BaseProps & {
   mode: "create";
   submitText?: string;
   onSubmit: (values: Required<CreateGoalRequest>) => Promise<void> | void;
 };
 
+// Props specific to edit mode
 type EditProps = BaseProps & {
   mode: "edit";
   submitText?: string;
   onSubmit: (values: UpdateGoalRequest) => Promise<void> | void;
 };
 
+// Union type for all possible props
 type Props = CreateProps | EditProps;
 
+// Available priority levels
 const PRIOS: Priority[] = ["HIGH", "MEDIUM", "LOW"];
 
 
 
+// Form component for creating or editing goals
 export default function GoalForm(props: Props) {
   const { initial, categoryOptions, lockCategoryId } = props;
 
+  // Form field states with initial values
   const [categoryId, setCategoryId] = React.useState<number | undefined>(
     lockCategoryId ?? initial?.categoryId
   );
@@ -46,10 +54,12 @@ export default function GoalForm(props: Props) {
     (initial?.priority as Priority) ?? "MEDIUM"
   );
 
+  // Form error and submission states
   const [fieldErrs, setFieldErrs] = React.useState<Record<string, string>>({});
   const [formErr, setFormErr] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
+  // Map server-side validation errors to form fields
   const mapServerErrors = (details?: any) => {
     const map: Record<string, string> = {};
     const arr = details?.errors;
@@ -63,13 +73,16 @@ export default function GoalForm(props: Props) {
     return map;
   };
 
+  // Handle form submission with validation
   const handleSubmit: React.FormEventHandler = async (e) => {
     e.preventDefault();
+    // Reset error states
     setFormErr(null);
     setFieldErrs({});
 
     const t = title.trim();
 
+    // Client-side validation
     if (props.mode === "create" && !categoryId) {
       return setFieldErrs({ categoryId: "category is required" });
     }
@@ -82,14 +95,16 @@ export default function GoalForm(props: Props) {
     setSubmitting(true);
     try {
       if (props.mode === "create") {
+        // Prepare payload for creating new goal
         const payload: Required<CreateGoalRequest> = {
-          categoryId: categoryId!, // guaranteed above
+          categoryId: categoryId!, // guaranteed above by validation
           title: t,
           description: description || null,
           priority,
         };
         await props.onSubmit(payload);
       } else {
+        // Prepare payload for updating existing goal
         const payload: UpdateGoalRequest = {
           categoryId,
           title: t,
@@ -99,15 +114,19 @@ export default function GoalForm(props: Props) {
         await props.onSubmit(payload);
       }
     } catch (err: any) {
+      // Handle API errors
       if (err instanceof ApiError) {
         if (err.status === 409) {
+          // Handle duplicate title error
           setFieldErrs({ title: err.details?.message || "title already exists" });
         } else {
+          // Map other API validation errors to form fields
           const mapped = mapServerErrors(err.details);
           if (Object.keys(mapped).length) setFieldErrs(mapped);
           else setFormErr(err.details?.message || err.message || "Request failed");
         }
       } else {
+        // Handle non-API errors
         setFormErr(err?.message || "Request failed");
       }
     } finally {
@@ -116,6 +135,7 @@ export default function GoalForm(props: Props) {
   };
 
   return (
+    // Form container with vertical spacing
     <form onSubmit={handleSubmit} className="space-y-3">
       {props.mode === "create" && !lockCategoryId && (
         <div>

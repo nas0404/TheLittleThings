@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+// Entity class representing a goal in the system
 @Entity
 @Table(name = "goals")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
