@@ -1,5 +1,6 @@
 package com.project.thelittlethings.dto.users;
 
+// response after sucessful login/register
 public class AuthResponse {
     private String token;
     private Long userId;

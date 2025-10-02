@@ -87,16 +87,6 @@ public class WinService {
         if (req.getNumTrophies() != null) {
             win.setNumTrophies(req.getNumTrophies());
         }
-        if (req.getGoalId() != null) {
-            win.setGoal(null); // ENTITY NEED TO BE CHANGED
-        }
-
-        if (req.getJournalId() != null) {
-            win.setJournalId(req.getJournalId());
-        }
-        // You could add logic to update goal/user if your design allows, but
-        // typically
-        // those are fixed.
 
         Win updatedWin = winRepo.save(win);
         return toResponse(updatedWin);

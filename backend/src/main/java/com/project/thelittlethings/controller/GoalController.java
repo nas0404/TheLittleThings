@@ -16,11 +16,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+// REST Controller for handling goal-related HTTP requests
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/goals")
 @Validated
@@ -34,6 +35,7 @@ public class GoalController {
     this.userService = userService;
   }
 
+  // Extract and validate user ID from JWT token in Authorization header
   private Long userIdFromAuth(String authHeader) {
     final String token = (authHeader != null && authHeader.startsWith("Bearer "))
         ? authHeader.substring(7)
@@ -43,16 +45,19 @@ public class GoalController {
       throw new IllegalArgumentException("Invalid or expired token");
     }
     final String username = HMACtokens.extractUsername(token);
-    if (username == null) throw new IllegalArgumentException("Invalid token");
+    if (username == null)
+      throw new IllegalArgumentException("Invalid token");
     User u = userService.findByUsername(username);
-    if (u == null) throw new IllegalArgumentException("User not found");
+    if (u == null)
+      throw new IllegalArgumentException("User not found");
     return u.getUserId();
   }
 
+  // POST /api/goals - Create a new goal
   @PostMapping
   public ResponseEntity<?> create(@RequestHeader("Authorization") String auth,
-                                  @Valid @RequestBody CreateGoalRequest req,
-                                  UriComponentsBuilder uri) {
+      @Valid @RequestBody CreateGoalRequest req,
+      UriComponentsBuilder uri) {
     try {
       Long userId = userIdFromAuth(auth);
       GoalResponse created = goalService.create(userId, req);
@@ -65,11 +70,10 @@ public class GoalController {
     }
   }
 
+  // GET /api/goals - List all goals or goals in a category
   @GetMapping
   public ResponseEntity<?> list(@RequestHeader("Authorization") String auth,
-                                @RequestParam(required = false)
-                                @Positive(message = "category must be valid")
-                                Long categoryId) {
+      @RequestParam(required = false) @Positive(message = "category must be valid") Long categoryId) {
     try {
       Long userId = userIdFromAuth(auth);
       List<GoalResponse> out = (categoryId == null)
@@ -81,15 +85,11 @@ public class GoalController {
     }
   }
 
+  // GET /api/goals/grouped - List goals grouped by priority
   @GetMapping("/grouped")
   public ResponseEntity<?> listGrouped(@RequestHeader("Authorization") String auth,
-                                       @RequestParam(required = false)
-                                       @Positive(message = "category must be valid")
-                                       Long categoryId,
-                                       @RequestParam(required = false)
-                                       @Pattern(regexp = "^(?i)(HIGH|MEDIUM|LOW)$",
-                                                message = "priority must be HIGH, MEDIUM, or LOW")
-                                       String priority) {
+      @RequestParam(required = false) @Positive(message = "category must be valid") Long categoryId,
+      @RequestParam(required = false) @Pattern(regexp = "^(?i)(HIGH|MEDIUM|LOW)$", message = "priority must be HIGH, MEDIUM, or LOW") String priority) {
     try {
       Long userId = userIdFromAuth(auth);
       Map<String, List<GoalResponse>> grouped = goalService.listGrouped(userId, categoryId, priority);
@@ -99,9 +99,10 @@ public class GoalController {
     }
   }
 
+  // GET /api/goals/{goalId} - Get details of a specific goal
   @GetMapping("/{goalId}")
   public ResponseEntity<?> getOne(@RequestHeader("Authorization") String auth,
-                                  @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
+      @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
     try {
       Long userId = userIdFromAuth(auth);
       return ResponseEntity.ok(goalService.getOwnedGoal(goalId, userId));
@@ -110,10 +111,11 @@ public class GoalController {
     }
   }
 
+  // PUT /api/goals/{goalId} - Update an existing goal
   @PutMapping("/{goalId}")
   public ResponseEntity<?> update(@RequestHeader("Authorization") String auth,
-                                  @PathVariable @Positive(message = "goalId must be positive") Long goalId,
-                                  @Valid @RequestBody UpdateGoalRequest req) {
+      @PathVariable @Positive(message = "goalId must be positive") Long goalId,
+      @Valid @RequestBody UpdateGoalRequest req) {
     try {
       Long userId = userIdFromAuth(auth);
       return ResponseEntity.ok(goalService.updateGoal(goalId, userId, req));
@@ -122,9 +124,10 @@ public class GoalController {
     }
   }
 
+  // DELETE /api/goals/{goalId} - Delete a specific goal
   @DeleteMapping("/{goalId}")
   public ResponseEntity<?> delete(@RequestHeader("Authorization") String auth,
-                                  @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
+      @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
     try {
       Long userId = userIdFromAuth(auth);
       goalService.delete(goalId, userId);
@@ -134,11 +137,12 @@ public class GoalController {
     }
   }
 
+  // POST /api/goals/{goalId}/complete - Mark a goal as complete
   @PostMapping("/{goalId}/complete")
   public ResponseEntity<?> complete(@RequestHeader("Authorization") String auth,
-                                    @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
+      @PathVariable @Positive(message = "goalId must be positive") Long goalId) {
     try {
-      long userId = userIdFromAuth(auth); 
+      Long userId = userIdFromAuth(auth);
       goalService.getOwnedGoal(goalId, userId);
       goalService.completeGoal(goalId);
       return ResponseEntity.ok("Goal completed and Win recorded.");

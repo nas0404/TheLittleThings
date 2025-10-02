@@ -1,9 +1,13 @@
+// src/pages/Home.tsx
+import React from "react";
 import Card from "../components/ui/Card";
-// import UserStatsCard from "../components/ui/UserStatsCard";
 import ChallengeCard from "../components/ui/ChallengeCard";
 import UserStatsCard from "../components/ui/UserStatsCard";
+import FriendsChallengesCard from "../components/ui/FriendsChallengesCard"; 
+import { useMe } from "../api/users";
 
 export default function Home() {
+  const { me, loading, err } = useMe();
 
   return (
     <section className="space-y-6">
@@ -12,7 +16,17 @@ export default function Home() {
 
       <div className="flex flex-col gap-6">
         <Card title="" description="">
-          <UserStatsCard username="MaximumTab" streak={7} trophies={120} />
+          {loading ? (
+            <div className="text-sm text-gray-500">Loading your stats…</div>
+          ) : err || !me ? (
+            <div className="text-sm text-red-600">{err ?? "Not logged in"}</div>
+          ) : (
+            <UserStatsCard
+              username={me.username}
+              streak={me.streaks ?? 0}
+              trophies={me.trophies ?? 0}
+            />
+          )}
         </Card>
 
         <Card title="Challenge of the Week" description="">
@@ -24,15 +38,11 @@ export default function Home() {
           />
         </Card>
 
-
-        <Card title="Card 2" description="This is the second card." />
+        {/* Card 2 → friends challenges */}
+        <FriendsChallengesCard />
 
         <Card title="Card 3" description="Sign in to access your account." />
-
-
       </div>
-
-
     </section>
   );
 }

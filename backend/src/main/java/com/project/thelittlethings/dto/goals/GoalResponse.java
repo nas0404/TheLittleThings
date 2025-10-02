@@ -5,6 +5,7 @@ import lombok.*;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 
+// DTO class for sending goal data in API responses
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

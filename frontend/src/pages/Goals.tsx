@@ -7,19 +7,25 @@ import { mapServerErrors } from "../lib/mapServerErrors";
 import { GoalsAPI, type GoalResponse, type Priority, type CreateGoalRequest } from "../api/GoalApi";
 import { CategoriesAPI, type Category as UICategory } from "../api/CategoryApi";
 
+// Type for sorting options
 type SortKey = "createdAt_desc" | "priority_desc";
 
+// Main Goals page component
 export default function GoalsPage() {
 
+  // State for data management
   const [categories, setCategories] = useState<UICategory[]>([]);
   const [goals, setGoals] = useState<GoalResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Filtering state
   const [filterCategoryIdStr, setFilterCategoryIdStr] = useState<string>("");
 
+  // Sorting state
   const [sortBy, setSortBy] = useState<SortKey>("createdAt_desc");
 
+  // New goal form state
   const [newCategoryIdStr, setNewCategoryIdStr] = useState<string>("");
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -27,21 +33,25 @@ export default function GoalsPage() {
   const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
   const [creating, setCreating] = useState(false);
 
+  // Edit/Delete modal state
   const [editingGoal, setEditingGoal] = useState<GoalResponse | null>(null);
   const [toDelete, setToDelete] = useState<GoalResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Computed value for selected category filter
   const selectedFilterCategoryId = useMemo(
     () => (filterCategoryIdStr === "" ? undefined : Number(filterCategoryIdStr)),
     [filterCategoryIdStr]
   );
 
+  // Fetch all categories and goals data
   async function refreshAll() {
     setLoading(true);
     setError(null);
     try {
+      // Parallel API calls for better performance
       const [cats, goalsList] = await Promise.all([
-        CategoriesAPI.list(), 
+        CategoriesAPI.list(),
         GoalsAPI.list({ categoryId: selectedFilterCategoryId }),
       ]);
       setCategories(cats);
@@ -57,18 +67,24 @@ export default function GoalsPage() {
     refreshAll();
   }, [selectedFilterCategoryId]);
 
+  // Memoized sorted goals list based on current sort criteria
   const sortedGoals = useMemo(() => {
+    // Sort function for newest first
     const byNewest = (a: GoalResponse, b: GoalResponse) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 
+    // If sorting by creation date, just sort by newest
     if (sortBy === "createdAt_desc") return [...goals].sort(byNewest);
 
+    // Priority weights for sorting (HIGH = 0, MEDIUM = 1, LOW = 2)
     const weight: Record<Priority, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
     return [...goals].sort((a, b) => {
+      // Get weights, default to 3 for unknown priorities
       const wa = weight[a.priority] ?? 3;
       const wb = weight[b.priority] ?? 3;
-      if (wa !== wb) return wa - wb; 
-      return byNewest(a, b);         
+      // Sort by priority first, then by creation date
+      if (wa !== wb) return wa - wb;
+      return byNewest(a, b);
     });
   }, [goals, sortBy]);
 
@@ -78,7 +94,7 @@ export default function GoalsPage() {
     setCreateErrors({});
 
     const payload: Required<CreateGoalRequest> = {
-      categoryId: Number(newCategoryIdStr),             
+      categoryId: Number(newCategoryIdStr),
       title: newTitle.trim(),
       description: newDescription ? newDescription : null,
       priority: newPriority,
@@ -120,6 +136,43 @@ export default function GoalsPage() {
       setDeleting(false);
     }
   }
+
+  async function completeGoal(goalId: number) {
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("token");
+
+    if (!userId || !token) {
+      alert("User ID or token not found.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/goals/${goalId}/complete`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      const message = await response.text();
+      alert(message);
+
+      await refreshAll();
+    } catch (err: any) {
+      console.error(err);
+      alert(`Error completing goal: ${err.message}`);
+    }
+  }
+
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -166,17 +219,26 @@ export default function GoalsPage() {
 
         <div className="space-y-3">
           {sortedGoals.map((g) => (
-            <GoalCard
-              key={g.goalId}
-              goal={{
-                goalId: g.goalId,
-                title: g.title,
-                description: g.description ?? null, 
-                priority: g.priority,
-              }}
-              onRequestDelete={() => requestDelete(g)}
-              onEdit={() => setEditingGoal(g)}
-            />
+            <div key={g.goalId} className="flex items-center justify-between">
+              <GoalCard
+                key={g.goalId}
+                goal={{
+                  goalId: g.goalId,
+                  title: g.title,
+                  description: g.description ?? null,
+                  priority: g.priority,
+                }}
+                onRequestDelete={() => requestDelete(g)}
+                onEdit={() => setEditingGoal(g)}
+              />
+              <button
+                onClick={() => completeGoal(g.goalId)}
+                className="ml-4 px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                type="button"
+              >
+                Complete Goal
+              </button>
+            </div>
           ))}
         </div>
       </div>
@@ -246,9 +308,8 @@ export default function GoalsPage() {
           <button
             type="submit"
             disabled={creating}
-            className={`w-full rounded-xl bg-black text-white py-2 font-medium hover:opacity-90 ${
-              creating ? "opacity-70 cursor-not-allowed" : ""
-            }`}
+            className={`w-full rounded-xl bg-black text-white py-2 font-medium hover:opacity-90 ${creating ? "opacity-70 cursor-not-allowed" : ""
+              }`}
           >
             {creating ? "Saving…" : "Create"}
           </button>
@@ -271,7 +332,7 @@ export default function GoalsPage() {
               await handleUpdateGoal(editingGoal.goalId, payload);
               setEditingGoal(null);
             } catch (e) {
-              throw e; 
+              throw e;
             }
           }}
         />
@@ -282,7 +343,7 @@ export default function GoalsPage() {
         title="Delete goal"
         message={toDelete ? `Delete “${toDelete.title}”? This cannot be undone.` : ""}
         confirmText={deleting ? "Deleting…" : "Delete"}
-        onConfirm={deleting ? () => {} : confirmDelete}
+        onConfirm={deleting ? () => { } : confirmDelete}
         onCancel={() => (deleting ? null : setToDelete(null))}
       />
     </div>

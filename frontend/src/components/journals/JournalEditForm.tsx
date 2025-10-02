@@ -23,6 +23,7 @@ interface JournalEditFormProps {
 }
 
 export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalEditFormProps) {
+  // prepopulate form with existing entry data
   const [formData, setFormData] = useState({
     title: entry.title,
     content: entry.content,
@@ -134,7 +135,6 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
         <h3 className="text-lg font-semibold text-gray-900">Edit Journal Entry</h3>
       </div>
 
-      {/* Title Field */}
       <div>
         <label htmlFor="edit-title" className="block text-sm font-medium text-gray-700 mb-1">
           Title *
@@ -153,7 +153,6 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
         </div>
       </div>
 
-      {/* Content Field */}
       <div>
         <label htmlFor="edit-content" className="block text-sm font-medium text-gray-700 mb-1">
           Content *
@@ -168,7 +167,6 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
         />
       </div>
 
-      {/* Linked Win Field */}
       <div>
         <label htmlFor="edit-linkedWinId" className="block text-sm font-medium text-gray-700 mb-1">
           Link to Win (Optional)
@@ -189,7 +187,6 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
         </select>
       </div>
 
-      {/* Error Messages */}
       {error && (
         <div className="rounded-md bg-red-50 border border-red-200 p-3">
           <p className="text-sm text-red-700">{error}</p>
@@ -202,7 +199,6 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
         </div>
       )}
 
-      {/* Action Buttons */}
       <div className="flex justify-end gap-3">
         <button
           type="button"

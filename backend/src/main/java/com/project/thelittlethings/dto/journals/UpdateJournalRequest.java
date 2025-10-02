@@ -2,6 +2,8 @@ package com.project.thelittlethings.dto.journals;
 
 import jakarta.validation.constraints.Size;
 
+// DTO for updating existing journals
+// fields are optional since user might only want to update certain things
 public class UpdateJournalRequest {
     @Size(max = 255, message = "Title must be 255 characters or less")
     private String title;

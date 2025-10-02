@@ -1,5 +1,6 @@
 package com.project.thelittlethings.dto.users;
 
+// data needed to change user password
 public class ChangePasswordRequest {
     private String oldPassword;
     private String newPassword;

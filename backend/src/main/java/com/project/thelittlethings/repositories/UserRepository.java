@@ -1,4 +1,6 @@
 package com.project.thelittlethings.repositories;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.PageRequest;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,4 +20,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
   List<User> findByRegionOrderByTrophiesDesc(String region, Pageable pageable);
 
   List<User> findAllByOrderByTrophiesDesc(Pageable pageable);
+
+  Optional<User> findByUsernameIgnoreCase(String username);
+  
+  boolean existsByUsernameIgnoreCase(String username);
+  
+  // Leaderboard methods for Ilkash
+  List<User> findByRegionOrderByTrophiesDesc(String region, PageRequest pageRequest);
+  List<User> findAllByOrderByTrophiesDesc(PageRequest pageRequest);
 }
