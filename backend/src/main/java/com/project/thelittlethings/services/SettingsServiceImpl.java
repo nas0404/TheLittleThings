@@ -18,17 +18,18 @@ public class SettingsServiceImpl implements SettingsService {
   private final NotificationPrefsRepository prefsRepo;
 
   public SettingsServiceImpl(UserProfileRepository profiles,
-                             NotificationPrefsRepository prefsRepo) {
+      NotificationPrefsRepository prefsRepo) {
     this.profiles = profiles;
     this.prefsRepo = prefsRepo;
   }
 
-  // ===== Profile (already had these) =====
+  // ---- Profile (existing) ----
   private static ProfileDto toDto(UserProfile p) {
     return new ProfileDto(p.getDisplayName(), p.getBio(), p.getAvatarUrl());
   }
 
-  @Override @Transactional(readOnly = true)
+  @Override
+  @Transactional(readOnly = true)
   public ProfileDto getProfile(long userId) {
     UserProfile p = profiles.findById(userId).orElseGet(() -> {
       UserProfile np = new UserProfile();
@@ -40,7 +41,8 @@ public class SettingsServiceImpl implements SettingsService {
     return toDto(p);
   }
 
-  @Override @Transactional
+  @Override
+  @Transactional
   public ProfileDto updateProfile(long userId, ProfileDto dto) {
     UserProfile p = profiles.findById(userId).orElseGet(() -> {
       UserProfile np = new UserProfile();
@@ -54,37 +56,37 @@ public class SettingsServiceImpl implements SettingsService {
     return toDto(profiles.save(p));
   }
 
-  // ===== Notifications (NEW) =====
+  // ---- Notifications (existing helpers) ----
   private static NotificationPrefsDto toDto(NotificationPrefs p) {
     return new NotificationPrefsDto(
-      p.isWinDailyReminder(),
-      p.isStreakMilestones(),
-      p.isTrophies(),
-      p.isWeeklyChallenges(),
-      p.isFriendRequests(),
-      p.isChannelInApp(),
-      p.isChannelEmail()
-    );
+        p.isWinDailyReminder(),
+        p.isStreakMilestones(),
+        p.isTrophies(),
+        p.isWeeklyChallenges(),
+        p.isFriendRequests(),
+        p.isChannelInApp(),
+        p.isChannelEmail());
   }
 
-  @Override @Transactional(readOnly = true)
+  @Override
+  @Transactional(readOnly = true)
   public NotificationPrefsDto getPrefs(long userId) {
     NotificationPrefs p = prefsRepo.findById(userId).orElseGet(() -> {
-      NotificationPrefs d = new NotificationPrefs(); // defaults already set
+      NotificationPrefs d = new NotificationPrefs(); // defaults
       d.setUserId(userId);
       return d; // not saved on GET
     });
     return toDto(p);
   }
 
-  @Override @Transactional
+  @Override
+  @Transactional
   public NotificationPrefsDto resetPrefs(long userId) {
     NotificationPrefs p = prefsRepo.findById(userId).orElseGet(() -> {
       NotificationPrefs d = new NotificationPrefs();
       d.setUserId(userId);
       return d;
     });
-    // reset to defaults
     p.setWinDailyReminder(true);
     p.setStreakMilestones(true);
     p.setTrophies(true);
@@ -92,6 +94,26 @@ public class SettingsServiceImpl implements SettingsService {
     p.setFriendRequests(true);
     p.setChannelInApp(true);
     p.setChannelEmail(false);
+    p.setUpdatedAt(Instant.now());
+    return toDto(prefsRepo.save(p));
+  }
+
+  // ---- NEW: Update prefs (covers #77 and sets you up for #76) ----
+  @Override
+  @Transactional
+  public NotificationPrefsDto updatePrefs(long userId, NotificationPrefsDto dto) {
+    NotificationPrefs p = prefsRepo.findById(userId).orElseGet(() -> {
+      NotificationPrefs d = new NotificationPrefs();
+      d.setUserId(userId);
+      return d;
+    });
+    p.setWinDailyReminder(dto.winDailyReminder());
+    p.setStreakMilestones(dto.streakMilestones());
+    p.setTrophies(dto.trophies());
+    p.setWeeklyChallenges(dto.weeklyChallenges());
+    p.setFriendRequests(dto.friendRequests());
+    p.setChannelInApp(dto.channelInApp());
+    p.setChannelEmail(dto.channelEmail());
     p.setUpdatedAt(Instant.now());
     return toDto(prefsRepo.save(p));
   }
