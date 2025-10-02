@@ -128,6 +128,29 @@ export default function Settings() {
           {err && <span className="text-red-600 text-sm">{err}</span>}
         </div>
       </form>
+      {/* Notifications — quick demo */}
+      
+<div className="mt-8 space-y-2">
+  <h2 className="text-xl font-semibold">Notifications</h2>
+  <button
+    onClick={async () => {
+      try {
+        const res = await fetch("http://localhost:8080/api/settings/notifications/reset", {
+          method: "POST",
+          headers: { "X-User-Id": "1" },
+        });
+        const data = await res.json();
+        alert("Notifications reset to defaults:\n" + JSON.stringify(data, null, 2));
+      } catch {
+        alert("Reset failed");
+      }
+    }}
+    className="rounded-xl bg-black px-4 py-2 text-white"
+  >
+    Reset to defaults
+  </button>
+</div>
+
     </section>
   );
 }
