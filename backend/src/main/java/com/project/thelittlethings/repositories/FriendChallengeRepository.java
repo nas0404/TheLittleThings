@@ -10,4 +10,5 @@ public interface FriendChallengeRepository extends JpaRepository<FriendChallenge
     List<FriendChallenge> findByChallengerOrOpponent(User c, User o);
     List<FriendChallenge> findByOpponentAndStatus(User opponent, FriendChallenge.Status status);
     List<FriendChallenge> findByChallengerOrOpponentAndStatusIn(User challenger, User opponent, List<FriendChallenge.Status> statuses);
+    List<FriendChallenge> findByChallengerOrOpponentAndStatusNotIn(User challenger, User opponent, List<FriendChallenge.Status> statuses);
 }

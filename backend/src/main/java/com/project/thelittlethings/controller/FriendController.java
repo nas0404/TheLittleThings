@@ -217,4 +217,38 @@ public class FriendController {
             .toList();
         return ResponseEntity.ok(list);
     }
+
+    @PostMapping("/challenges/{id}/request-complete")
+    public ResponseEntity<?> requestComplete(@RequestHeader("Authorization") String auth,
+                                            @PathVariable Long id) {
+        try {
+            Long me = me(auth);
+            return ResponseEntity.ok(ChallengeResponse.fromEntity(friendService.requestCompletion(me, id)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/challenges/{id}/confirm-complete")
+    public ResponseEntity<?> confirmComplete(@RequestHeader("Authorization") String auth,
+                                            @PathVariable Long id) {
+        try {
+            Long me = me(auth);
+            return ResponseEntity.ok(ChallengeResponse.fromEntity(friendService.confirmCompletion(me, id)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/challenges/{id}/reject-complete")
+    public ResponseEntity<?> rejectComplete(@RequestHeader("Authorization") String auth,
+                                            @PathVariable Long id) {
+        try {
+            Long me = me(auth);
+            return ResponseEntity.ok(ChallengeResponse.fromEntity(friendService.rejectCompletion(me, id)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }

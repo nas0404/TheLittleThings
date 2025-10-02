@@ -233,8 +233,11 @@ public class FriendService {
         if (Objects.equals(challengerId, opponentId)) throw new IllegalArgumentException("Cannot challenge yourself");
         User c = userRepo.findById(challengerId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         User o = userRepo.findById(opponentId).orElseThrow(() -> new IllegalArgumentException("Opponent not found"));
-
         if (!areFriends(c, o)) throw new IllegalArgumentException("Users are not friends");
+
+        int s = java.util.Optional.ofNullable(stake).orElse(0);
+        if (s < 0) throw new IllegalArgumentException("Stake cannot be negative");
+        if (trophiesOf(c) < s) throw new IllegalArgumentException("Insufficient trophies for stake");
 
         var now = java.time.OffsetDateTime.now();
 
@@ -242,23 +245,43 @@ public class FriendService {
                 .challenger(c).opponent(o)
                 .goalList(goalList)
                 .startDate(start).endDate(end)
-                .trophiesStake(Optional.ofNullable(stake).orElse(0))
+                .trophiesStake(s)
                 .status(FriendChallenge.Status.PROPOSED)
-                .createdAt(now)              // ← explicit
-                .updatedAt(now)              // ← explicit
+                .createdAt(now)
+                .updatedAt(now)
+                .escrowed(false)
                 .build();
 
         return challengeRepo.save(fc);
     }
 
+
     @Transactional
     public FriendChallenge acceptChallenge(Long meId, Long challengeId) {
         FriendChallenge fc = challengeRepo.findById(challengeId)
                 .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
-        if (!fc.getOpponent().getUserId().equals(meId)) throw new IllegalArgumentException("Only opponent can accept");
-        if (fc.getStatus() != FriendChallenge.Status.PROPOSED) throw new IllegalArgumentException("Wrong state");
+        if (!fc.getOpponent().getUserId().equals(meId))
+            throw new IllegalArgumentException("Only opponent can accept");
+        if (fc.getStatus() != FriendChallenge.Status.PROPOSED)
+            throw new IllegalArgumentException("Wrong state");
+
+        User c = fc.getChallenger();
+        User o = fc.getOpponent();
+        int s = java.util.Optional.ofNullable(fc.getTrophiesStake()).orElse(0);
+
+        // both must be able to pay the stake now
+        if (trophiesOf(c) < s) throw new IllegalArgumentException("Challenger has insufficient trophies now");
+        if (trophiesOf(o) < s) throw new IllegalArgumentException("You have insufficient trophies to accept");
+
+        // escrow: deduct from both
+        addTrophies(c, -s);
+        addTrophies(o, -s);
+        userRepo.save(c);
+        userRepo.save(o);
 
         fc.setStatus(FriendChallenge.Status.ACCEPTED);
+        fc.setEscrowed(true);
+        fc.setUpdatedAt(java.time.OffsetDateTime.now());
         return challengeRepo.save(fc);
     }
 
@@ -266,10 +289,13 @@ public class FriendService {
     public FriendChallenge declineChallenge(Long meId, Long challengeId) {
         FriendChallenge fc = challengeRepo.findById(challengeId)
                 .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
-        if (!fc.getOpponent().getUserId().equals(meId)) throw new IllegalArgumentException("Only opponent can decline");
-        if (fc.getStatus() != FriendChallenge.Status.PROPOSED) throw new IllegalArgumentException("Wrong state");
+        if (!fc.getOpponent().getUserId().equals(meId))
+            throw new IllegalArgumentException("Only opponent can decline");
+        if (fc.getStatus() != FriendChallenge.Status.PROPOSED)
+            throw new IllegalArgumentException("Wrong state");
 
         fc.setStatus(FriendChallenge.Status.DECLINED);
+        fc.setUpdatedAt(java.time.OffsetDateTime.now());
         return challengeRepo.save(fc);
     }
 
@@ -311,8 +337,97 @@ public class FriendService {
         var statuses = List.of(
             FriendChallenge.Status.PROPOSED,
             FriendChallenge.Status.ACCEPTED,
-            FriendChallenge.Status.ACTIVE
+            FriendChallenge.Status.ACTIVE,
+            FriendChallenge.Status.COMPLETION_REQUESTED
         );
         return challengeRepo.findByChallengerOrOpponentAndStatusIn(me, me, statuses);
+    }
+
+    
+    @Transactional
+    public FriendChallenge requestCompletion(Long meId, Long challengeId) {
+        FriendChallenge fc = challengeRepo.findById(challengeId)
+            .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+        if (!Objects.equals(fc.getChallenger().getUserId(), meId) &&
+            !Objects.equals(fc.getOpponent().getUserId(), meId))
+            throw new IllegalArgumentException("Not a participant");
+
+        if (fc.getStatus() != FriendChallenge.Status.ACCEPTED &&
+            fc.getStatus() != FriendChallenge.Status.ACTIVE)
+            throw new IllegalArgumentException("Challenge not active");
+
+        User me = userRepo.findById(meId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        fc.setStatus(FriendChallenge.Status.COMPLETION_REQUESTED);
+        fc.setCompletionRequestedBy(me);
+        fc.setCompletionRequestedAt(java.time.OffsetDateTime.now());
+        fc.setUpdatedAt(java.time.OffsetDateTime.now());
+        return challengeRepo.save(fc);
+    }
+
+
+    @Transactional
+    public FriendChallenge confirmCompletion(Long meId, Long challengeId) {
+        FriendChallenge fc = challengeRepo.findById(challengeId)
+            .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+
+        if (fc.getStatus() != FriendChallenge.Status.COMPLETION_REQUESTED)
+            throw new IllegalArgumentException("No completion to confirm");
+        if (fc.getCompletionRequestedBy() == null)
+            throw new IllegalStateException("Requestor missing");
+
+        Long requesterId = fc.getCompletionRequestedBy().getUserId();
+        boolean meIsParticipant = Objects.equals(fc.getChallenger().getUserId(), meId)
+                            || Objects.equals(fc.getOpponent().getUserId(), meId);
+        if (!meIsParticipant) throw new IllegalArgumentException("Not a participant");
+        if (Objects.equals(requesterId, meId))
+            throw new IllegalArgumentException("Requester cannot confirm");
+
+        // Winner = confirmer (you can invert if you prefer)
+        User winner = userRepo.findById(meId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        int stake = java.util.Optional.ofNullable(fc.getTrophiesStake()).orElse(0);
+        int pool  = fc.isEscrowed() ? stake * 2 : 0; // if escrow didn’t happen, don’t double pay
+
+        if (pool > 0) {
+            addTrophies(winner, pool);
+            userRepo.save(winner);
+            fc.setEscrowed(false); // consumed
+        }
+
+        fc.setStatus(FriendChallenge.Status.COMPLETED);
+        fc.setWinner(winner);
+        fc.setCompletionConfirmedBy(winner);
+        fc.setCompletionConfirmedAt(java.time.OffsetDateTime.now());
+        fc.setUpdatedAt(java.time.OffsetDateTime.now());
+        return challengeRepo.save(fc);
+    }
+
+
+    @Transactional
+    public FriendChallenge rejectCompletion(Long meId, Long challengeId) {
+        FriendChallenge fc = challengeRepo.findById(challengeId)
+            .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+
+        if (fc.getStatus() != FriendChallenge.Status.COMPLETION_REQUESTED)
+            throw new IllegalArgumentException("No completion to reject");
+        if (fc.getCompletionRequestedBy() == null)
+            throw new IllegalStateException("Requestor missing");
+        if (Objects.equals(fc.getCompletionRequestedBy().getUserId(), meId))
+            throw new IllegalArgumentException("Requester cannot reject");
+
+        fc.setStatus(FriendChallenge.Status.ACCEPTED); // or ACTIVE if you use it
+        fc.setCompletionRequestedBy(null);
+        fc.setCompletionRequestedAt(null);
+        fc.setUpdatedAt(java.time.OffsetDateTime.now());
+        return challengeRepo.save(fc);
+    }
+
+
+    private int trophiesOf(User u) {
+        return java.util.Optional.ofNullable(u.getTrophies()).orElse(0);
+    }
+    
+    private void addTrophies(User u, int delta) {
+        u.setTrophies(Math.max(0, trophiesOf(u) + delta));
     }
 }
