@@ -1,0 +1,49 @@
+package com.project.thelittlethings.services;
+
+import com.project.thelittlethings.dto.ProfileDto;
+import com.project.thelittlethings.entities.UserProfile;
+import com.project.thelittlethings.repositories.UserProfileRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+
+@Service
+public class SettingsServiceImpl implements SettingsService {
+
+  private final UserProfileRepository profiles;
+
+  public SettingsServiceImpl(UserProfileRepository profiles) {
+    this.profiles = profiles;
+  }
+
+  private static ProfileDto toDto(UserProfile p) {
+    return new ProfileDto(p.getDisplayName(), p.getBio(), p.getAvatarUrl());
+  }
+
+  @Override @Transactional(readOnly = true)
+  public ProfileDto getProfile(long userId) {
+    UserProfile p = profiles.findById(userId).orElseGet(() -> {
+      UserProfile np = new UserProfile();
+      np.setUserId(userId);
+      np.setDisplayName("New User");
+      np.setUpdatedAt(Instant.now());
+      return np; // not saved yet; fine for initial GET
+    });
+    return toDto(p);
+  }
+
+  @Override @Transactional
+  public ProfileDto updateProfile(long userId, ProfileDto dto) {
+    UserProfile p = profiles.findById(userId).orElseGet(() -> {
+      UserProfile np = new UserProfile();
+      np.setUserId(userId);
+      return np;
+    });
+    p.setDisplayName(dto.displayName());
+    p.setBio(dto.bio());
+    p.setAvatarUrl(dto.avatarUrl());
+    p.setUpdatedAt(Instant.now());
+    return toDto(profiles.save(p));
+  }
+}
