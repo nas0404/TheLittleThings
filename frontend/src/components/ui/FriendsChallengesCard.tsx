@@ -30,18 +30,18 @@ export default function FriendsChallengesCard() {
 
   useEffect(() => { load(); }, []);
 
-  const requestComplete = async (id: number) => {
-    try { await FriendsAPI.requestComplete(id); await load(); }
-    catch (e: any) { setErr(e.message || "Failed to request completion"); }
-  };
-  const confirmComplete = async (id: number) => {
-    try { await FriendsAPI.confirmComplete(id); await load(); }
-    catch (e: any) { setErr(e.message || "Failed to confirm"); }
-  };
-  const rejectComplete = async (id: number) => {
-    try { await FriendsAPI.rejectComplete(id); await load(); }
-    catch (e: any) { setErr(e.message || "Failed to reject"); }
-  };
+//   const requestComplete = async (id: number) => {
+//     try { await FriendsAPI.requestComplete(id); await load(); }
+//     catch (e: any) { setErr(e.message || "Failed to request completion"); }
+//   };
+//   const confirmComplete = async (id: number) => {
+//     try { await FriendsAPI.confirmComplete(id); await load(); }
+//     catch (e: any) { setErr(e.message || "Failed to confirm"); }
+//   };
+//   const rejectComplete = async (id: number) => {
+//     try { await FriendsAPI.rejectComplete(id); await load(); }
+//     catch (e: any) { setErr(e.message || "Failed to reject"); }
+//   };
 
   const renderOne = (c: Challenge) => {
     const partner = c.challengerUsername === me ? c.opponentUsername : c.challengerUsername;
