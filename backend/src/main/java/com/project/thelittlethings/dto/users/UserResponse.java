@@ -4,6 +4,7 @@ import com.project.thelittlethings.entities.User;
 
 import java.time.LocalDate;
 
+// user data sent back to frontend
 public class UserResponse {
     private Long userId;
     private String username;
@@ -15,8 +16,10 @@ public class UserResponse {
     private String gender;
     private Integer streaks;
     private String region;
-    private String lastLogin; 
+    private String lastLogin;
+    private Integer trophies;  
 
+    // converts user entity to response DTO
     public static UserResponse fromUser(User u) {
         UserResponse r = new UserResponse();
         r.userId = u.getUserId();
@@ -29,6 +32,7 @@ public class UserResponse {
         r.gender = u.getGender();
         r.streaks = u.getStreaks();
         r.region = u.getRegion();
+        r.trophies = (u.getTrophies());
        
         java.time.OffsetDateTime ll = u.getLastLogin();
         if (ll != null) {
@@ -39,7 +43,7 @@ public class UserResponse {
         return r;
     }
 
-   
+   // getters and setters
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
 

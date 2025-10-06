@@ -16,8 +16,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByUserId(long userId);
   boolean existsByUsername(String username);
   boolean existsByEmail(String email);
+
+  List<User> findByRegionOrderByTrophiesDesc(String region, Pageable pageable);
+
+  List<User> findAllByOrderByTrophiesDesc(Pageable pageable);
+
+  Optional<User> findByUsernameIgnoreCase(String username);
   
-  // Leaderboard methods
+  boolean existsByUsernameIgnoreCase(String username);
+  
+  // Leaderboard methods for Ilkash
   List<User> findByRegionOrderByTrophiesDesc(String region, PageRequest pageRequest);
   List<User> findAllByOrderByTrophiesDesc(PageRequest pageRequest);
 }

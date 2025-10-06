@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
 
+// handles all the journal stuff - creating, updating, deleting etc
 @Service
 public class JournalService {
     
@@ -24,15 +25,17 @@ public class JournalService {
     private final UserRepository userRepository;
     private final WinRepository winRepository;
 
+    // constructor for dependecy injection
     public JournalService(JournalRepository journalRepository, UserRepository userRepository, WinRepository winRepository) {
         this.journalRepository = journalRepository;
         this.userRepository = userRepository;
         this.winRepository = winRepository;
     }
 
+    // creates a new journal entry for the user
     @Transactional
     public JournalResponse createJournal(Long userId, CreateJournalRequest request) {
-        // prevent null pointer crashes
+        // need to validate inputs to prevent null pointer exceptions
         if (userId == null || userId <= 0) {
             throw new IllegalArgumentException("Invalid user ID");
         }
@@ -68,13 +71,15 @@ public class JournalService {
         return JournalResponse.fromJournal(journalOpt.get());
     }
 
+    // gets all journals for a user, can sort by title or date
     public List<JournalResponse> getAllJournals(Long userId, String sortBy) {
         List<Journal> journals;
         
+        // sort alphabetically if they want
         if ("title".equalsIgnoreCase(sortBy)) {
             journals = journalRepository.findByUser_UserIdOrderByTitleAsc(userId);
         } else {
-            // Default to date sorting (newest first)
+            // Default to date sorting (newest first) - makes more sense
             journals = journalRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
         }
 
@@ -118,6 +123,7 @@ public class JournalService {
         return JournalResponse.fromJournal(savedJournal);
     }
 
+    // deletes a journal - returns true if sucessful
     @Transactional
     public boolean deleteJournal(Long journalId, Long userId) {
         // check for null IDs to avoid crashes
@@ -128,12 +134,13 @@ public class JournalService {
             throw new IllegalArgumentException("Invalid user ID");
         }
         
+        // check if journal exists and belongs to user before deleting
         if (!journalRepository.existsByJournalIdAndUser_UserId(journalId, userId)) {
-            return false;
+            return false; // journal not found or doesnt belong to user
         }
         
         journalRepository.deleteById(journalId);
-        return true;
+        return true; // sucessfully deleted
     }
 
     public List<Win> getUserWins(Long userId) {

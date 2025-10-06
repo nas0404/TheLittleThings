@@ -7,6 +7,7 @@ export default function UserProfile() {
 	const [oldPass, setOldPass] = useState('');
 	const [newPass, setNewPass] = useState('');
 
+	// get user info when component loads
 	useEffect(() => {
 		const token = localStorage.getItem('token');
 		if (!token) return;
@@ -21,6 +22,7 @@ export default function UserProfile() {
 			.catch(() => setError('Unable to fetch'));
 	}, []);
 
+	// password change function
 	const change = async () => {
 		const token = localStorage.getItem('token');
 		try {
@@ -63,6 +65,7 @@ export default function UserProfile() {
 		}
 	};
 
+	// logout and clear token
 	const logout = async () => {
 		const token = localStorage.getItem('token');
 		await fetch('http://localhost:8080/api/users/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });

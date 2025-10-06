@@ -13,9 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/journals")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173") // allow frontend to connect
 public class JournalController {
 
     private final JournalService journalService;
@@ -26,11 +27,12 @@ public class JournalController {
         this.userService = userService;
     }
 
+    //endpoint to create new journal entry
     @PostMapping
     public ResponseEntity<?> createJournal(@RequestHeader("Authorization") String token,
                                          @RequestBody CreateJournalRequest request) {
         try {
-            // basic validation - prevent crashes
+            // validation
             if (request == null) {
                 return ResponseEntity.badRequest().body("Request cannot be empty");
             }
@@ -123,6 +125,8 @@ public class JournalController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // helper method to extract user ID from HMAC token
 
     private Long getUserIdFromAuthToken(String authHeader) {
         String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;

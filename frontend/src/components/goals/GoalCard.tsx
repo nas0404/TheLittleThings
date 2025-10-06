@@ -1,5 +1,7 @@
+// Type for goal priority levels
 type Priority = "HIGH" | "MEDIUM" | "LOW";
 
+// Lightweight goal type for card display
 type GoalLite = {
   goalId: number;
   title: string;
@@ -7,12 +9,14 @@ type GoalLite = {
   priority: Priority;
 };
 
+// Tailwind CSS classes for priority badges
 const priClasses: Record<Priority, string> = {
   HIGH: "bg-red-100 text-red-700",
   MEDIUM: "bg-amber-100 text-amber-700",
   LOW: "bg-emerald-100 text-emerald-700",
 };
 
+// Props for the GoalCard component
 type Props = {
   goal: GoalLite;
   onEdit: () => void;
@@ -20,6 +24,7 @@ type Props = {
 };
 
 
+// Component for displaying a goal in a card format
 export default function GoalCard({ goal, onEdit, onRequestDelete }: Props) {
   return (
     <div className="border rounded-xl p-4">

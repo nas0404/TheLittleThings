@@ -13,6 +13,7 @@ type RegisterForm = {
   region: string;
 };
 
+// calculate age from date of birth
 const calcAge = (isoDate: string) => {
   if (!isoDate) return undefined;
   const today = new Date();
@@ -92,7 +93,6 @@ export default function Register() {
         <h2 className="text-center text-2xl font-semibold text-gray-900">Create your account</h2>
 
         <form className="mt-6 space-y-5" onSubmit={handleSubmit} noValidate>
-          {/* Personal info card */}
           <div className="rounded-xl border bg-white p-4 shadow-sm">
             <h3 className="text-lg font-semibold mb-3">Personal Details</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -135,7 +135,6 @@ export default function Register() {
             </div>
           </div>
 
-          {/* Account info card */}
           <div className="rounded-xl border bg-white p-4 shadow-sm">
             <h3 className="text-lg font-semibold mb-3">Account</h3>
             <Field label="Username" id="username" hint="3+ characters, lowercase is fine.">
@@ -163,7 +162,6 @@ export default function Register() {
             </Field>
           </div>
 
-          {/* Other info card + submit */}
           <div className="rounded-xl border bg-white p-4 shadow-sm">
             <h3 className="text-lg font-semibold mb-3">Other</h3>
             <Field label="Region" id="region">
