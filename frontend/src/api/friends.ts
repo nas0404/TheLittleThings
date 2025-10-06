@@ -11,17 +11,19 @@ export type Friendship = {
 
 export type Challenge = {
   id: number;
-  challengerId: number;
-  challengerUsername: string;
-  opponentId: number;
-  opponentUsername: string;
   goalList: string;
-  startDate?: string;
-  endDate?: string;
   trophiesStake: number;
-  status: string;
-  winnerUsername?: string | null;
+  status: "proposed" | "accepted" | "declined" | "active" | "completion_requested" | "completed" | "expired";
+  startDate?: string; endDate?: string;
+
+  challengerId: number; challengerUsername: string;
+  opponentId: number;   opponentUsername: string;
+
+  completionRequestedById?: number | null;
+  completionRequestedByUsername?: string | null;
+  completionRequestedAt?: string | null;
 };
+
 
 
 const BASE = "http://localhost:8080";
@@ -173,5 +175,29 @@ export const FriendsAPI = {
     return r.json();
   },
 
+  requestComplete: async (id: number) => {
+    const r = await fetch(`http://localhost:8080/api/friends/challenges/${id}/request-complete`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
+  confirmComplete: async (id: number) => {
+    const r = await fetch(`http://localhost:8080/api/friends/challenges/${id}/confirm-complete`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
+  rejectComplete: async (id: number) => {
+    const r = await fetch(`http://localhost:8080/api/friends/challenges/${id}/reject-complete`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
   
 };

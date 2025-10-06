@@ -1,4 +1,3 @@
-// dto/friends/ChallengeResponse.java
 package com.project.thelittlethings.dto.friends;
 
 import com.project.thelittlethings.entities.FriendChallenge;
@@ -28,7 +27,12 @@ public class ChallengeResponse {
 
     private String winnerUsername;
 
+    private Long   completionRequestedById;
+    private String completionRequestedByUsername;
+
     public static ChallengeResponse fromEntity(FriendChallenge fc) {
+        var reqBy = fc.getCompletionRequestedBy();
+
         return ChallengeResponse.builder()
             .id(fc.getId())
             .challengerId(fc.getChallenger().getUserId())
@@ -43,6 +47,8 @@ public class ChallengeResponse {
             .createdAt(fc.getCreatedAt())
             .updatedAt(fc.getUpdatedAt())
             .winnerUsername(fc.getWinner() != null ? fc.getWinner().getUsername() : null)
+            .completionRequestedById(reqBy != null ? reqBy.getUserId() : null)
+            .completionRequestedByUsername(reqBy != null ? reqBy.getUsername() : null)
             .build();
     }
 }

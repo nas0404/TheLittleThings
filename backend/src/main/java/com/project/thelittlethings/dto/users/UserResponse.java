@@ -16,7 +16,8 @@ public class UserResponse {
     private String gender;
     private Integer streaks;
     private String region;
-    private String lastLogin; 
+    private String lastLogin;
+    private Integer trophies;  
 
     // converts user entity to response DTO
     public static UserResponse fromUser(User u) {
@@ -31,6 +32,7 @@ public class UserResponse {
         r.gender = u.getGender();
         r.streaks = u.getStreaks();
         r.region = u.getRegion();
+        r.trophies = (u.getTrophies());
        
         java.time.OffsetDateTime ll = u.getLastLogin();
         if (ll != null) {
