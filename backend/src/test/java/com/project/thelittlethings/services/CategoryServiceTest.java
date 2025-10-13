@@ -52,24 +52,24 @@ class CategoryServiceTest {
     }
 
     @Test
-void create_success() {
-    User user = mockUser(10L);
-    when(userRepo.findById(10L)).thenReturn(Optional.of(user));
-    when(categoryRepo.existsByUser_UserIdAndName(10L, "Fitness")).thenReturn(false);
+    void create_success() {
+        User user = mockUser(10L);
+        when(userRepo.findById(10L)).thenReturn(Optional.of(user));
+        when(categoryRepo.existsByUser_UserIdAndName(10L, "Fitness")).thenReturn(false);
 
-    when(categoryRepo.save(any(Category.class))).thenAnswer(inv -> {
-        Category c = inv.getArgument(0);
-        c.setCategoryId(1L);
-        return c;
-    });
+        when(categoryRepo.save(any(Category.class))).thenAnswer(inv -> {
+            Category c = inv.getArgument(0);
+            c.setCategoryId(1L);
+            return c;
+        });
 
-    var req = new CreateCategoryRequest("Fitness", "Gym");
-    CategoryResponse res = service.create(10L, req);
+        var req = new CreateCategoryRequest("Fitness", "Gym");
+        CategoryResponse res = service.create(10L, req);
 
-    assertEquals(1L, res.getCategoryId());
-    assertEquals("Fitness", res.getName());
-    verify(categoryRepo).save(any(Category.class));
-}
+        assertEquals(1L, res.getCategoryId());
+        assertEquals("Fitness", res.getName());
+        verify(categoryRepo).save(any(Category.class));
+    }
 
 
     @Test
