@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/buttons/Button";
+import { UserAPI } from "../api/users";
+import { ApiError } from "../api/http";
 
 type RegisterForm = {
   username: string;
@@ -62,26 +64,21 @@ export default function Register() {
     setServerError(null);
     
     try {
-      const res = await fetch('http://localhost:8080/api/users/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+      const data = await UserAPI.register({
+        username: form.username,
+        email: form.email,
+        password: form.password
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          navigate("/home");
-        } else {
-          setServerError('Something went wrong');
-        }
-      } else {
-        const errorData = await res.text();
-        setServerError(errorData || 'Registration failed');
-      }
+      
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('username', data.user.username);
+      navigate("/home");
     } catch (error) {
-      setServerError('Network error - please try again');
+      if (error instanceof ApiError) {
+        setServerError(error.message || 'Registration failed');
+      } else {
+        setServerError('Network error - please try again');
+      }
     } finally {
       setSubmitting(false);
     }

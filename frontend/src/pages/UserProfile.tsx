@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import Button from '../components/buttons/Button';
+import { UserAPI } from '../api/users';
+import { ApiError } from '../api/http';
 
 export default function UserProfile() {
 	const [user, setUser] = useState<any>(null);
@@ -9,17 +11,25 @@ export default function UserProfile() {
 
 	// get user info when component loads
 	useEffect(() => {
-		const token = localStorage.getItem('token');
-		if (!token) return;
-		fetch('http://localhost:8080/api/users/me', { headers: { Authorization: `Bearer ${token}` } })
-			.then((r) => r.json())
-			.then(data => {
+		const fetchUserData = async () => {
+			try {
+				const data = await UserAPI.me();
 				console.log('User data received:', data);
-				console.log('Age value:', data.age, 'Type:', typeof data.age);
-				console.log('DOB value:', data.dob, 'Type:', typeof data.dob);
 				setUser(data);
-			})
-			.catch(() => setError('Unable to fetch'));
+			} catch (err) {
+				if (err instanceof ApiError && err.status === 401) {
+					setError('Please log in');
+					localStorage.removeItem('token');
+				} else {
+					setError('Unable to fetch user data');
+				}
+			}
+		};
+		
+		const token = localStorage.getItem('token');
+		if (token) {
+			fetchUserData();
+		}
 	}, []);
 
 	// password change function
@@ -67,9 +77,7 @@ export default function UserProfile() {
 
 	// logout and clear token
 	const logout = async () => {
-		const token = localStorage.getItem('token');
-		await fetch('http://localhost:8080/api/users/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-		localStorage.removeItem('token');
+		UserAPI.logout();
 		window.location.href = '/';
 	};
 

@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
-
-interface Win {
-  winId: number;
-  title: string;
-  description?: string;
-}
+import { JournalAPI, type Win, type CreateJournalRequest } from '../../api/JournalApi';
+import { ApiError } from '../../api/http';
 
 interface JournalCreateFormProps {
   onSuccess: () => void;
@@ -29,21 +25,9 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
 
   const fetchUserWins = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
       console.log('Loading wins');
-
-      const response = await fetch('http://localhost:8080/api/journals/wins', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setWins(data);
-      }
+      const data = await JournalAPI.getWins();
+      setWins(data);
     } catch (err) {
       console.error('Error fetching wins:', err);
     }
@@ -83,35 +67,24 @@ export default function JournalCreateForm({ onSuccess }: JournalCreateFormProps)
     setServerError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please log in');
-        return;
-      }
-
-      const body = {
+      const body: CreateJournalRequest = {
         title: formData.title,
         content: formData.content,
         ...(formData.linkedWinId && { linkedWinId: parseInt(formData.linkedWinId) })
       };
 
-      const response = await fetch('http://localhost:8080/api/journals', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.ok) {
-        onSuccess();
-      } else {
-        const error = await response.text();
-        setServerError(error || 'Failed to create entry');
-      }
+      await JournalAPI.create(body);
+      onSuccess();
     } catch (err) {
-      setServerError('Network error');
+      if (err instanceof ApiError) {
+        if (err.status === 401) {
+          setError('Please log in');
+        } else {
+          setServerError(err.message || 'Failed to create entry');
+        }
+      } else {
+        setServerError('Network error');
+      }
     } finally {
       setLoading(false);
     }
