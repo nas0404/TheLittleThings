@@ -9,7 +9,7 @@ export type MeResponse = {
 };
 
 export type LoginRequest = {
-  username: string;
+  usernameOrEmail: string;
   password: string;
 };
 
@@ -17,11 +17,17 @@ export type RegisterRequest = {
   username: string;
   email: string;
   password: string;
+  firstName: string;
+  lastName: string;
+  dob: string;
+  gender: string;
+  region: string;
 };
 
 export type LoginResponse = {
   token: string;
-  user: MeResponse;
+  userId: number;
+  username: string;
 };
 
 export type UpdateUserRequest = {
@@ -39,7 +45,7 @@ export const UserAPI = {
 
   // Login user
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    return http<LoginResponse>(`/api/auth/login`, {
+    return http<LoginResponse>(`/api/users/login`, {
       method: "POST",
       body: JSON.stringify(credentials),
     });
@@ -47,7 +53,7 @@ export const UserAPI = {
 
   // Register new user
   async register(userData: RegisterRequest): Promise<LoginResponse> {
-    return http<LoginResponse>(`/api/auth/register`, {
+    return http<LoginResponse>(`/api/users/register`, {
       method: "POST",
       body: JSON.stringify(userData),
     });
