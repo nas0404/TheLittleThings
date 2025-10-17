@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Button from "../components/buttons/Button";
 import { UserAPI } from "../api/users";
 import { ApiError } from "../api/http";
@@ -27,7 +26,6 @@ const calcAge = (isoDate: string) => {
 };
 
 export default function Register() {
-  const navigate = useNavigate();
   const [form, setForm] = useState<RegisterForm>({
     username: "",
     email: "",
@@ -67,12 +65,18 @@ export default function Register() {
       const data = await UserAPI.register({
         username: form.username,
         email: form.email,
-        password: form.password
+        password: form.password,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        dob: form.dob,
+        gender: form.gender,
+        region: form.region
       });
       
       localStorage.setItem('token', data.token);
-      localStorage.setItem('username', data.user.username);
-      navigate("/home");
+      localStorage.setItem('username', data.username);
+      // Navigate to home and refresh the page
+      window.location.href = "/home";
     } catch (error) {
       if (error instanceof ApiError) {
         setServerError(error.message || 'Registration failed');
@@ -162,11 +166,20 @@ export default function Register() {
           <div className="rounded-xl border bg-white p-4 shadow-sm">
             <h3 className="text-lg font-semibold mb-3">Other</h3>
             <Field label="Region" id="region">
-              <input
-                id="region" name="region" type="text" required
+              <select
+                id="region" name="region" required
                 className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 value={form.region} onChange={onChange}
-              />
+              >
+                <option value="">Select a continent</option>
+                <option value="Africa">Africa</option>
+                <option value="Antarctica">Antarctica</option>
+                <option value="Asia">Asia</option>
+                <option value="Europe">Europe</option>
+                <option value="North America">North America</option>
+                <option value="Oceania">Oceania</option>
+                <option value="South America">South America</option>
+              </select>
             </Field>
 
             <div className="mt-4">
