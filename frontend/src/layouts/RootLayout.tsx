@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 
 type Props = { children: React.ReactNode };
@@ -12,6 +12,11 @@ type MeResponse = {
 
 export default function RootLayout({ children }: Props) {
   const [me, setMe] = useState<MeResponse | null>(null);
+  const location = useLocation();
+  
+  // Routes where we should hide the navbar (landing page and auth pages)
+  const hideNavbarRoutes = ['/', '/register', '/login'];
+  const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -32,52 +37,54 @@ export default function RootLayout({ children }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="border-b bg-white">
-        <nav className="mx-auto flex max-w-6xl items-center gap-4 p-4">
-          <NavLink to="/" className="font-semibold">
-            TheLittleThing
-          </NavLink>
-          <div className="ml-auto flex items-center gap-3">
-            <NavLink to="/home" className="hover:underline">
-              Home
+      {!shouldHideNavbar && (
+        <header className="border-b bg-white">
+          <nav className="mx-auto flex max-w-6xl items-center gap-4 p-4">
+            <NavLink to="/" className="font-semibold">
+              TheLittleThing
             </NavLink>
-            <NavLink to="/about" className="hover:underline">
-              About
-            </NavLink>
-            <NavLink to="/settings" className="hover:underline">
-              Settings
-            </NavLink>
-            <NavLink to="/categories" className="hover:underline">
-              Categories
-            </NavLink>
-            <NavLink to="/goals" className="hover:underline">
-              Goals
-            </NavLink>
-            <NavLink to="/wins" className="hover:underline">
-              Wins
-            </NavLink>
-            <NavLink to="/journal" className="hover:underline">
-              Journal
-            </NavLink>
-            <NavLink to="/leaderboard" className="hover:underline">
-              Leaderboard
-            </NavLink>
-            <NavLink to="/user" className="hover:underline">
-              Account
-            </NavLink>
-            <NavLink to="/friends" className="hover:underline">
-              Friends
-            </NavLink>
+            <div className="ml-auto flex items-center gap-3">
+              <NavLink to="/home" className="hover:underline">
+                Home
+              </NavLink>
+              <NavLink to="/about" className="hover:underline">
+                About
+              </NavLink>
+              <NavLink to="/settings" className="hover:underline">
+                Settings
+              </NavLink>
+              <NavLink to="/categories" className="hover:underline">
+                Categories
+              </NavLink>
+              <NavLink to="/goals" className="hover:underline">
+                Goals
+              </NavLink>
+              <NavLink to="/wins" className="hover:underline">
+                Wins
+              </NavLink>
+              <NavLink to="/journal" className="hover:underline">
+                Journal
+              </NavLink>
+              <NavLink to="/leaderboard" className="hover:underline">
+                Leaderboard
+              </NavLink>
+              <NavLink to="/user" className="hover:underline">
+                Account
+              </NavLink>
+              <NavLink to="/friends" className="hover:underline">
+                Friends
+              </NavLink>
 
-            {/* username display */}
-            {me && (
-              <span className="ml-4 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
-                {me.username}
-              </span>
-            )}
-          </div>
-        </nav>
-      </header>
+              {/* username display */}
+              {me && (
+                <span className="ml-4 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
+                  {me.username}
+                </span>
+              )}
+            </div>
+          </nav>
+        </header>
+      )}
 
       <main className="mx-auto max-w-6xl p-6">{children}</main>
 
