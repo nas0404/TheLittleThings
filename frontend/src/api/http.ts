@@ -22,7 +22,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
     ...(token ? { Authorization: `Bearer ${token}` } : {}), //This is being used in postman for testing
   };
   // Make the fetch call to the API
-  const res = await fetch(path.startsWith("/api") ? path : `/api${path}`, {
+  const res = await fetch(path.startsWith("/api") ? `http://localhost:8080${path}` : `http://localhost:8080/api${path}`, {
     ...init,
     headers,
   });
@@ -36,6 +36,17 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
     const message = details?.message || text || res.statusText;
     throw new ApiError(res.status, message, details);
   }
-  return text ? (JSON.parse(text) as T) : (undefined as T);
+  
+  // For successful responses, only parse as JSON if there's content and it looks like JSON
+  if (!text) {
+    return undefined as T;
+  }
+  
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    // If JSON parsing fails, return the text as is (for plain text responses)
+    return text as T;
+  }
 }
 
