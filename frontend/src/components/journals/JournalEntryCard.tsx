@@ -35,8 +35,11 @@ export default function JournalEntryCard({ entry, onDeleted, onUpdated }: Journa
   const handleDelete = async () => {
     setLoading(true);
     try {
+      console.log('Deleting journal entry:', entry.journalId);
       await JournalAPI.remove(entry.journalId);
+      console.log('Delete API call completed successfully');
       onDeleted(entry.journalId);
+      console.log('onDeleted callback called');
     } catch (err) {
       console.error('Error deleting journal entry:', err);
       if (err instanceof ApiError) {
