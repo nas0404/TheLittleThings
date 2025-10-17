@@ -46,7 +46,10 @@ export default function Journal() {
   };
 
   const handleEntryDeleted = (deletedId: number) => {
-    setEntries(entries.filter(entry => entry.journalId !== deletedId));
+    console.log('handleEntryDeleted called with ID:', deletedId);
+    console.log('Current entries before delete:', entries.length);
+    // Instead of trying to update local state, fetch fresh data from backend
+    fetchEntries();
   };
 
   if (view === 'create') {
