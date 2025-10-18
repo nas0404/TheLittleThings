@@ -14,7 +14,7 @@ export default function RootLayout({ children }: Props) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const location = useLocation();
   
-  // Routes where we should hide the navbar (landing page and auth pages)
+  // Hide Navbar on signin/register pages
   const hideNavbarRoutes = ['/', '/register', '/login'];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
 
