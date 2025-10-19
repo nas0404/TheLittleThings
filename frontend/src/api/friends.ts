@@ -92,7 +92,9 @@ export const FriendsAPI = {
   },
 
   sendRequestByUsername: async (username: string) => {
-    const r = await fetch(`http://localhost:8080/api/friends/requests/by-username`, {
+    // const r = await fetch(`http://localhost:8080/api/friends/requests/by-username`, {
+        const r = await fetch(`api/friends/requests/by-username`, {
+
       method: "POST",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
