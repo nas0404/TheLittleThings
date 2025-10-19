@@ -7,7 +7,7 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-  # Ensure Node.js 20.x is installed which is what is need for the frontend
+  # Ensure Node.js 20.x is installed which is what is needed for the frontend
   - task: UseNode@1
     displayName: "Use Node.js 20.x"
     inputs:
@@ -32,8 +32,7 @@ steps:
     displayName: "Build frontend"
     workingDirectory: frontend
 
-
-  # Make sure Java 17 is installed  which is needed for springboot and maven compliation
+  # Make sure Java 17 is installed which is needed for Spring Boot and Maven compilation
   - task: JavaToolInstaller@0
     displayName: "Set up Java 17"
     inputs:
