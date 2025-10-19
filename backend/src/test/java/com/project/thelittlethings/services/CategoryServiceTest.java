@@ -73,7 +73,7 @@ class CategoryServiceTest {
 
 
     @Test
-    void create_fails_missingName() {
+    void create_fail_missingName() {
         User user = mockUser(10L);
         when(userRepo.findById(10L)).thenReturn(Optional.of(user));
 
