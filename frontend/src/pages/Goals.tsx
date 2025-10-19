@@ -148,7 +148,8 @@ export default function GoalsPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/goals/${goalId}/complete`,
+        `/api/goals/${goalId}/complete`,
+        // `http://localhost:8080/api/goals/${goalId}/complete`,
         {
           method: "POST",
           headers: {

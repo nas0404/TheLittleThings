@@ -22,7 +22,8 @@ export default function RootLayout({ children }: Props) {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    fetch("http://localhost:8080/api/users/me", {
+    fetch("api/users/me", {
+    // fetch("http://localhost:8080/api/users/me", {
       headers: {
         Authorization: `Bearer ${token}`,
       },

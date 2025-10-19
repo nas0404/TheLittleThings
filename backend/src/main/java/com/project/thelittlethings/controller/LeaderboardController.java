@@ -4,14 +4,17 @@ import com.project.thelittlethings.dto.leaderboard.LeaderboardUserDTO;
 import com.project.thelittlethings.services.LeaderboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/leaderboard")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+// @CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+    "http://localhost:5173",
+    "https://thelittlethingsapp-f7ethybxcqagqdfhua.australiaeast-01.azurewebsites.net"
+})
 public class LeaderboardController {
 
     private final LeaderboardService leaderboardService;

@@ -11,7 +11,11 @@ import org.springframework.web.bind.annotation.*;
 // handles user authentication and account managment
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:5173") // frontend connection
+// @CrossOrigin(origins = "http://localhost:5173") // frontend connection
+@CrossOrigin(origins = {
+    "http://localhost:5173",
+    "https://thelittlethingsapp-f7ethybxcqagqdfhua.australiaeast-01.azurewebsites.net"
+})
 public class UserController {
 
     private final UserService userService;

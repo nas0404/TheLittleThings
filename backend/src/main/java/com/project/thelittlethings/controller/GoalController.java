@@ -21,7 +21,11 @@ import java.util.List;
 import java.util.Map;
 
 // REST Controller for handling goal-related HTTP requests
-@CrossOrigin(origins = "http://localhost:5173")
+// @CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+    "http://localhost:5173",
+    "https://thelittlethingsapp-f7ethybxcqagqdfhua.australiaeast-01.azurewebsites.net"
+})
 @RestController
 @RequestMapping("/api/goals")
 @Validated

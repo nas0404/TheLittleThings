@@ -36,7 +36,8 @@ export default function UserProfile() {
 	const change = async () => {
 		const token = localStorage.getItem('token');
 		try {
-			const res = await fetch('http://localhost:8080/api/users/change-password', {
+			const res = await fetch('/api/users/change-password', {
+			// const res = await fetch('http://localhost:8080/api/users/change-password', {
 				method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass })
 			});
@@ -54,7 +55,8 @@ export default function UserProfile() {
 	const changeUsername = async () => {
 		const token = localStorage.getItem('token');
 		try {
-			const res = await fetch('http://localhost:8080/api/users/change-username', {
+			// const res = await fetch('http://localhost:8080/api/users/change-username', {
+			const res = await fetch('/api/users/change-username', {
 				method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ newUsername })
 			});
@@ -165,7 +167,8 @@ export default function UserProfile() {
 								if (!confirm('Delete your account? This is irreversible.')) return;
 								const token = localStorage.getItem('token');
 								try {
-									const res = await fetch('http://localhost:8080/api/users/', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+									// const res = await fetch('http://localhost:8080/api/users/', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+									const res = await fetch('/api/users/', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
 									if (!res.ok) { setError('Delete failed'); return; }
 									localStorage.removeItem('token');
 									window.location.href = '/';
