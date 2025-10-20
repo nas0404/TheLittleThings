@@ -1,63 +1,75 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy JAR app to Azure Web App - tlt
 
 on:
   push:
-    branches:
-      - main
+    branches: [ dpw ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Java version
+      # OPTIONAL: build React (delete this block if you already commit a built UI)
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Copy frontend build into Spring Boot static
+        run: |
+          rm -rf backend/src/main/resources/static
+          mkdir -p backend/src/main/resources/static
+          # change "dist" to "build" if your React output is 'build'
+          cp -r frontend/dist/* backend/src/main/resources/static/ || true
+
+      # Build Spring Boot from /backend
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'microsoft'
+      - name: Maven package (backend)
+        working-directory: backend
+        run: mvn -B -DskipTests package
 
-      - name: Build with Maven
-        run: mvn clean install
-
-      - name: Upload artifact for deployment job
+      - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+          path: backend/target/*.jar
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-  
+      id-token: write
+      contents: read
+
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: java-app
-      
-      - name: Login to Azure
+
+      - name: Azure login
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_54C37F0C10DC4A179E1EBDF4056DE9DE }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B6B1A65916CA4B17A85327ED179ABF14 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9FBDE09BF9FE4A4C99785C3BD81DE5CF }}
+          client-id: ${{ secrets.__clientidsecretname__ }}
+          tenant-id: ${{ secrets.__tenantidsecretname__ }}
+          subscription-id: ${{ secrets.__subscriptionidsecretname__ }}
 
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'tlt'
           slot-name: 'Production'
           package: '*.jar'
-          
