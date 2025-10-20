@@ -28,8 +28,8 @@ jobs:
         run: |
           rm -rf backend/src/main/resources/static
           mkdir -p backend/src/main/resources/static
-          # change "dist" to "build" if your React output is 'build'
-          cp -r frontend/dist/* backend/src/main/resources/static/ || true
+          if [ -d frontend/dist ]; then cp -r frontend/dist/* backend/src/main/resources/static/; fi
+          if [ -d frontend/build ]; then cp -r frontend/build/* backend/src/main/resources/static/; fi
 
       # Build Spring Boot from /backend
       - name: Set up Java 17
@@ -40,6 +40,9 @@ jobs:
       - name: Maven package (backend)
         working-directory: backend
         run: mvn -B -DskipTests package
+
+      - name: List built files
+        run: ls -la backend/target
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
