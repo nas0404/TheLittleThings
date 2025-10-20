@@ -6,60 +6,166 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-steps:
-  # Ensure Node.js 20.x is installed which is what is need for the frontend
-  - task: UseNode@1
-    displayName: "Use Node.js 20.x"
-    inputs:
-      version: '20.19.0'
+# Define variables for deployment (you'll configure these in Azure DevOps)
+variables:
+  # Backend variables
+  - name: backendArtifactName
+    value: 'backend-drop'
+  # Frontend variables  
+  - name: frontendArtifactName
+    value: 'frontend-drop'
 
-  # Cache frontend dependencies to speed up pipeline runs
-  - task: Cache@2
-    displayName: Cache npm (frontend)
-    inputs:
-      key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
-      path: frontend/node_modules
-      restoreKeys: |
-        npm | "$(Agent.OS)"
+stages:
+  # ========================================
+  # STAGE 1: BUILD & TEST (CI)
+  # ========================================
+  - stage: Build
+    displayName: 'Build and Test'
+    jobs:
+      - job: BuildJob
+        displayName: 'Build Frontend and Backend'
+        steps:
+          # ===== FRONTEND BUILD =====
+          # Ensure Node.js 20.x is installed which is what is needed for the frontend
+          - task: UseNode@1
+            displayName: "Use Node.js 20.x"
+            inputs:
+              version: '20.19.0'
 
-  # Install frontend dependencies from package-lock.json file
-  - script: npm ci
-    displayName: "Install dependencies (frontend)"
-    workingDirectory: frontend
+          # Cache frontend dependencies to speed up pipeline runs
+          - task: Cache@2
+            displayName: Cache npm (frontend)
+            inputs:
+              key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
+              path: frontend/node_modules
+              restoreKeys: |
+                npm | "$(Agent.OS)"
 
-  # Build the frontend for ready production deployment
-  - script: npm run build
-    displayName: "Build frontend"
-    workingDirectory: frontend
+          # Install frontend dependencies from package-lock.json file
+          - script: npm ci
+            displayName: "Install dependencies (frontend)"
+            workingDirectory: frontend
 
+          # Build the frontend for ready production deployment
+          - script: npm run build
+            displayName: "Build frontend"
+            workingDirectory: frontend
 
-  # Make sure Java 17 is installed  which is needed for springboot and maven compliation
-  - task: JavaToolInstaller@0
-    displayName: "Set up Java 17"
-    inputs:
-      versionSpec: '17'
-      jdkArchitectureOption: 'x64'
-      jdkSourceOption: 'PreInstalled'
+          # Publish frontend build artifacts (dist folder) for deployment
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Frontend Artifacts'
+            inputs:
+              PathtoPublish: 'frontend/dist'
+              ArtifactName: '$(frontendArtifactName)'
+              publishLocation: 'Container'
 
-  # Run backend unit tests with Maven
-  # Flags explained:
-  # -Dsurefire.printSummary=true = show test summary in console
-  # -Dsurefire.useFile=false = stream test results to console instead of a file
-  # --no-transfer-progress = hides Maven dependency download spam
-  - script: >
-      mvn -B clean test
-      -Dsurefire.printSummary=true
-      -Dsurefire.useFile=false
-      --no-transfer-progress
-    displayName: "Run backend unit tests"
-    workingDirectory: backend
+          # ===== BACKEND BUILD & TEST =====
+          # Make sure Java 17 is installed which is needed for springboot and maven compilation
+          - task: JavaToolInstaller@0
+            displayName: "Set up Java 17"
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
 
-  # Publish JUnit test results to Azure DevOps
-  # This makes tests appear in the "Tests" tab with pass/fail status
-  - task: PublishTestResults@2
-    displayName: "Publish JUnit results"
-    inputs:
-      testResultsFormat: 'JUnit'
-      testResultsFiles: 'backend/target/surefire-reports/*.xml'
-      mergeTestResults: true
-      testRunTitle: 'Backend Unit Tests'
+          # Run backend unit tests with Maven
+          # Flags explained:
+          # -Dsurefire.printSummary=true = show test summary in console
+          # -Dsurefire.useFile=false = stream test results to console instead of a file
+          # --no-transfer-progress = hides Maven dependency download spam
+          - script: >
+              mvn -B clean test
+              -Dsurefire.printSummary=true
+              -Dsurefire.useFile=false
+              --no-transfer-progress
+            displayName: "Run backend unit tests"
+            workingDirectory: backend
+
+          # Publish JUnit test results to Azure DevOps
+          # This makes tests appear in the "Tests" tab with pass/fail status
+          - task: PublishTestResults@2
+            displayName: "Publish JUnit results"
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'backend/target/surefire-reports/*.xml'
+              mergeTestResults: true
+              testRunTitle: 'Backend Unit Tests'
+
+          # Package backend as executable JAR
+          - script: >
+              mvn -B package -DskipTests
+              --no-transfer-progress
+            displayName: "Package backend JAR"
+            workingDirectory: backend
+
+          # Publish backend JAR artifact for deployment
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Backend Artifacts'
+            inputs:
+              PathtoPublish: 'backend/target/*.jar'
+              ArtifactName: '$(backendArtifactName)'
+              publishLocation: 'Container'
+
+  # ========================================
+  # STAGE 2: DEPLOY (CD)
+  # ========================================
+  - stage: Deploy
+    displayName: 'Deploy to Azure'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      # Deploy Backend to Azure App Service
+      - deployment: DeployBackend
+        displayName: 'Deploy Backend to App Service'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Download backend artifact
+                - download: current
+                  artifact: $(backendArtifactName)
+                  displayName: 'Download Backend Artifact'
+
+                # Deploy to Azure App Service
+                # NOTE: You need to create a service connection in Azure DevOps
+                # and replace 'YOUR_APP_SERVICE_NAME' with your actual App Service name
+                - task: AzureWebApp@1
+                  displayName: 'Deploy Backend JAR to Azure App Service'
+                  inputs:
+                    azureSubscription: 'YOUR_SERVICE_CONNECTION_NAME' # Configure this in Azure DevOps
+                    appType: 'webAppLinux'
+                    appName: 'YOUR_BACKEND_APP_SERVICE_NAME' # Replace with your App Service name
+                    package: '$(Pipeline.Workspace)/$(backendArtifactName)/**/*.jar'
+                    runtimeStack: 'JAVA|17-java17'
+
+      # Deploy Frontend to Azure Static Web Apps or App Service
+      - deployment: DeployFrontend
+        displayName: 'Deploy Frontend to Azure'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Download frontend artifact
+                - download: current
+                  artifact: $(frontendArtifactName)
+                  displayName: 'Download Frontend Artifact'
+
+                # Option A: Deploy to Azure Static Web Apps
+                - task: AzureStaticWebApp@0
+                  displayName: 'Deploy to Azure Static Web Apps'
+                  inputs:
+                    app_location: '$(Pipeline.Workspace)/$(frontendArtifactName)'
+                    skip_app_build: true
+                    azure_static_web_apps_api_token: '$(AZURE_STATIC_WEB_APPS_API_TOKEN)' # Configure as secret variable
+                
+                # Option B: Or deploy to Azure App Service (uncomment if using App Service instead)
+                # - task: AzureWebApp@1
+                #   displayName: 'Deploy Frontend to Azure App Service'
+                #   inputs:
+                #     azureSubscription: 'YOUR_SERVICE_CONNECTION_NAME'
+                #     appType: 'webAppLinux'
+                #     appName: 'YOUR_FRONTEND_APP_SERVICE_NAME'
+                #     package: '$(Pipeline.Workspace)/$(frontendArtifactName)'
+                #     runtimeStack: 'NODE|20-lts'
