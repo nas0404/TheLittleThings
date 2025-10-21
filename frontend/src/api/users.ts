@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"; 
 import { http } from "./http";
 
 export type MeResponse = {
@@ -101,3 +101,32 @@ export const UserAPI = {
       localStorage.removeItem("username");
     },
 };
+
+export function useMe() {                      // ADDED
+  const [me, setMe] = useState<MeResponse | null>(null);     // ADDED
+  const [loading, setLoading] = useState(true);               // ADDED
+  const [err, setErr] = useState<string | null>(null);        // ADDED
+
+  useEffect(() => {                                           // ADDED
+    let cancelled = false;                                    // ADDED
+    (async () => {
+      try {
+        const data = await UserAPI.me();
+        if (!cancelled) {
+          setMe(data);
+          localStorage.setItem("username", data.username);    // ADDED: handy elsewhere
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setErr(e?.message || "Failed to load user");        // ADDED
+          setMe(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);                    // ADDED
+      }
+    })();
+    return () => { cancelled = true; };                       // ADDED
+  }, []);
+
+  return { me, loading, err };                                // ADDED
+}
