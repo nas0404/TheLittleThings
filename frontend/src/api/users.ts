@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react"; 
+// frontend/src/api/users.ts
+import { useEffect, useState } from "react";
 import { http } from "./http";
+
+const API_BASE = "/api/accounts"; // CHANGED: was /api/users
 
 export type MeResponse = {
   userId: number;
@@ -39,94 +42,95 @@ export type UpdateUserRequest = {
 // Authentication and user management API
 export const UserAPI = {
   async me(): Promise<MeResponse> {
-    return http<MeResponse>(`/api/users/me`);
+    return http<MeResponse>(`${API_BASE}/me`);
   },
 
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const r = await http<LoginResponse>(`/api/users/login`, {
+    const r = await http<LoginResponse>(`${API_BASE}/login`, {
       method: "POST",
       body: JSON.stringify(credentials),
-      skipAuth: true,                 // CHANGED: unauthenticated call
+      skipAuth: true, // unauthenticated call
     });
-    localStorage.setItem("token", r.token);  // CHANGED: save token centrally
-    localStorage.setItem("username", r.username); // CHANGED
+    localStorage.setItem("token", r.token);
+    localStorage.setItem("username", r.username);
     return r;
   },
 
   async register(userData: RegisterRequest): Promise<LoginResponse> {
-    const r = await http<LoginResponse>(`/api/users/register`, {
+    const r = await http<LoginResponse>(`${API_BASE}/register`, {
       method: "POST",
       body: JSON.stringify(userData),
-      skipAuth: true,                 // CHANGED: unauthenticated call
+      skipAuth: true, // unauthenticated call
     });
-    localStorage.setItem("token", r.token);  // CHANGED
-    localStorage.setItem("username", r.username); // CHANGED
+    localStorage.setItem("token", r.token);
+    localStorage.setItem("username", r.username);
     return r;
   },
 
-
   async changeUsername(newUsername: string): Promise<LoginResponse> {
-      const r = await http<LoginResponse>(`/api/users/change-username`, {
-        method: "POST",
-        body: JSON.stringify({ newUsername }),
-      });
-      localStorage.setItem("token", r.token);     // CHANGED: backend issues new token
-      localStorage.setItem("username", r.username);
-      return r;
-    },
+    const r = await http<LoginResponse>(`${API_BASE}/change-username`, {
+      method: "POST",
+      body: JSON.stringify({ newUsername }),
+    });
+    localStorage.setItem("token", r.token); // backend issues a new token
+    localStorage.setItem("username", r.username);
+    return r;
+  },
 
-    async changePassword(payload: { oldPassword: string; newPassword: string }): Promise<void> {
-      await http<void>(`/api/users/change-password`, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-    },
+  async changePassword(payload: { oldPassword: string; newPassword: string }): Promise<void> {
+    await http<void>(`${API_BASE}/change-password`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
 
-    async resetPassword(email: string): Promise<void> {
-      await http<void>(`/api/users/reset-password`, {
-        method: "POST",
-        body: JSON.stringify({ email }),
-        skipAuth: true,                 // CHANGED
-      });
-    },
+  async resetPassword(email: string): Promise<void> {
+    await http<void>(`${API_BASE}/reset-password`, {
+      method: "POST",
+      body: JSON.stringify({ email }),
+      skipAuth: true,
+    });
+  },
 
-    async deleteMe(): Promise<void> {
-      await http<void>(`/api/users/`, { method: "DELETE" });
-      localStorage.removeItem("token");           // CHANGED: clean up here
-      localStorage.removeItem("username");
-    },
+  async deleteMe(): Promise<void> {
+    await http<void>(`${API_BASE}/`, { method: "DELETE" });
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+  },
 
-    logout(): void {
-      localStorage.removeItem("token");
-      localStorage.removeItem("username");
-    },
+  logout(): void {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+  },
 };
 
-export function useMe() {                      // ADDED
-  const [me, setMe] = useState<MeResponse | null>(null);     // ADDED
-  const [loading, setLoading] = useState(true);               // ADDED
-  const [err, setErr] = useState<string | null>(null);        // ADDED
+export function useMe() {
+  const [me, setMe] = useState<MeResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {                                           // ADDED
-    let cancelled = false;                                    // ADDED
+  useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
         const data = await UserAPI.me();
         if (!cancelled) {
           setMe(data);
-          localStorage.setItem("username", data.username);    // ADDED: handy elsewhere
+          localStorage.setItem("username", data.username);
         }
       } catch (e: any) {
         if (!cancelled) {
-          setErr(e?.message || "Failed to load user");        // ADDED
+          setErr(e?.message || "Failed to load user");
           setMe(null);
         }
       } finally {
-        if (!cancelled) setLoading(false);                    // ADDED
+        if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };                       // ADDED
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  return { me, loading, err };                                // ADDED
+  return { me, loading, err };
 }
