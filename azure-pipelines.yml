@@ -6,40 +6,34 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-# CHANGE: centralize names you showed in screenshots so we reuse them below
 variables:
-  webAppName: 'TheLittleThings'             # CHANGE: your App Service name
-  azureServiceConnection: 'TheLittleThings' # CHANGE: service connection you created
-  artifactName: 'drop'                      # CHANGE: name for the published artifact
+  webAppName: 'TheLittleThings'             # your App Service name
+  azureServiceConnection: 'TheLittleThings' # service connection you created
+  artifactName: 'drop'
 
 steps:
-  # Ensure Node.js 20.x is installed which is what is need for the frontend
   - task: UseNode@1
     displayName: "Use Node.js 20.x"
     inputs:
       version: '20.19.0'
 
-  # Cache frontend dependencies to speed up pipeline runs
   - task: Cache@2
-    displayName: Cache npm (frontend)
+    displayName: "Cache npm (frontend)"
     inputs:
       key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
       path: frontend/node_modules
       restoreKeys: |
         npm | "$(Agent.OS)"
 
-  # Install frontend dependencies from package-lock.json file
   - script: npm ci
     displayName: "Install dependencies (frontend)"
     workingDirectory: frontend
 
-  # Build the frontend for ready production deployment
   - script: npm run build
     displayName: "Build frontend"
     workingDirectory: frontend
 
-  # CHANGE: copy the built frontend into Spring Boot static assets so the backend can serve it
-  # Supports both Vite ("dist") and CRA ("build") output folders.
+  # Copy built frontend into Spring Boot static folder
   - bash: |
       set -e
       OUT=""
@@ -52,9 +46,8 @@ steps:
       mkdir -p backend/src/main/resources/static
       cp -r "$OUT/"* backend/src/main/resources/static/
       echo "Copied $OUT -> backend/src/main/resources/static"
-    displayName: "COPY frontend → backend static"  # CHANGE: make backend serve the SPA
+    displayName: "COPY frontend → backend static"
 
-  # Make sure Java 17 is installed  which is needed for springboot and maven compliation
   - task: JavaToolInstaller@0
     displayName: "Set up Java 17"
     inputs:
@@ -62,15 +55,14 @@ steps:
       jdkArchitectureOption: 'x64'
       jdkSourceOption: 'PreInstalled'
 
-  # CHANGE: cache Maven repo to speed up builds
   - task: Cache@2
-    displayName: Cache Maven repository
+    displayName: "Cache Maven repository"
     inputs:
       key: 'maven | "$(Agent.OS)" | **/pom.xml'
       path: $(Pipeline.Workspace)/.m2
       restoreKeys: |
         maven | "$(Agent.OS)"
-    # CHANGE: tell Maven to use the cached directory via MAVEN_OPTS
+
   - script: |
       mvn -B -Dmaven.repo.local=$(Pipeline.Workspace)/.m2 \
         clean test \
@@ -80,8 +72,6 @@ steps:
     displayName: "Run backend unit tests"
     workingDirectory: backend
 
-  # Publish JUnit test results to Azure DevOps
-  # This makes tests appear in the "Tests" tab with pass/fail status
   - task: PublishTestResults@2
     displayName: "Publish JUnit results"
     inputs:
@@ -90,22 +80,20 @@ steps:
       mergeTestResults: true
       testRunTitle: 'Backend Unit Tests'
 
-  # CHANGE: package Spring Boot as a fat JAR for App Service (Windows, Java SE)
+  # Package the backend as a fat JAR for App Service
   - script: |
       mvn -B -Dmaven.repo.local=$(Pipeline.Workspace)/.m2 \
         clean package -DskipTests --no-transfer-progress
     displayName: "Package backend (fat JAR)"
     workingDirectory: backend
 
-  # CHANGE: stage files for Zip Deploy (rename jar to app.jar and add web.config)
+  # Stage app.jar + web.config for deployment
   - bash: |
       set -e
       STAGE="$(Build.ArtifactStagingDirectory)"
       mkdir -p "$STAGE"
-      # pick first jar in target and rename to app.jar
       JAR=$(ls backend/target/*.jar | head -n 1)
       cp "$JAR" "$STAGE/app.jar"
-      # generate web.config for Windows App Service with Java SE
       cat > "$STAGE/web.config" << 'EOF'
       <?xml version="1.0" encoding="utf-8"?>
       <configuration>
@@ -124,26 +112,33 @@ steps:
       echo "Staged $(ls -l "$STAGE")"
     displayName: "Stage deployables (app.jar + web.config)"
 
-  # CHANGE: publish the staged folder as a pipeline artifact (useful for debugging/releases)
-  - publish: '$(Build.ArtifactStagingDirectory)'
-    artifact: $(artifactName)
-    displayName: "Publish build artifact"
+  # Zip everything in staging folder
+  - task: ArchiveFiles@2
+    displayName: "Zip staged files to app.zip"
+    inputs:
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+      replaceExistingArchive: true
 
-  # CHANGE: zip the staged files for Zip Deploy
-  - bash: |
-      cd "$(Pipeline.Workspace)"
-      rm -f app.zip
-      zip -r app.zip "$(artifactName)"
-      echo "Created $(Pipeline.Workspace)/app.zip"
-    displayName: "Zip artifact for deployment"
+  # Sanity check before deploy
+  - script: |
+      echo "Contents of $(Build.ArtifactStagingDirectory):"
+      ls -l "$(Build.ArtifactStagingDirectory)"
+    displayName: "List staging directory (debug)"
 
-  # CHANGE: deploy to your App Service using the service connection named 'TheLittleThings'
+  # Deploy to Azure App Service
   - task: AzureWebApp@1
     displayName: "Deploy to Azure App Service: $(webAppName)"
     inputs:
-      azureSubscription: '$(azureServiceConnection)'     # CHANGE: your service connection
-      appName: '$(webAppName)'                           # CHANGE: your App Service name
-      package: '$(Pipeline.Workspace)/app.zip'           # CHANGE: zip produced above
-      appType: 'webApp'                                  # CHANGE: target a Windows Web App
+      azureSubscription: '$(azureServiceConnection)'
+      appName: '$(webAppName)'
+      package: '$(Build.ArtifactStagingDirectory)/app.zip'
+      appType: 'webApp'
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-    # CHANGE: only deploy from main and only if prior steps succeeded
+
+  # Publish artifacts for download/debugging
+  - publish: '$(Build.ArtifactStagingDirectory)'
+    artifact: $(artifactName)
+    displayName: "Publish build artifact"
