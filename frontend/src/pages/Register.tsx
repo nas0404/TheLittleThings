@@ -55,38 +55,34 @@ export default function Register() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isValid) return;
-    
-    setSubmitting(true);
-    setServerError(null);
-    
-    try {
-      const data = await UserAPI.register({
-        username: form.username,
-        email: form.email,
-        password: form.password,
-        firstName: form.firstName,
-        lastName: form.lastName,
-        dob: form.dob,
-        gender: form.gender,
-        region: form.region
-      });
-      
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('username', data.username);
-      // Navigate to home and refresh the page
-      window.location.href = "/home";
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setServerError(error.message || 'Registration failed');
-      } else {
-        setServerError('Network error - please try again');
+      e.preventDefault();
+      if (!isValid) return;
+
+      setSubmitting(true);
+      setServerError(null);
+
+      try {
+        await UserAPI.register({
+          username: form.username,
+          email: form.email,
+          password: form.password,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          dob: form.dob,
+          gender: form.gender,
+          region: form.region
+        });                                       // CHANGED: token saved inside UserAPI
+        window.location.href = "/home";           // unchanged
+      } catch (error) {
+        if (error instanceof ApiError) {
+          setServerError(error.message || 'Registration failed');
+        } else {
+          setServerError('Network error - please try again');
+        }
+      } finally {
+        setSubmitting(false);
       }
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-10 px-4">

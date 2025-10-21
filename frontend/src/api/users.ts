@@ -38,67 +38,66 @@ export type UpdateUserRequest = {
 
 // Authentication and user management API
 export const UserAPI = {
-  // Get current user info
   async me(): Promise<MeResponse> {
     return http<MeResponse>(`/api/users/me`);
   },
 
-  // Login user
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    return http<LoginResponse>(`/api/users/login`, {
+    const r = await http<LoginResponse>(`/api/users/login`, {
       method: "POST",
       body: JSON.stringify(credentials),
+      skipAuth: true,                 // CHANGED: unauthenticated call
     });
+    localStorage.setItem("token", r.token);  // CHANGED: save token centrally
+    localStorage.setItem("username", r.username); // CHANGED
+    return r;
   },
 
-  // Register new user
   async register(userData: RegisterRequest): Promise<LoginResponse> {
-    return http<LoginResponse>(`/api/users/register`, {
+    const r = await http<LoginResponse>(`/api/users/register`, {
       method: "POST",
       body: JSON.stringify(userData),
+      skipAuth: true,                 // CHANGED: unauthenticated call
     });
+    localStorage.setItem("token", r.token);  // CHANGED
+    localStorage.setItem("username", r.username); // CHANGED
+    return r;
   },
 
-  // Update user profile
-  async update(userId: number, userData: UpdateUserRequest): Promise<MeResponse> {
-    return http<MeResponse>(`/api/users/${userId}`, {
-      method: "PUT",
-      body: JSON.stringify(userData),
-    });
-  },
 
-  // Logout (client-side token removal)
-  logout(): void {
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-  },
+  async changeUsername(newUsername: string): Promise<LoginResponse> {
+      const r = await http<LoginResponse>(`/api/users/change-username`, {
+        method: "POST",
+        body: JSON.stringify({ newUsername }),
+      });
+      localStorage.setItem("token", r.token);     // CHANGED: backend issues new token
+      localStorage.setItem("username", r.username);
+      return r;
+    },
+
+    async changePassword(payload: { oldPassword: string; newPassword: string }): Promise<void> {
+      await http<void>(`/api/users/change-password`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+
+    async resetPassword(email: string): Promise<void> {
+      await http<void>(`/api/users/reset-password`, {
+        method: "POST",
+        body: JSON.stringify({ email }),
+        skipAuth: true,                 // CHANGED
+      });
+    },
+
+    async deleteMe(): Promise<void> {
+      await http<void>(`/api/users/`, { method: "DELETE" });
+      localStorage.removeItem("token");           // CHANGED: clean up here
+      localStorage.removeItem("username");
+    },
+
+    logout(): void {
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+    },
 };
-
-// Legacy function for backward compatibility
-export async function fetchMe(): Promise<MeResponse> {
-  return UserAPI.me();
-}
-
-
-export function useMe() {
-  const [me, setMe] = useState<MeResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await fetchMe();
-        setMe(data);
-        localStorage.setItem("username", data.username); // handy for other components
-      } catch (e: any) {
-        setErr(e.message || "Failed to load user");
-        setMe(null);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  return { me, loading, err };
-}

@@ -1,8 +1,9 @@
-// Custom error class for API-related errors
-export class ApiError extends Error {
-  status: number;   // HTTP status code (e.g., 400, 404, 500)
-  details?: any;    // Extra details from backend error response to be displayed in frontned
+// src/api/http.ts
 
+// Unified error type
+export class ApiError extends Error {
+  status: number;
+  details?: any;
   constructor(status: number, message: string, details?: any) {
     super(message);
     this.status = status;
@@ -10,43 +11,72 @@ export class ApiError extends Error {
   }
 }
 
-// Generic HTTP function to make API requests
-export async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  // Get token (if logged in) from localStorage
-  const token = localStorage.getItem("token");
+/**
+ * Optional base URL:
+ *  - In dev, set VITE_API_BASE=http://localhost:8080
+ *  - In prod (Azure), you can leave it empty so calls are same-origin.
+ */
+const BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
 
-  // Build request headers
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...(init?.headers || {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}), //This is being used in postman for testing
-  };
-  // Make the fetch call to the API
-  const res = await fetch(path.startsWith("/api") ? path : `/api${path}`, {
+/**
+ * Options you can pass to http()
+ *  - skipAuth: do not attach Authorization header (useful for login/register)
+ */
+type HttpOptions = RequestInit & { skipAuth?: boolean };
+
+export async function http<T = unknown>(path: string, init: HttpOptions = {}): Promise<T> {
+  // Normalize URL
+  const rel = path.startsWith("/") ? path : `/${path}`;
+  const url = `${BASE}${rel}`;
+
+  // Build headers
+  const headers = new Headers(init.headers || {});
+  // Only add JSON content-type if we actually send a body and caller didn't set it
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  // Attach token unless explicitly skipped
+  const token = localStorage.getItem("token");
+  if (!init.skipAuth && token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  // Make request (include credentials so cookies work if you ever use them)
+  const res = await fetch(url, {
+    credentials: "include",
     ...init,
     headers,
   });
-  // Parse the response text
+
+  // Read body safely (could be empty or non-JSON)
   const text = await res.text();
+  const tryJson = () => {
+    try { return text ? JSON.parse(text) : undefined; } catch { return undefined; }
+  };
+
   if (!res.ok) {
-    let details: any;
-    try {
-      details = text ? JSON.parse(text) : undefined;
-    } catch { }
-    const message = details?.message || text || res.statusText;
+    const details = tryJson();
+    const message =
+      (details && (details.message || details.error)) ||
+      (text || res.statusText || `HTTP ${res.status}`);
     throw new ApiError(res.status, message, details);
   }
-  
-  // For successful responses, only parse as JSON if there's content and it looks like JSON
-  if (!text) {
-    return undefined as T;
-  }
-  
-  try {
-    return JSON.parse(text) as T;
-  } catch {
-    // If JSON parsing fails, return the text as is (for plain text responses)
-    return text as T;
-  }
+
+  // 204 / empty body
+  if (!text) return undefined as T;
+
+  // Prefer JSON, fall back to text
+  const json = tryJson();
+  return (json ?? (text as unknown)) as T;
 }
 
+/* Optional helpers if you want them here */
+export function saveAuth(token: string, username?: string) {
+  localStorage.setItem("token", token);
+  if (username) localStorage.setItem("username", username);
+}
+export function clearAuth() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("username");
+}
