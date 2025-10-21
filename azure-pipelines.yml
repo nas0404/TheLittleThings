@@ -94,6 +94,7 @@ steps:
       mkdir -p "$STAGE"
       JAR=$(ls backend/target/*.jar | head -n 1)
       cp "$JAR" "$STAGE/app.jar"
+      # CHANGE: Use the dynamic port from IIS (HTTP_PLATFORM_PORT); removed hard-coded 8080.
       cat > "$STAGE/web.config" << 'EOF'
       <?xml version="1.0" encoding="utf-8"?>
       <configuration>
@@ -103,7 +104,7 @@ steps:
           </handlers>
           <httpPlatform
             processPath="%JAVA_HOME%\bin\java.exe"
-            arguments="-jar %HOME%\site\wwwroot\app.jar --server.port=8080"
+            arguments="-Dserver.port=%HTTP_PLATFORM_PORT% -jar %HOME%\site\wwwroot\app.jar"
             stdoutLogEnabled="true"
             stdoutLogFile="%HOME%\LogFiles\java.log" />
         </system.webServer>
@@ -128,7 +129,7 @@ steps:
       ls -l "$(Build.ArtifactStagingDirectory)"
     displayName: "List staging directory (debug)"
 
-  # Deploy to Azure App Service
+  # Deploy to Azure App Service (Run-From-Package)
   - task: AzureWebApp@1
     displayName: "Deploy to Azure App Service: $(webAppName)"
     inputs:
@@ -137,6 +138,7 @@ steps:
       package: '$(Build.ArtifactStagingDirectory)/app.zip'
       appType: 'webApp'
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    # CHANGE: no path change needed; deployment will mount the ZIP read-only and use our corrected web.config.
 
   # Publish artifacts for download/debugging
   - publish: '$(Build.ArtifactStagingDirectory)'
