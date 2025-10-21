@@ -87,14 +87,26 @@ steps:
     displayName: "Package backend (fat JAR)"
     workingDirectory: backend
 
-  # Stage app.jar + web.config for deployment
+  # Stage app.jar + web.config + run.cmd for deployment
   - bash: |
       set -e
       STAGE="$(Build.ArtifactStagingDirectory)"
       mkdir -p "$STAGE"
+
+      # copy JAR
       JAR=$(ls backend/target/*.jar | head -n 1)
       cp "$JAR" "$STAGE/app.jar"
-      # CHANGE: Use the dynamic port from IIS (HTTP_PLATFORM_PORT); removed hard-coded 8080.
+
+      # CHANGE 1: add a wrapper script to launch Java via cmd.exe
+      cat > "$STAGE/run.cmd" << 'EOF'
+      @echo off
+      echo [%DATE% %TIME%] Starting Java... >> "%HOME%\LogFiles\java-wrapper.log" 2>&1
+      "%JAVA_HOME%\bin\java.exe" -Dserver.port=%HTTP_PLATFORM_PORT% -jar "%HOME%\site\wwwroot\app.jar" >> "%HOME%\LogFiles\java.log" 2>&1
+      echo [%DATE% %TIME%] Java exited with code %ERRORLEVEL% >> "%HOME%\LogFiles\java-wrapper.log" 2>&1
+      EXIT /B %ERRORLEVEL%
+      EOF
+
+      # CHANGE 2: httpPlatform invokes cmd.exe to run the wrapper; longer startup timeout; extra attrs
       cat > "$STAGE/web.config" << 'EOF'
       <?xml version="1.0" encoding="utf-8"?>
       <configuration>
@@ -103,15 +115,21 @@ steps:
             <add name="httpPlatformHandler" path="*" verb="*" modules="httpPlatformHandler" resourceType="Unspecified" />
           </handlers>
           <httpPlatform
-            processPath="%JAVA_HOME%\bin\java.exe"
-            arguments="-Dserver.port=%HTTP_PLATFORM_PORT% -jar %HOME%\site\wwwroot\app.jar"
+            processPath="%COMSPEC%"
+            arguments='/D /C "%HOME%\site\wwwroot\run.cmd"'
+            startupTimeLimit="180"
             stdoutLogEnabled="true"
-            stdoutLogFile="%HOME%\LogFiles\java.log" />
+            stdoutLogFile="%HOME%\LogFiles\java.log"
+            processesPerApplication="1"
+            rapidFailsPerMinute="10" />
         </system.webServer>
       </configuration>
       EOF
-      echo "Staged $(ls -l "$STAGE")"
-    displayName: "Stage deployables (app.jar + web.config)"
+
+      echo "Staged files:"
+      ls -l "$STAGE"
+    displayName: "Stage deployables (JAR + wrapper + web.config)"
+
 
   # Zip everything in staging folder
   - task: ArchiveFiles@2
