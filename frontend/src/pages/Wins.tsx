@@ -22,19 +22,27 @@ export default function Wins() {
     const [error, setError] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState<Partial<Win>>({});
-    localStorage.setItem("userId", "1");
-    const userId = localStorage.getItem("userId");
+
+    const token = localStorage.getItem("token");
 
     useEffect(() => {
-        if (!userId) return;
-        fetch(`http://localhost:8080/api/wins?userId=${userId}`)
+        if (!token) {
+            setError("Not logged in yet!");
+            return;
+        }
+
+        fetch("http://localhost:8080/api/wins", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        })
             .then((res) => {
                 if (!res.ok) throw new Error("Failed to fetch wins");
                 return res.json();
             })
             .then(setWins)
             .catch((err) => setError(err.message));
-    }, [userId]);
+    }, [token]);
 
     const startEditing = (win: Win) => {
         setEditingId(win.winId);
@@ -51,12 +59,14 @@ export default function Wins() {
     };
 
     const saveEdit = async (winId: number) => {
-        if (!userId) return;
+        if (!token) return;
+
         try {
-            const response = await fetch(`http://localhost:8080/api/wins/${winId}?userId=${userId}`, {
+            const response = await fetch(`http://localhost:8080/api/wins/${winId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     title: editForm.title,
@@ -80,12 +90,15 @@ export default function Wins() {
     };
 
     const deleteWin = async (winId: number) => {
-        if (!userId) return;
+        if (!token) return;
         if (!window.confirm("Are you sure you want to delete this win?")) return;
 
         try {
-            const response = await fetch(`http://localhost:8080/api/wins/${winId}?userId=${userId}`, {
+            const response = await fetch(`http://localhost:8080/api/wins/${winId}`, {
                 method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             });
 
             if (!response.ok) throw new Error("Failed to delete win");

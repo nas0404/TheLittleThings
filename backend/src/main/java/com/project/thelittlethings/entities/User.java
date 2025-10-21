@@ -19,25 +19,25 @@ import java.time.Period;
 public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name="user_id")
+  @Column(name = "user_id")
   private Long userId;
 
-  @Column(nullable=false, unique=true, length=50)
+  @Column(nullable = false, unique = true, length = 50)
   private String username;
 
-  @Column(nullable=false, unique=true, length=100)
+  @Column(nullable = false, unique = true, length = 100)
   private String email;
 
-  @Column(nullable=false, length=255)
+  @Column(nullable = false, length = 255)
   private String password;
 
-  @Column(name="first_name", nullable=false, length=50)
+  @Column(name = "first_name", nullable = false, length = 50)
   private String firstName;
 
-  @Column(name="last_name", nullable=false, length=50)
+  @Column(name = "last_name", nullable = false, length = 50)
   private String lastName;
 
-  @Column(nullable=false)
+  @Column(nullable = false)
   private LocalDate dob;
 
   private Integer age;
@@ -48,6 +48,12 @@ public class User {
   private String region;
   private Integer trophies;
 
+  @Column(columnDefinition = "TEXT")
+  private String avatarUrl;
+
+  @Column(length = 500)
+  private String bio;
+
   // calculate age from dob
   @Transient
   public int getCalculatedAge() {
@@ -57,7 +63,7 @@ public class User {
     return Period.between(dob, LocalDate.now()).getYears();
   }
 
-  //update the ag based on dob
+  // update the ag based on dob
   @PrePersist
   @PreUpdate
   public void updateAge() {

@@ -113,7 +113,7 @@ export default function Settings() {
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
     if (!profile.displayName.trim()) {
-      setProfileErr("Display name is required");
+      setProfileErr("Username is required");
       return;
     }
     setSavingProfile(true);
@@ -313,10 +313,10 @@ export default function Settings() {
           </label>
 
           <label className="block">
-            <span className="text-sm">Display name *</span>
+            <span className="text-sm">Username *</span>
             <input
               className="mt-1 w-full rounded-lg border p-2"
-              placeholder="Your name"
+              placeholder="Update your username"
               required
               value={profile.displayName}
               onChange={(e) => setProfile((f) => ({ ...f, displayName: e.target.value }))}
