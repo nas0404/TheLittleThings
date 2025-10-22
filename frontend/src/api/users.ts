@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { http } from "./http";
 
-const API_BASE = "/api/accounts"; // CHANGED: was /api/users
+const API_BASE = "/api/users";
 
 export type MeResponse = {
   userId: number;
