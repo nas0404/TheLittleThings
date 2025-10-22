@@ -11,7 +11,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/leaderboard")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173/", "https://thelittlethings.azurewebsites.net/"}, allowCredentials = "true")
 public class LeaderboardController {
 
     private final LeaderboardService leaderboardService;

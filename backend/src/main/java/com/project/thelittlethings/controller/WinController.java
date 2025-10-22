@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/wins")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173/", "https://thelittlethings.azurewebsites.net/"}, allowCredentials = "true")
 public class WinController {
 
     private final WinService service;
