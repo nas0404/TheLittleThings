@@ -53,6 +53,7 @@ export const UserAPI = {
     });
     localStorage.setItem("token", r.token);
     localStorage.setItem("username", r.username);
+    localStorage.setItem("userId", r.userId.toString());
     return r;
   },
 
@@ -64,6 +65,7 @@ export const UserAPI = {
     });
     localStorage.setItem("token", r.token);
     localStorage.setItem("username", r.username);
+    localStorage.setItem("userId", r.userId.toString());
     return r;
   },
 
@@ -74,6 +76,7 @@ export const UserAPI = {
     });
     localStorage.setItem("token", r.token); // backend issues a new token
     localStorage.setItem("username", r.username);
+    localStorage.setItem("userId", r.userId.toString());
     return r;
   },
 
@@ -96,11 +99,13 @@ export const UserAPI = {
     await http<void>(`${API_BASE}/`, { method: "DELETE" });
     localStorage.removeItem("token");
     localStorage.removeItem("username");
+    localStorage.removeItem("userId");
   },
 
   logout(): void {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
+    localStorage.removeItem("userId");
   },
 };
 
@@ -117,6 +122,7 @@ export function useMe() {
         if (!cancelled) {
           setMe(data);
           localStorage.setItem("username", data.username);
+          localStorage.setItem("userId", data.userId.toString());
         }
       } catch (e: any) {
         if (!cancelled) {

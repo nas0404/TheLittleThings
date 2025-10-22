@@ -70,11 +70,13 @@ export async function http<T = unknown>(path: string, init: HttpOptions = {}): P
 }
 
 /* Optional helpers if you want them here */
-export function saveAuth(token: string, username?: string) {
+export function saveAuth(token: string, username?: string, userId?: number) {
   localStorage.setItem("token", token);
   if (username) localStorage.setItem("username", username);
+  if (typeof userId === "number") localStorage.setItem("userId", userId.toString());
 }
 export function clearAuth() {
   localStorage.removeItem("token");
   localStorage.removeItem("username");
+  localStorage.removeItem("userId");
 }

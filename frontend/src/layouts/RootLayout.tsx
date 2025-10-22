@@ -31,7 +31,11 @@ export default function RootLayout({ children }: Props) {
         if (!res.ok) throw new Error("Not logged in");
         return res.json();
       })
-      .then((data) => setMe(data))
+      .then((data) => {
+        setMe(data);
+        localStorage.setItem("username", data.username);
+        localStorage.setItem("userId", data.userId.toString());
+      })
       .catch(() => setMe(null));
   }, []);
 
