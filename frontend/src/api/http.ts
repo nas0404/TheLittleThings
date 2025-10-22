@@ -12,9 +12,7 @@ export class ApiError extends Error {
 }
 
 /**
- * Optional base URL:
- *  - In dev, set VITE_API_BASE=http://localhost:8080
- *  - In prod (Azure), you can leave it empty so calls are same-origin.
+ * Optional base URL - uses same-origin in production
  */
 const BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
 
