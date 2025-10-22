@@ -1,4 +1,5 @@
 package com.project.thelittlethings.services;
+
 import java.time.LocalDate;
 
 import com.project.thelittlethings.entities.User;
@@ -6,7 +7,6 @@ import com.project.thelittlethings.dto.users.CreateUserRequest;
 import com.project.thelittlethings.dto.users.LoginRequest;
 import com.project.thelittlethings.repositories.UserRepository;
 import com.project.thelittlethings.security.HMACtokens;
-
 
 import java.util.*;
 import java.security.MessageDigest;
@@ -30,15 +30,19 @@ public class UserService {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
 			byte[] b = md.digest(s.getBytes("UTF-8"));
 			StringBuilder sb = new StringBuilder();
-			for (byte x : b) sb.append(String.format("%02x", x));
+			for (byte x : b)
+				sb.append(String.format("%02x", x));
 			return sb.toString();
-		} catch (Exception e) { throw new RuntimeException(e); }
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	// creates new user account
 	@Transactional
 	public synchronized User register(CreateUserRequest req) {
-		if (userRepository.existsByUsername(req.getUsername()) || userRepository.existsByEmail(req.getEmail())) throw new IllegalArgumentException("User already exists");
+		if (userRepository.existsByUsername(req.getUsername()) || userRepository.existsByEmail(req.getEmail()))
+			throw new IllegalArgumentException("User already exists");
 
 		User u = new User();
 		u.setUsername(req.getUsername());
@@ -58,80 +62,91 @@ public class UserService {
 	}
 
 	private String normalizeGender(String raw) {
-		if (raw == null || raw.trim().isEmpty()) return "Other";
+		if (raw == null || raw.trim().isEmpty())
+			return "Other";
 		String s = raw.trim().toLowerCase();
-		if (s.equals("male") || s.equals("m")) return "Male";
-		if (s.equals("female") || s.equals("f")) return "Female";
+		if (s.equals("male") || s.equals("m"))
+			return "Male";
+		if (s.equals("female") || s.equals("f"))
+			return "Female";
 		return "Other";
 	}
 
 	private int calcAge(LocalDate dob) {
-		if (dob == null) return 0;
+		if (dob == null)
+			return 0;
 		return LocalDate.now().getYear() - dob.getYear();
 	}
 
-    // authenticates user and returns token
-    public String login(LoginRequest req) {
-        // basic validation to avoid null pointer exceptions
-        if (req == null) {
-            throw new IllegalArgumentException("Request cannot be null");
-        }
-        if (req.getUsernameOrEmail() == null || req.getUsernameOrEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Username or email is required");
-        }
-        if (req.getPassword() == null || req.getPassword().isEmpty()) {
-            throw new IllegalArgumentException("Password is required");
-        }
-        
-        Optional<User> userOpt = req.getUsernameOrEmail().contains("@") 
-            ? userRepository.findByEmail(req.getUsernameOrEmail())
-            : userRepository.findByUsername(req.getUsernameOrEmail());
-        
-        if (userOpt.isEmpty()) throw new IllegalArgumentException("User not found");
-        
-        User user = userOpt.get();
-        if (!user.getPassword().equals(hash(req.getPassword()))) {
-            throw new IllegalArgumentException("Wrong password");
-        }
+	// authenticates user and returns token
+	public String login(LoginRequest req) {
+		// basic validation to avoid null pointer exceptions
+		if (req == null) {
+			throw new IllegalArgumentException("Request cannot be null");
+		}
+		if (req.getUsernameOrEmail() == null || req.getUsernameOrEmail().trim().isEmpty()) {
+			throw new IllegalArgumentException("Username or email is required");
+		}
+		if (req.getPassword() == null || req.getPassword().isEmpty()) {
+			throw new IllegalArgumentException("Password is required");
+		}
 
-        user.setLastLogin(java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC));
-        userRepository.save(user);
+		Optional<User> userOpt = req.getUsernameOrEmail().contains("@")
+				? userRepository.findByEmail(req.getUsernameOrEmail())
+				: userRepository.findByUsername(req.getUsernameOrEmail());
 
-        return HMACtokens.issueToken(user.getUsername(), 60 * 60 * 24);
+		if (userOpt.isEmpty())
+			throw new IllegalArgumentException("User not found");
+
+		User user = userOpt.get();
+		if (!user.getPassword().equals(hash(req.getPassword()))) {
+			throw new IllegalArgumentException("Wrong password");
+		}
+
+		user.setLastLogin(java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC));
+		userRepository.save(user);
+
+		return HMACtokens.issueToken(user.getUsername(), 60 * 60 * 24);
 	}
 
 	public User findByUsername(String username) {
 		return userRepository.findByUsername(username).orElse(null);
 	}
 
-	public User findById(Long id) { return userRepository.findById(id).orElse(null); }
+	public User findById(Long id) {
+		return userRepository.findById(id).orElse(null);
+	}
 
-	
-	public void logout(String token) { blacklistedTokens.add(token); }
+	public void logout(String token) {
+		blacklistedTokens.add(token);
+	}
 
-	public boolean isTokenBlacklisted(String token) { return blacklistedTokens.contains(token); }
+	public boolean isTokenBlacklisted(String token) {
+		return blacklistedTokens.contains(token);
+	}
 
-    // changes user password
-    public void changePassword(Long userId, String oldPassword, String newPassword) {
-        // check inputs to prevent crashes
-        if (userId == null || userId <= 0) {
-            throw new IllegalArgumentException("Invalid user ID");
-        }
-        if (oldPassword == null || newPassword == null) {
-            throw new IllegalArgumentException("Passwords cannot be null");
-        }
-        if (newPassword.length() < 6) {
-            throw new IllegalArgumentException("New password must be at least 6 characters");
-        }
-        
-        User u = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        if (!u.getPassword().equals(hash(oldPassword))) throw new IllegalArgumentException("Invalid current password");
-        u.setPassword(hash(newPassword));
-        userRepository.save(u);
-    }
-    
-    // resets password by finding emal
-    public void resetPassword(String email, String newPassword) {
+	// changes user password
+	public void changePassword(Long userId, String oldPassword, String newPassword) {
+		// check inputs to prevent crashes
+		if (userId == null || userId <= 0) {
+			throw new IllegalArgumentException("Invalid user ID");
+		}
+		if (oldPassword == null || newPassword == null) {
+			throw new IllegalArgumentException("Passwords cannot be null");
+		}
+		if (newPassword.length() < 6) {
+			throw new IllegalArgumentException("New password must be at least 6 characters");
+		}
+
+		User u = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+		if (!u.getPassword().equals(hash(oldPassword)))
+			throw new IllegalArgumentException("Invalid current password");
+		u.setPassword(hash(newPassword));
+		userRepository.save(u);
+	}
+
+	// resets password by finding emal
+	public void resetPassword(String email, String newPassword) {
 		User u = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
 		u.setPassword(hash(newPassword));
 		userRepository.save(u);
@@ -139,20 +154,24 @@ public class UserService {
 
 	// changes username and issues new token
 	public String changeUsername(Long userId, String newUsername) {
-		if (userRepository.existsByUsername(newUsername)) throw new IllegalArgumentException("Username already taken");
+		if (userRepository.existsByUsername(newUsername))
+			throw new IllegalArgumentException("Username already taken");
 		User u = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
 		u.setUsername(newUsername);
 		userRepository.save(u);
 		return HMACtokens.issueToken(u.getUsername(), 60 * 60 * 24);
 	}
 
-	
-
 	// deletes user account
 	public boolean deleteUser(Long userId) {
-		if (!userRepository.existsById(userId)) return false;
+		if (!userRepository.existsById(userId))
+			return false;
 		userRepository.deleteById(userId);
 		return true;
 	}
-}
 
+	public User save(User user) {
+		return userRepository.save(user);
+	}
+
+}

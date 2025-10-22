@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 
+window.dispatchEvent(new Event("user-updated"));
+
+
 /** ---------------- Types ---------------- */
 type ProfileDto = {
   displayName: string;
