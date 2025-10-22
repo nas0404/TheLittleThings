@@ -31,7 +31,7 @@ export default function Wins() {
             return;
         }
 
-        fetch("http://localhost:8080/api/wins", {
+        fetch("/api/wins", {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -62,7 +62,7 @@ export default function Wins() {
         if (!token) return;
 
         try {
-            const response = await fetch(`http://localhost:8080/api/wins/${winId}`, {
+            const response = await fetch(`/api/wins/${winId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -94,7 +94,7 @@ export default function Wins() {
         if (!window.confirm("Are you sure you want to delete this win?")) return;
 
         try {
-            const response = await fetch(`http://localhost:8080/api/wins/${winId}`, {
+            const response = await fetch(`/api/wins/${winId}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${token}`,
