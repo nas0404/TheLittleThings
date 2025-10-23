@@ -11,6 +11,7 @@ export default function Home() {
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">Welcome</h1>
+      <h1 className="text-2xl font-bold">Welcome</h1>
       
 
       <div className="flex flex-col gap-6">
