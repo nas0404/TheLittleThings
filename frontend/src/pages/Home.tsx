@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">Welcome</h1>
-      <p>Start here. Add widgets or cards that matter to your user.</p>
+      
 
       <div className="flex flex-col gap-6">
         <Card title="" description="">
