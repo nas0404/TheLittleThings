@@ -321,29 +321,32 @@ export default function CreateGoalsPage() {
         )}
 
         <div className="space-y-3">
-          {sortedGoals.map((g) => (
-            <div key={g.goalId} className="flex items-center justify-between">
-              <GoalCard
-                goal={{
-                  goalId: g.goalId,
-                  title: g.title,
-                  description: g.description ?? null,
-                  priority: g.priority,
-                }}
-                onRequestDelete={() => requestDeleteGoal(g)}
-                onEdit={() => setEditingGoal(g)}
-              />
-              <button
-                onClick={() => completeGoal(g.goalId)}
-                className="ml-4 px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                type="button"
-              >
-                Complete Goal
-              </button>
-            </div>
-          ))}
+            {sortedGoals.map((g) => (
+                <div key={g.goalId} className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                        <GoalCard
+                        goal={{
+                            goalId: g.goalId,
+                            title: g.title,
+                            description: g.description ?? null,
+                            priority: g.priority,
+                        }}
+                        onRequestDelete={() => requestDeleteGoal(g)}
+                        onEdit={() => setEditingGoal(g)}
+                        />
+                    </div>
+
+                    <button
+                        onClick={() => completeGoal(g.goalId)}
+                        className="shrink-0 self-center h-9 px-3 rounded bg-green-600 text-white hover:bg-green-700"
+                        type="button"
+                    >
+                        Complete Goal
+                    </button>
+                </div>
+            ))}
         </div>
-      </div>
+    </div>
 
       {/* Column 3: New Category + New Goal forms */}
       <div className="space-y-6">
