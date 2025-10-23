@@ -1,5 +1,5 @@
-import { NavLink } from "react-router-dom";
 import React, { useEffect, useState, useCallback } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 
 type Props = { children: React.ReactNode };
 
@@ -19,9 +19,9 @@ export default function RootLayout({ children }: Props) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const location = useLocation();
-  
+
   // Hide Navbar on signin/register pages
-  const hideNavbarRoutes = ['/', '/register', '/login'];
+  const hideNavbarRoutes = ["/", "/register", "/login"];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   const fetchAll = useCallback(async () => {
@@ -31,43 +31,38 @@ export default function RootLayout({ children }: Props) {
       setProfile(null);
       return;
     }
-    // 1) who am i?
-    const meRes = await fetch("http://localhost:8080/api/users/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!meRes.ok) {
+
+    try {
+      // 1) who am I? (server-relative path)
+      const meRes = await fetch("/api/users/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!meRes.ok) throw new Error("Not logged in");
+
+      const meJson: MeResponse = await meRes.json();
+      setMe(meJson);
+      localStorage.setItem("username", meJson.username);
+      localStorage.setItem("userId", String(meJson.userId));
+
+      // 2) profile (server-relative path)
+      const profRes = await fetch("/api/settings/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-User-Id": String(meJson.userId),
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (profRes.ok) {
+        const profJson: ProfileResponse = await profRes.json();
+        setProfile(profJson);
+      } else {
+        setProfile(null);
+      }
+    } catch {
       setMe(null);
       setProfile(null);
-      return;
     }
-    const meJson: MeResponse = await meRes.json();
-    setMe(meJson);
-
-    // 2) fetch profile (avatar, display name) from user_profiles
-    const profRes = await fetch("http://localhost:8080/api/settings/profile", {
-    fetch("/api/users/me", {
-      headers: {
-        "X-User-Id": String(meJson.userId),
-        "Content-Type": "application/json",
-      },
-    });
-    if (profRes.ok) {
-      const profJson: ProfileResponse = await profRes.json();
-      setProfile(profJson);
-    } else {
-      setProfile(null);
-    }
-    });
-      .then((res) => {
-        if (!res.ok) throw new Error("Not logged in");
-        return res.json();
-      })
-      .then((data) => {
-        setMe(data);
-        localStorage.setItem("username", data.username);
-        localStorage.setItem("userId", data.userId.toString());
-      })
-      .catch(() => setMe(null));
   }, []);
 
   useEffect(() => {
@@ -86,13 +81,14 @@ export default function RootLayout({ children }: Props) {
     };
   }, [fetchAll]);
 
-  // little helper for avatar fallback (initials)
+  // avatar initials fallback
   const initials =
-    me?.username
-      ?.split(/\s+/)
-      .map((s) => s[0]?.toUpperCase())
+    (me?.username ?? "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((s) => s[0]?.toUpperCase() ?? "")
       .join("")
-      .slice(0, 2) ?? "?";
+      .slice(0, 2) || "?";
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
@@ -103,41 +99,31 @@ export default function RootLayout({ children }: Props) {
               TheLittleThing
             </NavLink>
             <div className="ml-auto flex items-center gap-3">
-              <NavLink to="/home" className="hover:underline">
-                Home
-              </NavLink>
-              <NavLink to="/about" className="hover:underline">
-                About
-              </NavLink>
-              <NavLink to="/settings" className="hover:underline">
-                Settings
-              </NavLink>
-              <NavLink to="/categories" className="hover:underline">
-                Categories
-              </NavLink>
-              <NavLink to="/goals" className="hover:underline">
-                Goals
-              </NavLink>
-              <NavLink to="/wins" className="hover:underline">
-                Wins
-              </NavLink>
-              <NavLink to="/journal" className="hover:underline">
-                Journal
-              </NavLink>
-              <NavLink to="/leaderboard" className="hover:underline">
-                Leaderboard
-              </NavLink>
-              <NavLink to="/user" className="hover:underline">
-                Account
-              </NavLink>
-              <NavLink to="/friends" className="hover:underline">
-                Friends
-              </NavLink>
+              <NavLink to="/home" className="hover:underline">Home</NavLink>
+              <NavLink to="/about" className="hover:underline">About</NavLink>
+              <NavLink to="/settings" className="hover:underline">Settings</NavLink>
+              <NavLink to="/categories" className="hover:underline">Categories</NavLink>
+              <NavLink to="/goals" className="hover:underline">Goals</NavLink>
+              <NavLink to="/wins" className="hover:underline">Wins</NavLink>
+              <NavLink to="/journal" className="hover:underline">Journal</NavLink>
+              <NavLink to="/leaderboard" className="hover:underline">Leaderboard</NavLink>
+              <NavLink to="/user" className="hover:underline">Account</NavLink>
+              <NavLink to="/friends" className="hover:underline">Friends</NavLink>
 
-              {/* username display */}
               {me && (
-                <span className="ml-4 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
-                  {me.username}
+                <span className="ml-4 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
+                  {profile?.avatarUrl ? (
+                    <img
+                      src={profile.avatarUrl}
+                      alt={profile.displayName ?? me.username}
+                      className="h-6 w-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold">
+                      {initials}
+                    </span>
+                  )}
+                  <span>{profile?.displayName ?? me.username}</span>
                 </span>
               )}
             </div>
