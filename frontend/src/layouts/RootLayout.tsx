@@ -16,8 +16,8 @@ type ProfileResponse = {
 };
 
 export default function RootLayout({ children }: Props) {
-  const [me, setMe] = useState<MeResponse | null>(null);
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [, setMe] = useState<MeResponse | null>(null);
+  const [, setProfile] = useState<ProfileResponse | null>(null);
   const location = useLocation();
 
   // Hide Navbar on signin/register pages
@@ -89,7 +89,7 @@ export default function RootLayout({ children }: Props) {
       .map((s) => s[0]?.toUpperCase() ?? "")
       .join("")
       .slice(0, 2) || "?";
-    */
+  */
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
