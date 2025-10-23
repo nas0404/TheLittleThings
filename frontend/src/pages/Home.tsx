@@ -40,7 +40,7 @@ export default function Home() {
         {/* Card 2 → friends challenges */}
         <FriendsChallengesCard />
 
-        <Card title="Card 3" description="Sign in to access your account." />
+        
       </div>
     </section>
   );
