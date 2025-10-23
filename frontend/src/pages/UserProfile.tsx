@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import Button from '../components/buttons/Button';
 import { UserAPI } from '../api/users';
 import { ApiError } from '../api/http';
+import { useNavigate } from 'react-router-dom';
 
 export default function UserProfile() {
 	const [user, setUser] = useState<any>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [oldPass, setOldPass] = useState('');
 	const [newPass, setNewPass] = useState('');
-
+	const navigate = useNavigate();
 	// get user info when component loads
 	useEffect(() => {
 		const fetchUserData = async () => {
@@ -82,6 +83,15 @@ export default function UserProfile() {
 	};
 
 	return (
+
+	<div className="max-w-lg mx-auto">
+		{/* Top bar with Settings button */}
+		<div className="mb-6 flex items-center justify-between">
+			<h1 className="text-3xl font-bold text-gray-900">User Profile</h1>
+			<Button onClick={() => navigate('/settings')}>Settings</Button>
+		</div>
+
+
 		<div className="max-w-lg mx-auto">
 			<h1 className="text-3xl font-bold text-gray-900 mb-6">User Profile</h1>
 			{error && (
@@ -178,5 +188,6 @@ export default function UserProfile() {
 				<div>Not logged in</div>
 			)}
 		</div>
+	</div>
 	);
 }

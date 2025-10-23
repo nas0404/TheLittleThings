@@ -100,8 +100,9 @@ export default function RootLayout({ children }: Props) {
             </NavLink>
             <div className="ml-auto flex items-center gap-3">
               <NavLink to="/home" className="hover:underline">Home</NavLink>
-              <NavLink to="/settings" className="hover:underline">Settings</NavLink>
+              
               {/*
+              <NavLink to="/settings" className="hover:underline">Settings</NavLink>
               <NavLink to="/about" className="hover:underline">About</NavLink>
               <NavLink to="/categories" className="hover:underline">Categories</NavLink>
               <NavLink to="/goals" className="hover:underline">Goals</NavLink>
