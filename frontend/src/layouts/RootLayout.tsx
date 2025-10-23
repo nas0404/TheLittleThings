@@ -82,13 +82,14 @@ export default function RootLayout({ children }: Props) {
   }, [fetchAll]);
 
   // avatar initials fallback
-  const initials =
+  /*{const initials =
     (me?.username ?? "")
       .split(/\s+/)
       .filter(Boolean)
       .map((s) => s[0]?.toUpperCase() ?? "")
       .join("")
       .slice(0, 2) || "?";
+    */
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
@@ -100,7 +101,7 @@ export default function RootLayout({ children }: Props) {
             </NavLink>
             <div className="ml-auto flex items-center gap-3">
               <NavLink to="/home" className="hover:underline">Home</NavLink>
-              
+              <NavLink to="/create-goals" className="hover:underline">Goals</NavLink>
               {/*
               <NavLink to="/settings" className="hover:underline">Settings</NavLink>
               <NavLink to="/about" className="hover:underline">About</NavLink>
@@ -110,10 +111,10 @@ export default function RootLayout({ children }: Props) {
               <NavLink to="/wins" className="hover:underline">Wins</NavLink>
               <NavLink to="/journal" className="hover:underline">Journal</NavLink>
               <NavLink to="/leaderboard" className="hover:underline">Leaderboard</NavLink>
-              <NavLink to="/user" className="hover:underline">Account</NavLink>
               <NavLink to="/friends" className="hover:underline">Friends</NavLink>
-              <NavLink to="/create-goals" className="hover:underline">Goals</NavLink>
-
+              <NavLink to="/user" className="hover:underline">Account</NavLink>
+              
+              {/*
               {me && (
                 <span className="ml-4 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
                   {profile?.avatarUrl ? (
@@ -130,6 +131,7 @@ export default function RootLayout({ children }: Props) {
                   <span>{profile?.displayName ?? me.username}</span>
                 </span>
               )}
+                */}            
             </div>
           </nav>
         </header>
