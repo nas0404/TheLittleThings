@@ -109,7 +109,7 @@ export default function RootLayout({ children }: Props) {
               <NavLink to="/leaderboard" className="hover:underline">Leaderboard</NavLink>
               <NavLink to="/user" className="hover:underline">Account</NavLink>
               <NavLink to="/friends" className="hover:underline">Friends</NavLink>
-              <NavLink to="/creategoals" className="hover:underline">Add Goal</NavLink>
+              <NavLink to="/create-goals" className="hover:underline">Add Goal</NavLink>
 
               {me && (
                 <span className="ml-4 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
