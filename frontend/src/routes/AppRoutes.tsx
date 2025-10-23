@@ -14,6 +14,7 @@ import Wins from '../pages/Wins.tsx';
 import Goals from '../pages/Goals.tsx';
 import Journal from '../pages/Journal';
 import FriendsPage from "../pages/FriendsPage";
+import CreateGoalsPage from "../pages/CreateGoals";
 
 export default function AppRoutes() {
   return (
@@ -32,6 +33,7 @@ export default function AppRoutes() {
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="*" element={<NotFound />} />
       <Route path="/friends" element={<FriendsPage />} />
+      <Route path="/create-goals" element={<CreateGoalsPage />} />
     </Routes>
   );
 }
