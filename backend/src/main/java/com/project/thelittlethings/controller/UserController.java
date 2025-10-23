@@ -167,4 +167,44 @@ public class UserController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
+
+    // allows user to update their profile (bio + avatar)
+@PutMapping("/profile")
+public ResponseEntity<?> updateProfile(
+        @RequestHeader("Authorization") String auth,
+        @RequestBody UpdateProfileRequest req) {
+    try {
+        // validate token
+        String token = auth.replaceFirst("Bearer ", "");
+        if (!HMACtokens.validateToken(token) || userService.isTokenBlacklisted(token)) {
+            return ResponseEntity.status(401).build();
+        }
+
+        // get user by token username
+        String username = HMACtokens.extractUsername(token);
+        User user = userService.findByUsername(username);
+        if (user == null) {
+            return ResponseEntity.status(404).build();
+        }
+
+        // update fields
+        if (req.getBio() != null) {
+            user.setBio(req.getBio());
+        }
+        if (req.getAvatarUrl() != null) {
+            user.setAvatarUrl(req.getAvatarUrl());
+        }
+
+        // save to DB
+        userService.save(user);
+
+        // convert to response DTO
+        UserResponse response = UserResponse.fromUser(user);
+        return ResponseEntity.ok(response);
+
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError().body("Failed to update profile: " + e.getMessage());
+    }
+}
+
 }

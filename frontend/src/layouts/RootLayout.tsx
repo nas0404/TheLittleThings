@@ -1,5 +1,5 @@
-import { NavLink, useLocation } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
+import React, { useEffect, useState, useCallback } from "react";
 
 type Props = { children: React.ReactNode };
 
@@ -7,26 +7,57 @@ type MeResponse = {
   userId: number;
   username: string;
   email: string;
-  // add other fields you return from /me
+};
+
+type ProfileResponse = {
+  displayName: string;
+  bio: string | null;
+  avatarUrl: string | null;
 };
 
 export default function RootLayout({ children }: Props) {
   const [me, setMe] = useState<MeResponse | null>(null);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const location = useLocation();
   
   // Hide Navbar on signin/register pages
   const hideNavbarRoutes = ['/', '/register', '/login'];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
 
-  useEffect(() => {
+  const fetchAll = useCallback(async () => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      setMe(null);
+      setProfile(null);
+      return;
+    }
+    // 1) who am i?
+    const meRes = await fetch("http://localhost:8080/api/users/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!meRes.ok) {
+      setMe(null);
+      setProfile(null);
+      return;
+    }
+    const meJson: MeResponse = await meRes.json();
+    setMe(meJson);
 
+    // 2) fetch profile (avatar, display name) from user_profiles
+    const profRes = await fetch("http://localhost:8080/api/settings/profile", {
     fetch("/api/users/me", {
       headers: {
-        Authorization: `Bearer ${token}`,
+        "X-User-Id": String(meJson.userId),
+        "Content-Type": "application/json",
       },
-    })
+    });
+    if (profRes.ok) {
+      const profJson: ProfileResponse = await profRes.json();
+      setProfile(profJson);
+    } else {
+      setProfile(null);
+    }
+    });
       .then((res) => {
         if (!res.ok) throw new Error("Not logged in");
         return res.json();
@@ -38,6 +69,30 @@ export default function RootLayout({ children }: Props) {
       })
       .catch(() => setMe(null));
   }, []);
+
+  useEffect(() => {
+    fetchAll();
+
+    // refresh navbar when settings page saves or token changes
+    const onUserUpdated = () => fetchAll();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "token") fetchAll();
+    };
+    window.addEventListener("user-updated", onUserUpdated as EventListener);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("user-updated", onUserUpdated as EventListener);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [fetchAll]);
+
+  // little helper for avatar fallback (initials)
+  const initials =
+    me?.username
+      ?.split(/\s+/)
+      .map((s) => s[0]?.toUpperCase())
+      .join("")
+      .slice(0, 2) ?? "?";
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
