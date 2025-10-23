@@ -65,7 +65,7 @@ export default function Settings() {
   const [prefsErr, setPrefsErr] = useState<string | null>(null);
 
   // Security (#81)
-  const [currentPasswordU, setCurrentPasswordU] = useState("");
+  /* const [currentPasswordU, setCurrentPasswordU] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [savingUsername, setSavingUsername] = useState(false);
   const [userMsg, setUserMsg] = useState<string | null>(null);
@@ -82,7 +82,7 @@ export default function Settings() {
   const [deactivateMsg, setDeactivateMsg] = useState<string | null>(null);
   const [deactivateErr, setDeactivateErr] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(""); */
 
   const [loading, setLoading] = useState(true);
 
@@ -180,102 +180,9 @@ export default function Settings() {
     }
   }
 
-  /** -------- Security handlers (#81) -------- */
-  async function changeUsername(e: React.FormEvent) {
-    e.preventDefault();
-    if (!currentPasswordU || !newUsername.trim()) {
-      setUserErr("Enter current password and a new username.");
-      return;
-    }
-    setSavingUsername(true);
-    setUserMsg(null);
-    setUserErr(null);
-    try {
-      await fetchJSON<void>(`${API}/api/settings/username`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword: currentPasswordU, newUsername }),
-      });
-      setUserMsg("Username changed ✓");
-      setCurrentPasswordU("");
-      setNewUsername("");
-    } catch (e: any) {
-      console.error("Change username failed:", e.message);
-      setUserErr("Change failed");
-    } finally {
-      setSavingUsername(false);
-      setTimeout(() => setUserMsg(null), 2500);
-    }
-  }
 
-  async function changePassword(e: React.FormEvent) {
-    e.preventDefault();
-    if (!currentPasswordP || !newPassword) {
-      setPassErr("Enter current and new password.");
-      return;
-    }
-    if (newPassword.length < 8) {
-      setPassErr("New password must be at least 8 characters.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPassErr("Passwords do not match.");
-      return;
-    }
-    setSavingPassword(true);
-    setPassMsg(null);
-    setPassErr(null);
-    try {
-      await fetchJSON<void>(`${API}/api/settings/password`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword: currentPasswordP, newPassword }),
-      });
-      setPassMsg("Password changed ✓");
-      setCurrentPasswordP("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (e: any) {
-      console.error("Change password failed:", e.message);
-      setPassErr("Change failed");
-    } finally {
-      setSavingPassword(false);
-      setTimeout(() => setPassMsg(null), 2500);
-    }
-  }
 
-  /** -------- Account control handlers (#83) -------- */
-  async function deactivateAccount() {
-    setDeactivateErr(null);
-    setDeactivateMsg(null);
-    try {
-      await fetchJSON<void>(`${API}/api/settings/deactivate`, { method: "POST" });
-      setDeactivateMsg("Account deactivated ✓");
-    } catch (e: any) {
-      console.error("Deactivate failed:", e.message);
-      setDeactivateErr("Failed to deactivate");
-    }
-  }
 
-  async function deleteAccount() {
-    if (deleteConfirm !== "DELETE") {
-      setDeactivateErr('Type DELETE to confirm.');
-      return;
-    }
-    setDeleting(true);
-    setDeactivateErr(null);
-    setDeactivateMsg(null);
-    try {
-      await fetchJSON<void>(`${API}/api/settings/account`, { method: "DELETE" });
-      setDeactivateMsg("Account deleted ✓");
-      // In a real app you would redirect to a goodbye page or sign-out.
-    } catch (e: any) {
-      console.error("Delete failed:", e.message);
-      setDeactivateErr("Failed to delete");
-    } finally {
-      setDeleting(false);
-    }
-  }
 
   if (loading) {
     return (
