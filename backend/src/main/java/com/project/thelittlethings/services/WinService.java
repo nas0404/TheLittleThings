@@ -10,6 +10,7 @@ import com.project.thelittlethings.repositories.GoalRepository;
 import com.project.thelittlethings.repositories.UserRepository;
 import com.project.thelittlethings.repositories.WinRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,8 +21,7 @@ public class WinService {
     private final UserRepository userRepo;
     private final GoalRepository goalRepo;
 
-    public WinService(WinRepository winRepo, UserRepository userRepo,
-            GoalRepository goalRepo) {
+    public WinService(WinRepository winRepo, UserRepository userRepo, GoalRepository goalRepo) {
         this.winRepo = winRepo;
         this.userRepo = userRepo;
         this.goalRepo = goalRepo;
@@ -36,17 +36,15 @@ public class WinService {
         r.setDescription(win.getDescription());
         r.setCompletionDate(win.getCompletionDate());
         r.setNumTrophies(win.getNumTrophies());
-        if (win.getJournalId() != null)
-            r.setJournalId(win.getJournalId());
+        if (win.getJournalId() != null) r.setJournalId(win.getJournalId());
         return r;
     }
 
+    @Transactional
     public WinResponse createWin(CreateWinRequest req) {
         // Validate required fields
-        if (req.getUserId() == null)
-            throw new IllegalArgumentException("userId is required");
-        if (req.getGoalId() == null)
-            throw new IllegalArgumentException("goalId is required");
+        if (req.getUserId() == null) throw new IllegalArgumentException("userId is required");
+        if (req.getGoalId() == null) throw new IllegalArgumentException("goalId is required");
         if (req.getTitle() == null || req.getTitle().trim().isEmpty())
             throw new IllegalArgumentException("title is required");
         if (req.getCompletionDate() == null)
@@ -66,14 +64,23 @@ public class WinService {
         win.setUser(user);
         win.setGoal(goal);
         win.setTitle(req.getTitle().trim());
-        win.setNumTrophies(req.getNumTrophies());
+        win.setNumTrophies(Math.max(0, req.getNumTrophies())); // clamp to non-negative
         win.setCompletionDate(req.getCompletionDate());
         win.setDescription(req.getDescription());
         win.setJournalId(req.getJournalId());
 
-        return toResponse(winRepo.save(win));
+        Win saved = winRepo.save(win);
+
+        // Add trophies to user
+        int toAdd = saved.getNumTrophies() == null ? 0 : saved.getNumTrophies();
+        int current = user.getTrophies() == null ? 0 : user.getTrophies();
+        user.setTrophies(current + toAdd);
+        userRepo.save(user);
+
+        return toResponse(saved);
     }
 
+    @Transactional
     public WinResponse updateWin(Long winId, Long userId, UpdateWinRequest req) {
         Win win = winRepo.findByWinIdAndUser_UserId(winId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Win not found or not owned by user"));
@@ -84,8 +91,20 @@ public class WinService {
         if (req.getDescription() != null) {
             win.setDescription(req.getDescription());
         }
+
         if (req.getNumTrophies() != null) {
-            win.setNumTrophies(req.getNumTrophies());
+            int oldVal = win.getNumTrophies() == null ? 0 : win.getNumTrophies();
+            int newVal = Math.max(0, req.getNumTrophies());
+            int delta = newVal - oldVal;
+
+            if (delta != 0) {
+                User user = win.getUser(); // already associated
+                int current = user.getTrophies() == null ? 0 : user.getTrophies();
+                int updated = current + delta;
+                user.setTrophies(Math.max(0, updated)); // keep non-negative total
+                userRepo.save(user);
+            }
+            win.setNumTrophies(newVal);
         }
 
         Win updatedWin = winRepo.save(win);
@@ -107,9 +126,18 @@ public class WinService {
         return toResponse(win);
     }
 
+    @Transactional
     public void deleteWin(Long winId, Long userId) {
-        var win = winRepo.findByWinIdAndUser_UserId(winId, userId)
+        Win win = winRepo.findByWinIdAndUser_UserId(winId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("win not found"));
+
+        // Subtract trophies from user to keep totals consistent
+        User user = win.getUser();
+        int current = user.getTrophies() == null ? 0 : user.getTrophies();
+        int toSubtract = win.getNumTrophies() == null ? 0 : win.getNumTrophies();
+        user.setTrophies(Math.max(0, current - toSubtract));
+        userRepo.save(user);
+
         winRepo.delete(win);
     }
 }

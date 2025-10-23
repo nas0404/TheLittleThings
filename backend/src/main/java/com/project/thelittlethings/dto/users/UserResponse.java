@@ -32,7 +32,7 @@ public class UserResponse {
         r.gender = u.getGender();
         r.streaks = u.getStreaks();
         r.region = u.getRegion();
-        r.trophies = (u.getTrophies());
+        r.trophies = (u.getTrophies() == null ? 0 : u.getTrophies());
        
         java.time.OffsetDateTime ll = u.getLastLogin();
         if (ll != null) {
@@ -76,4 +76,8 @@ public class UserResponse {
 
     public String getLastLogin() { return lastLogin; }
     public void setLastLogin(String lastLogin) { this.lastLogin = lastLogin; }
+
+    public Integer getTrophies() { return trophies; }
+    public void setTrophies(Integer trophies) { this.trophies = trophies; }
+
 }
