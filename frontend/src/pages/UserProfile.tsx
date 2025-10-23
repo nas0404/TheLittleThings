@@ -93,7 +93,7 @@ export default function UserProfile() {
 
 
 		<div className="max-w-lg mx-auto">
-			<h1 className="text-3xl font-bold text-gray-900 mb-6">User Profile</h1>
+			
 			{error && (
 				<div className="mb-4 rounded-md bg-red-50 border border-red-200 p-3">
 					<p className="text-sm text-red-700">{error}</p>
