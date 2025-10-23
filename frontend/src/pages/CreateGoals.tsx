@@ -322,28 +322,18 @@ export default function CreateGoalsPage() {
 
         <div className="space-y-4">
             {sortedGoals.map((g) => (
-                <div key={g.goalId}>
                 <GoalCard
-                    goal={{
+                key={g.goalId}
+                goal={{
                     goalId: g.goalId,
                     title: g.title,
                     description: g.description ?? null,
                     priority: g.priority,
-                    }}
-                    onRequestDelete={() => requestDeleteGoal(g)}
-                    onEdit={() => setEditingGoal(g)}
+                }}
+                onEdit={() => setEditingGoal(g)}
+                onRequestDelete={() => requestDeleteGoal(g)}
+                onComplete={() => completeGoal(g.goalId)} // button renders inside the card
                 />
-
-                <div className="mt-2 flex justify-end">
-                    <button
-                    onClick={() => completeGoal(g.goalId)}
-                    type="button"
-                    className="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700"
-                    >
-                    Complete Goal
-                    </button>
-                </div>
-                </div>
             ))}
         </div>
 
