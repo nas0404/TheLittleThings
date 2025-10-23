@@ -16,25 +16,19 @@ const priClasses: Record<Priority, string> = {
   LOW: "bg-emerald-100 text-emerald-700",
 };
 
-// components/goals/GoalCard.tsx
-
+// Props for the GoalCard component
 type Props = {
   goal: GoalLite;
-  onEdit?: () => void;
-  onRequestDelete?: () => void;
-  onComplete?: () => void;           
-  showEditDelete?: boolean;           // NEW
+  onEdit: () => void;
+  onRequestDelete: () => void;
+  onComplete?: () => void; // FIX: support in-card complete button
 };
 
-export default function GoalCard({
-  goal,
-  onEdit,
-  onRequestDelete,
-  onComplete,
-  showEditDelete = true,              // NEW (defaults to true)
-}: Props) {
+// Component for displaying a goal in a card format
+export default function GoalCard({ goal, onEdit, onRequestDelete, onComplete }: Props) {
   return (
     <div className="border rounded-xl p-4 bg-white">
+      {/* Top: title, priority, id (wrap safely) */}
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="font-semibold break-words">{goal.title}</div>
@@ -49,6 +43,7 @@ export default function GoalCard({
         )}
       </div>
 
+      {/* Bottom: actions row (separate line, right-aligned) */}
       <div className="mt-3 flex flex-wrap items-center gap-2 justify-end">
         {onComplete && (
           <button
@@ -59,33 +54,21 @@ export default function GoalCard({
             Complete
           </button>
         )}
-
-        {showEditDelete && (
-          <>
-            {onEdit && (
-              <button
-                className="px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50"
-                type="button"
-                onClick={onEdit}
-              >
-                Edit
-              </button>
-            )}
-            {onRequestDelete && (
-              <button
-                className="px-3 py-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700"
-                type="button"
-                onClick={onRequestDelete}
-              >
-                Delete
-              </button>
-            )}
-          </>
-        )}
+        <button
+          className="px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50"
+          type="button"
+          onClick={onEdit}
+        >
+          Edit
+        </button>
+        <button
+          className="px-3 py-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700"
+          type="button"
+          onClick={onRequestDelete}
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
 }
-
-
-
