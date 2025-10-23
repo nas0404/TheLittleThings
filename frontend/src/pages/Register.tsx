@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Button from "../components/buttons/Button";
+import { UserAPI } from "../api/users";
+import { ApiError } from "../api/http";
 
 type RegisterForm = {
   username: string;
@@ -25,7 +26,6 @@ const calcAge = (isoDate: string) => {
 };
 
 export default function Register() {
-  const navigate = useNavigate();
   const [form, setForm] = useState<RegisterForm>({
     username: "",
     email: "",
@@ -55,37 +55,34 @@ export default function Register() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isValid) return;
-    
-    setSubmitting(true);
-    setServerError(null);
-    
-    try {
-      const res = await fetch('http://localhost:8080/api/users/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
+      e.preventDefault();
+      if (!isValid) return;
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          navigate("/home");
+      setSubmitting(true);
+      setServerError(null);
+
+      try {
+        await UserAPI.register({
+          username: form.username,
+          email: form.email,
+          password: form.password,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          dob: form.dob,
+          gender: form.gender,
+          region: form.region
+        });                                       // CHANGED: token saved inside UserAPI
+        window.location.href = "/home";           // unchanged
+      } catch (error) {
+        if (error instanceof ApiError) {
+          setServerError(error.message || 'Registration failed');
         } else {
-          setServerError('Something went wrong');
+          setServerError('Network error - please try again');
         }
-      } else {
-        const errorData = await res.text();
-        setServerError(errorData || 'Registration failed');
+      } finally {
+        setSubmitting(false);
       }
-    } catch (error) {
-      setServerError('Network error - please try again');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-10 px-4">
@@ -165,11 +162,20 @@ export default function Register() {
           <div className="rounded-xl border bg-white p-4 shadow-sm">
             <h3 className="text-lg font-semibold mb-3">Other</h3>
             <Field label="Region" id="region">
-              <input
-                id="region" name="region" type="text" required
+              <select
+                id="region" name="region" required
                 className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 value={form.region} onChange={onChange}
-              />
+              >
+                <option value="">Select a continent</option>
+                <option value="Africa">Africa</option>
+                <option value="Antarctica">Antarctica</option>
+                <option value="Asia">Asia</option>
+                <option value="Europe">Europe</option>
+                <option value="North America">North America</option>
+                <option value="Oceania">Oceania</option>
+                <option value="South America">South America</option>
+              </select>
             </Field>
 
             <div className="mt-4">

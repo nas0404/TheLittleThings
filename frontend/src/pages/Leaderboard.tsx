@@ -21,7 +21,7 @@ export default function Leaderboard() {
             setError(null);
 
             try {
-                let url = "http://localhost:8080/api/leaderboard";
+                let url = "/api/leaderboard";
                 if (region) {
                     url += `?region=${encodeURIComponent(region)}`;
                 }

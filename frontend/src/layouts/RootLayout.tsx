@@ -18,6 +18,11 @@ type ProfileResponse = {
 export default function RootLayout({ children }: Props) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const location = useLocation();
+  
+  // Hide Navbar on signin/register pages
+  const hideNavbarRoutes = ['/', '/register', '/login'];
+  const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   const fetchAll = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -40,6 +45,7 @@ export default function RootLayout({ children }: Props) {
 
     // 2) fetch profile (avatar, display name) from user_profiles
     const profRes = await fetch("http://localhost:8080/api/settings/profile", {
+    fetch("/api/users/me", {
       headers: {
         "X-User-Id": String(meJson.userId),
         "Content-Type": "application/json",
@@ -51,6 +57,17 @@ export default function RootLayout({ children }: Props) {
     } else {
       setProfile(null);
     }
+    });
+      .then((res) => {
+        if (!res.ok) throw new Error("Not logged in");
+        return res.json();
+      })
+      .then((data) => {
+        setMe(data);
+        localStorage.setItem("username", data.username);
+        localStorage.setItem("userId", data.userId.toString());
+      })
+      .catch(() => setMe(null));
   }, []);
 
   useEffect(() => {
@@ -79,45 +96,54 @@ export default function RootLayout({ children }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="border-b bg-white">
-        <nav className="mx-auto flex max-w-6xl items-center gap-4 p-4">
-          <NavLink to="/" className="font-semibold">
-            TheLittleThing
-          </NavLink>
-          <div className="ml-auto flex items-center gap-3">
-            <NavLink to="/home" className="hover:underline">Home</NavLink>
-            <NavLink to="/about" className="hover:underline">About</NavLink>
-            <NavLink to="/settings" className="hover:underline">Settings</NavLink>
-            <NavLink to="/categories" className="hover:underline">Categories</NavLink>
-            <NavLink to="/goals" className="hover:underline">Goals</NavLink>
-            <NavLink to="/wins" className="hover:underline">Wins</NavLink>
-            <NavLink to="/journal" className="hover:underline">Journal</NavLink>
-            <NavLink to="/leaderboard" className="hover:underline">Leaderboard</NavLink>
-            <NavLink to="/user" className="hover:underline">Account</NavLink>
-            <NavLink to="/friends" className="hover:underline">Friends</NavLink>
+      {!shouldHideNavbar && (
+        <header className="border-b bg-white">
+          <nav className="mx-auto flex max-w-6xl items-center gap-4 p-4">
+            <NavLink to="/" className="font-semibold">
+              TheLittleThing
+            </NavLink>
+            <div className="ml-auto flex items-center gap-3">
+              <NavLink to="/home" className="hover:underline">
+                Home
+              </NavLink>
+              <NavLink to="/about" className="hover:underline">
+                About
+              </NavLink>
+              <NavLink to="/settings" className="hover:underline">
+                Settings
+              </NavLink>
+              <NavLink to="/categories" className="hover:underline">
+                Categories
+              </NavLink>
+              <NavLink to="/goals" className="hover:underline">
+                Goals
+              </NavLink>
+              <NavLink to="/wins" className="hover:underline">
+                Wins
+              </NavLink>
+              <NavLink to="/journal" className="hover:underline">
+                Journal
+              </NavLink>
+              <NavLink to="/leaderboard" className="hover:underline">
+                Leaderboard
+              </NavLink>
+              <NavLink to="/user" className="hover:underline">
+                Account
+              </NavLink>
+              <NavLink to="/friends" className="hover:underline">
+                Friends
+              </NavLink>
 
-            {me && (
-              <span className="ml-2 inline-flex items-center gap-2 rounded-full bg-gray-100 pl-1 pr-3 py-1 text-sm font-medium text-gray-700">
-                {/* avatar */}
-                {profile?.avatarUrl ? (
-                  <img
-                    src={profile.avatarUrl}
-                    onError={(e) => ((e.currentTarget.style.display = "none"))}
-                    alt="avatar"
-                    className="h-7 w-7 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="h-7 w-7 rounded-full bg-gray-300 grid place-items-center text-xs">
-                    {initials}
-                  </span>
-                )}
-                {/* username */}
-                <span>{me.username}</span>
-              </span>
-            )}
-          </div>
-        </nav>
-      </header>
+              {/* username display */}
+              {me && (
+                <span className="ml-4 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
+                  {me.username}
+                </span>
+              )}
+            </div>
+          </nav>
+        </header>
+      )}
 
       <main className="mx-auto max-w-6xl p-6">{children}</main>
 

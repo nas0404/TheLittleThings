@@ -2,16 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import JournalCreateForm from '../components/journals/JournalCreateForm';
 import JournalEntryCard from '../components/journals/JournalEntryCard';
-
-interface JournalEntry {
-  journalId: number;
-  title: string;
-  content: string;
-  linkedWinId?: number;
-  linkedWinTitle?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { JournalAPI, type JournalEntry } from '../api/JournalApi';
+import { ApiError } from '../api/http';
 
 export default function Journal() {
   // manage view state, either showing list or create form
@@ -31,30 +23,18 @@ export default function Journal() {
     setLoading(true);
     setError(null);
     
-    const token = localStorage.getItem('token');
-    console.log('Fetching journl entries');
-    if (!token) {
-      setError('Please log in frist');
-      setLoading(false);
-      return;
-    }
-
+    console.log('Fetching journal entries');
+    
     try {
-      const response = await fetch(`http://localhost:8080/api/journals?sort=${sortBy}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setEntries(data);
+      const data = await JournalAPI.list(sortBy);
+      setEntries(data);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setError('Please log in first');
       } else {
         setError('Failed to load entries');
       }
-    } catch (err) {
-      setError('Network error');
+      console.error('Error fetching journal entries:', err);
     } finally {
       setLoading(false);
     }
@@ -66,7 +46,10 @@ export default function Journal() {
   };
 
   const handleEntryDeleted = (deletedId: number) => {
-    setEntries(entries.filter(entry => entry.journalId !== deletedId));
+    console.log('handleEntryDeleted called with ID:', deletedId);
+    console.log('Current entries before delete:', entries.length);
+    // Instead of trying to update local state, fetch fresh data from backend
+    fetchEntries();
   };
 
   if (view === 'create') {

@@ -1,15 +1,7 @@
 import { useState } from 'react';
 import JournalEditForm from './JournalEditForm';
-
-interface JournalEntry {
-  journalId: number;
-  title: string;
-  content: string;
-  linkedWinId?: number;
-  linkedWinTitle?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { JournalAPI, type JournalEntry } from '../../api/JournalApi';
+import { ApiError } from '../../api/http';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
@@ -43,24 +35,17 @@ export default function JournalEntryCard({ entry, onDeleted, onUpdated }: Journa
   const handleDelete = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const response = await fetch(`http://localhost:8080/api/journals/${entry.journalId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        onDeleted(entry.journalId);
-      } else {
-        console.error('Failed to delete journal entry');
-      }
+      console.log('Deleting journal entry:', entry.journalId);
+      await JournalAPI.remove(entry.journalId);
+      console.log('Delete API call completed successfully');
+      onDeleted(entry.journalId);
+      console.log('onDeleted callback called');
     } catch (err) {
       console.error('Error deleting journal entry:', err);
+      if (err instanceof ApiError) {
+        // You could show a toast or error message here
+        console.error('API Error:', err.message);
+      }
     } finally {
       setLoading(false);
       setShowDeleteConfirm(false);

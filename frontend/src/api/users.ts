@@ -1,4 +1,8 @@
+// frontend/src/api/users.ts
 import { useEffect, useState } from "react";
+import { http } from "./http";
+
+const API_BASE = "/api/users";
 
 export type MeResponse = {
   userId: number;
@@ -7,16 +11,103 @@ export type MeResponse = {
   trophies?: number | null;
 };
 
-const BASE = "http://localhost:8080";
+export type LoginRequest = {
+  usernameOrEmail: string;
+  password: string;
+};
 
-export async function fetchMe(): Promise<MeResponse> {
-  const r = await fetch(`${BASE}/api/users/me`, {
-    headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
-  });
-  if (!r.ok) throw new Error("Not logged in");
-  return r.json();
-}
+export type RegisterRequest = {
+  username: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  dob: string;
+  gender: string;
+  region: string;
+};
 
+export type LoginResponse = {
+  token: string;
+  userId: number;
+  username: string;
+};
+
+export type UpdateUserRequest = {
+  username?: string;
+  email?: string;
+  password?: string;
+};
+
+// Authentication and user management API
+export const UserAPI = {
+  async me(): Promise<MeResponse> {
+    return http<MeResponse>(`${API_BASE}/me`);
+  },
+
+  async login(credentials: LoginRequest): Promise<LoginResponse> {
+    const r = await http<LoginResponse>(`${API_BASE}/login`, {
+      method: "POST",
+      body: JSON.stringify(credentials),
+      skipAuth: true, // unauthenticated call
+    });
+    localStorage.setItem("token", r.token);
+    localStorage.setItem("username", r.username);
+    localStorage.setItem("userId", r.userId.toString());
+    return r;
+  },
+
+  async register(userData: RegisterRequest): Promise<LoginResponse> {
+    const r = await http<LoginResponse>(`${API_BASE}/register`, {
+      method: "POST",
+      body: JSON.stringify(userData),
+      skipAuth: true, // unauthenticated call
+    });
+    localStorage.setItem("token", r.token);
+    localStorage.setItem("username", r.username);
+    localStorage.setItem("userId", r.userId.toString());
+    return r;
+  },
+
+  async changeUsername(newUsername: string): Promise<LoginResponse> {
+    const r = await http<LoginResponse>(`${API_BASE}/change-username`, {
+      method: "POST",
+      body: JSON.stringify({ newUsername }),
+    });
+    localStorage.setItem("token", r.token); // backend issues a new token
+    localStorage.setItem("username", r.username);
+    localStorage.setItem("userId", r.userId.toString());
+    return r;
+  },
+
+  async changePassword(payload: { oldPassword: string; newPassword: string }): Promise<void> {
+    await http<void>(`${API_BASE}/change-password`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async resetPassword(email: string): Promise<void> {
+    await http<void>(`${API_BASE}/reset-password`, {
+      method: "POST",
+      body: JSON.stringify({ email }),
+      skipAuth: true,
+    });
+  },
+
+  async deleteMe(): Promise<void> {
+    await http<void>(`${API_BASE}/`, { method: "DELETE" });
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    localStorage.removeItem("userId");
+  },
+
+  logout(): void {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    localStorage.removeItem("userId");
+  },
+};
 
 export function useMe() {
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -24,18 +115,27 @@ export function useMe() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
-        const data = await fetchMe();
-        setMe(data);
-        localStorage.setItem("username", data.username); // handy for other components
+        const data = await UserAPI.me();
+        if (!cancelled) {
+          setMe(data);
+          localStorage.setItem("username", data.username);
+          localStorage.setItem("userId", data.userId.toString());
+        }
       } catch (e: any) {
-        setErr(e.message || "Failed to load user");
-        setMe(null);
+        if (!cancelled) {
+          setErr(e?.message || "Failed to load user");
+          setMe(null);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return { me, loading, err };

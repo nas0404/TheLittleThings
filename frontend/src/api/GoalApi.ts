@@ -33,25 +33,25 @@ export type UpdateGoalRequest = Partial<{
 
 // Fetch list of goals, optionally filtered by category
 const list = (opts?: { categoryId?: number }) =>
-  http<GoalResponse[]>(`/goals${opts?.categoryId ? `?categoryId=${opts.categoryId}` : ""}`);
+  http<GoalResponse[]>(`/api/goals${opts?.categoryId ? `?categoryId=${opts.categoryId}` : ""}`);
 
 // Create a new goal
 const create = (body: CreateGoalRequest) =>
-  http<GoalResponse>(`/goals`, {
+  http<GoalResponse>(`/api/goals`, {
     method: "POST",
     body: JSON.stringify(body),
   });
 
 // Update an existing goal by ID
 const update = (goalId: number, body: UpdateGoalRequest) =>
-  http<GoalResponse>(`/goals/${goalId}`, {
+  http<GoalResponse>(`/api/goals/${goalId}`, {
     method: "PUT",
     body: JSON.stringify(body),
   });
 
 // Delete a goal by ID
 const remove = (goalId: number) =>
-  http<void>(`/goals/${goalId}`, { method: "DELETE" });
+  http<void>(`/api/goals/${goalId}`, { method: "DELETE" });
 
 // Fetch goals grouped by priority, optionally filtered by category and priority
 const grouped = (opts?: { categoryId?: number; priority?: Priority }) => {
@@ -59,7 +59,7 @@ const grouped = (opts?: { categoryId?: number; priority?: Priority }) => {
   if (opts?.categoryId) qs.set("categoryId", String(opts.categoryId));
   if (opts?.priority) qs.set("priority", opts.priority);
   const q = qs.toString();
-  return http<Record<Priority, GoalResponse[]>>(`/goals/grouped${q ? `?${q}` : ""}`);
+  return http<Record<Priority, GoalResponse[]>>(`/api/goals/grouped${q ? `?${q}` : ""}`);
 };
 
 export const GoalsAPI = { list, create, update, remove, grouped };

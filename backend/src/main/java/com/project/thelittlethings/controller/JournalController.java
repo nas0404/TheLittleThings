@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/journals")
-@CrossOrigin(origins = "http://localhost:5173") // allow frontend to connect
+@CrossOrigin(origins = {"http://localhost:5173/", "https://thelittlethings.azurewebsites.net/"}, allowCredentials = "true")
 public class JournalController {
 
     private final JournalService journalService;

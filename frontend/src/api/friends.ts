@@ -26,7 +26,7 @@ export type Challenge = {
 
 
 
-const BASE = "http://localhost:8080";
+const BASE = "";
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
   "Content-Type": "application/json",
@@ -92,7 +92,7 @@ export const FriendsAPI = {
   },
 
   sendRequestByUsername: async (username: string) => {
-    const r = await fetch(`http://localhost:8080/api/friends/requests/by-username`, {
+    const r = await fetch(`/api/friends/requests/by-username`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
@@ -133,7 +133,7 @@ export const FriendsAPI = {
   },
 
   listProposedChallenges: async (): Promise<Challenge[]> => {
-    const r = await fetch(`http://localhost:8080/api/friends/challenges/proposed`, {
+    const r = await fetch(`/api/friends/challenges/proposed`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
       },
@@ -149,7 +149,7 @@ export const FriendsAPI = {
   },
 
   acceptChallenge: async (id: number): Promise<Challenge> => {
-    const r = await fetch(`http://localhost:8080/api/friends/challenges/${id}/accept`, {
+    const r = await fetch(`/api/friends/challenges/${id}/accept`, {
       method: "POST",
       headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
     });
@@ -157,7 +157,7 @@ export const FriendsAPI = {
     return r.json();
   },
   declineChallenge: async (id: number): Promise<Challenge> => {
-    const r = await fetch(`http://localhost:8080/api/friends/challenges/${id}/decline`, {
+    const r = await fetch(`/api/friends/challenges/${id}/decline`, {
       method: "POST",
       headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
     });
@@ -176,7 +176,7 @@ export const FriendsAPI = {
   },
 
   requestComplete: async (id: number) => {
-    const r = await fetch(`http://localhost:8080/api/friends/challenges/${id}/request-complete`, {
+    const r = await fetch(`/api/friends/challenges/${id}/request-complete`, {
       method: "POST",
       headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
     });
@@ -184,7 +184,7 @@ export const FriendsAPI = {
     return r.json();
   },
   confirmComplete: async (id: number) => {
-    const r = await fetch(`http://localhost:8080/api/friends/challenges/${id}/confirm-complete`, {
+    const r = await fetch(`/api/friends/challenges/${id}/confirm-complete`, {
       method: "POST",
       headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
     });
@@ -192,7 +192,7 @@ export const FriendsAPI = {
     return r.json();
   },
   rejectComplete: async (id: number) => {
-    const r = await fetch(`http://localhost:8080/api/friends/challenges/${id}/reject-complete`, {
+    const r = await fetch(`/api/friends/challenges/${id}/reject-complete`, {
       method: "POST",
       headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
     });

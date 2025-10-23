@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 // handles user authentication and account managment
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:5173") // frontend connection
 public class UserController {
 
     private final UserService userService;

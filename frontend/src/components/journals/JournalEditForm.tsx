@@ -1,20 +1,6 @@
 import { useState, useEffect } from 'react';
-
-interface Win {
-  winId: number;
-  title: string;
-  description?: string;
-}
-
-interface JournalEntry {
-  journalId: number;
-  title: string;
-  content: string;
-  linkedWinId?: number;
-  linkedWinTitle?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { JournalAPI, type JournalEntry, type Win, type UpdateJournalRequest } from '../../api/JournalApi';
+import { ApiError } from '../../api/http';
 
 interface JournalEditFormProps {
   entry: JournalEntry;
@@ -41,20 +27,8 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
 
   const fetchUserWins = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const response = await fetch('http://localhost:8080/api/journals/wins', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setWins(data);
-      }
+      const data = await JournalAPI.getWins();
+      setWins(data);
     } catch (err) {
       console.error('Error fetching wins:', err);
     }
@@ -94,35 +68,24 @@ export default function JournalEditForm({ entry, onCancel, onSuccess }: JournalE
     setServerError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please log in');
-        return;
-      }
-
-      const requestBody = {
+      const requestBody: UpdateJournalRequest = {
         title: formData.title,
         content: formData.content,
-        linkedWinId: formData.linkedWinId ? parseInt(formData.linkedWinId) : null
+        linkedWinId: formData.linkedWinId ? parseInt(formData.linkedWinId) : undefined
       };
 
-      const response = await fetch(`http://localhost:8080/api/journals/${entry.journalId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (response.ok) {
-        onSuccess();
-      } else {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to update journal entry' }));
-        setServerError(errorData.error || 'Failed to update journal entry');
-      }
+      await JournalAPI.update(entry.journalId, requestBody);
+      onSuccess();
     } catch (err) {
-      setServerError('Failed to update journal entry');
+      if (err instanceof ApiError) {
+        if (err.status === 401) {
+          setError('Please log in');
+        } else {
+          setServerError(err.message || 'Failed to update journal entry');
+        }
+      } else {
+        setServerError('Failed to update journal entry');
+      }
       console.error('Error updating journal entry:', err);
     } finally {
       setLoading(false);

@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/friends")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173/", "https://thelittlethings.azurewebsites.net/"}, allowCredentials = "true")
 @RequiredArgsConstructor
 public class FriendController {
 
