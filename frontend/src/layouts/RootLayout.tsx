@@ -100,16 +100,18 @@ export default function RootLayout({ children }: Props) {
             </NavLink>
             <div className="ml-auto flex items-center gap-3">
               <NavLink to="/home" className="hover:underline">Home</NavLink>
-              <NavLink to="/about" className="hover:underline">About</NavLink>
               <NavLink to="/settings" className="hover:underline">Settings</NavLink>
+              {/*
+              <NavLink to="/about" className="hover:underline">About</NavLink>
               <NavLink to="/categories" className="hover:underline">Categories</NavLink>
               <NavLink to="/goals" className="hover:underline">Goals</NavLink>
+              */}
               <NavLink to="/wins" className="hover:underline">Wins</NavLink>
               <NavLink to="/journal" className="hover:underline">Journal</NavLink>
               <NavLink to="/leaderboard" className="hover:underline">Leaderboard</NavLink>
               <NavLink to="/user" className="hover:underline">Account</NavLink>
               <NavLink to="/friends" className="hover:underline">Friends</NavLink>
-              <NavLink to="/create-goals" className="hover:underline">Add Goal</NavLink>
+              <NavLink to="/create-goals" className="hover:underline">Goals</NavLink>
 
               {me && (
                 <span className="ml-4 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
