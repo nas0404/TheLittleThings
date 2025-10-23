@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
-window.dispatchEvent(new Event("user-updated"));
-
+fetchJSON<ProfileDto>(`/api/settings/profile`)
 
 /** ---------------- Types ---------------- */
 type ProfileDto = {
