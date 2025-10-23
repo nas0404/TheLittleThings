@@ -320,32 +320,33 @@ export default function CreateGoalsPage() {
           <div className="text-sm text-slate-500">No goals yet. Create one on the right.</div>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-4">
             {sortedGoals.map((g) => (
-                <div key={g.goalId} className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                        <GoalCard
-                        goal={{
-                            goalId: g.goalId,
-                            title: g.title,
-                            description: g.description ?? null,
-                            priority: g.priority,
-                        }}
-                        onRequestDelete={() => requestDeleteGoal(g)}
-                        onEdit={() => setEditingGoal(g)}
-                        />
-                    </div>
+                <div key={g.goalId}>
+                <GoalCard
+                    goal={{
+                    goalId: g.goalId,
+                    title: g.title,
+                    description: g.description ?? null,
+                    priority: g.priority,
+                    }}
+                    onRequestDelete={() => requestDeleteGoal(g)}
+                    onEdit={() => setEditingGoal(g)}
+                />
 
+                <div className="mt-2 flex justify-end">
                     <button
-                        onClick={() => completeGoal(g.goalId)}
-                        className="shrink-0 self-center h-9 px-3 rounded bg-green-600 text-white hover:bg-green-700"
-                        type="button"
+                    onClick={() => completeGoal(g.goalId)}
+                    type="button"
+                    className="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700"
                     >
-                        Complete Goal
+                    Complete Goal
                     </button>
+                </div>
                 </div>
             ))}
         </div>
+
     </div>
 
       {/* Column 3: New Category + New Goal forms */}
