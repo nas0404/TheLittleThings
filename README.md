@@ -157,7 +157,9 @@ Every source file begins with a contributor attribution comment to keep ownershi
 
 ## External Dependencies & Deadlines
 
-- **Azure for Students subscription:** Hosts the shared Postgres instance and CI/CD secrets. Subscription owner: @Maxim Tabachuk. **Expiry:** 13 Nov 2025. After that date, the hosted database and secrets will be removed—set up a replacement beforehand.
+- **Azure for Students subscription:** Hosts the shared Postgres instance and CI/CD secrets. Subscription owner: @Maxim Tabachuk. 
+
+***Expiry:*** 13 Nov 2025. After that date, the hosted database and secrets will be removed—set up a replacement beforehand.
 
 For further clarifications, reach out to @Naseem Win.
 
