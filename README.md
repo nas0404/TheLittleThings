@@ -1,109 +1,151 @@
+Contributor: @Naseem Win
+
 # TheLittleThings
 
-TheLittleThings is a goal tracking and social motivation application we've developed for our Advanced Software Development course. The idea behind the app is to help users set personal goals, track their progress through journaling, and stay motivated by connecting with friends through leaderboards and challenges.
+TheLittleThings is a goal-tracking and social motivation platform built for our Advanced Software Development course. Users can create goals, jot journal entries, celebrate wins, and stay accountable with friends through leaderboards and challenges. The solution is fully functional end to end, with both the hosted Azure deployment and the local workflow delivering the same experience.
 
-## Project Structure
-
-We've organized this project as a monorepo with two main parts - a React frontend and a Spring Boot backend. This setup makes it easier to manage both sides of the application while keeping everything in one place.
+## Repository Map
 
 ```
 TheLittleThings/
-├── frontend/           // React + TypeScript frontend application
-├── backend/           // Spring Boot backend API
-├── azure-pipelines.yml // CI/CD configuration
-├── package.json       // Root workspace configuration
-└── README.md         // This file
+├── frontend/            React 19 + TypeScript client (Vite, Tailwind, React Router)
+├── backend/             Spring Boot 3.3.3 REST API (Java 17, PostgreSQL, Maven)
+├── azure-pipelines.yml  Azure DevOps CI/CD pipeline
+├── package.json         Root workspace definition for VS Code tooling
+└── README.md            Project handbook (this file)
 ```
 
-### Frontend Setup
+### Frontend layout
 
-The frontend is built with React 19 and TypeScript, using Vite as our build tool. We chose Tailwind CSS for styling because it makes the UI development much faster and more consistent. React Router DOM handles all the navigation between different pages.
-
-Our main features include:
-- User authentication system (sign in and registration)
-- Goal creation and management with categories
-- Personal journal entries for reflection
-- Friends system where users can connect with each other
-- Leaderboards to create some friendly competition
-- User profiles and customizable settings
-
-The frontend code is organized like this:
 ```
 frontend/src/
-├── components/        // Reusable UI components
-│   ├── buttons/      // Button components
-│   ├── categories/   // Category-related components
-│   ├── goals/        // Goal management components
-│   ├── journals/     // Journal entry components
-│   └── ui/          // General UI components
-├── pages/            // Route components
-├── api/              // API client functions
-├── layouts/          // Layout components
-├── routes/           // Route configurations
-├── lib/              // Utility functions
-└── styles/           // CSS and styling files
+├── api/           Typed API clients (fetch wrappers and DTO helpers)
+├── components/    Reusable UI widgets grouped by domain (buttons, goals, journals…)
+├── layouts/       Shared page chrome such as `RootLayout`
+├── lib/           Utilities (`mapServerErrors`, formatting helpers)
+├── pages/         Route-aligned screens (Goals, Journal, Leaderboard, etc.)
+├── routes/        Router configuration and lazy loading helpers
+└── styles/        Global Tailwind and design tokens
 ```
 
-### Backend Architecture
+### Backend layout
 
-For the backend, we're using Spring Boot 3.3.3 with Java 17. PostgreSQL handles our data storage, and we use JPA/Hibernate for database operations. Maven manages our dependencies and build process.
-
-The backend provides:
-- RESTful API endpoints for all frontend operations
-- User authentication and authorization
-- Data persistence with proper validation
-- Comprehensive test coverage to ensure reliability
-
-Our backend structure follows standard Spring Boot conventions:
 ```
 backend/src/main/java/com/project/thelittlethings/
-├── controller/        // REST API controllers
-├── services/         // Business logic layer
-├── repositories/     // JPA repositories
-├── entities/         // JPA entity classes
-├── dto/             // Data Transfer Objects
-├── security/        // Authentication & authorization
-├── config/          // Configuration classes
-├── View/            // Database views
-└── MaterialisedView/ // Materialized views
+├── config/          Cross-cutting Spring configuration
+├── controller/      REST controllers per aggregate (Goals, Wins, Journal, …)
+├── dto/             Request/response transfer objects
+├── entities/        JPA entities and persistence mappings
+├── repositories/    Spring Data repositories
+├── security/        Authentication & authorization components
+├── services/        Business logic and orchestration layer
+├── view/            Database view projections
+└── materialisedview/ Materialized view bindings
 ```
 
-The main entities in our system are User (for account management), Goal (personal objectives), Category (goal organization), Win (achievement tracking), Journal (personal entries), Friendship (social connections), and various challenge-related entities.
+Test sources live under `backend/src/test/java` mirroring the production package structure. Build artefacts land in `backend/target/` and should not be checked in.
 
-## Getting Started
+## Technology Stack
 
-To run this project locally, you'll need Node.js 18+, Java 17+, Maven 3.6+, and PostgreSQL 12+.
+- **Frontend:** React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, React Router 7, lucide-react icon set.
+- **Backend:** Spring Boot 3.3.3, Java 17, Spring Data JPA, Bean Validation, PostgreSQL driver, Lombok (compile-time), Maven 3.
+- **Testing:** JUnit 5, Spring Boot Test, H2 in-memory database for backend unit tests, Vitest (optional via Vite) and ESLint for frontend validation.
+- **DevOps:** Azure Pipelines for CI/CD, GitHub Actions optional, Docker (recommended) for local database.
+- **External services:** A shared Postgres instance runs on our Azure for Students subscription; that subscription expires **13 Nov 2025**, at which point the hosted database will be decommissioned. Plan to migrate or create a local database before then.
 
-For the frontend:
-```bash
+## Getting Started (Tutor Machine)
+
+### Hosted Deployment
+
+- **Public URL:** https://thelittlethings.azurewebsites.net/
+- **Deployment pipeline:** `azure-pipelines.yml` builds the React frontend, copies the static assets into the backend, packages `app.jar`, and deploys the ZIP artifact to the App Service using the `TheLittleThings` service connection.
+- **Database:** Production points to the managed Azure PostgreSQL instance inside the Azure for Students subscription (expires 13 Nov 2025). After that date, redeploy with a new connection string.
+- **Environment variables:** Managed through the App Service configuration blade (`SPRING_DATASOURCE_*` keys mirror the local setup below).
+
+You can verify a successful deployment by visiting the URL above and signing in with a seeded demo account (if enabled) or creating a new user account.
+
+### Local Run (Fully Functional Build)
+
+The cloud deployment is feature-complete; the steps below reproduce the exact stack on a local machine.
+
+### 1. Prerequisites
+
+- Node.js 18+ and npm 10+ (https://nodejs.org)
+- Java 17 JDK (Temurin or Oracle)
+- Maven Wrapper included (`mvnw.cmd`); Maven 3.9+ if you prefer a system install
+- PostgreSQL 16 installed and running locally
+
+
+
+### 2. Provision PostgreSQL 16
+
+Make sure a local PostgreSQL 16 server is running before you start the backend.
+
+- Create a `thelittlethings` database.
+- Create a user `thelittlethings` with password `thelittlethings` and grant it ownership of the database.
+- If you choose different names or credentials, update the environment variables in the next step to match.
+
+### 3. Configure environment variables
+
+The backend reads its datasource settings from environment variables. In PowerShell, set them in the session where you will start the server:
+
+```powershell
+$env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/thelittlethings"
+$env:SPRING_DATASOURCE_USERNAME="thelittlethings"
+$env:SPRING_DATASOURCE_PASSWORD="thelittlethings"
+$env:SPRING_JPA_HIBERNATE_DDL_AUTO="update"
+```
+
+For persistent configuration, create a `.env` file and source it, or add the variables through the Windows Environment Variables UI.
+
+### 4. Start the backend API
+
+```powershell
+cd backend
+./mvnw.cmd spring-boot:run
+```
+
+The application serves REST endpoints at `http://localhost:8080`. Logs are emitted at INFO by default; adjust via `application.properties` for deeper debugging.
+
+### 5. Start the frontend client
+
+Open a new PowerShell window:
+
+```powershell
 cd frontend
 npm install
 npm run dev
 ```
 
-For the backend:
-```bash
-cd backend
-./mvnw spring-boot:run
-```
+Vite hosts the UI at `http://localhost:5173`, proxying API calls to the backend according to the configuration in `frontend/src/api/http.ts`.
 
+### 6. Run the automated test suites
 
-## Team Responsibilities
+- Backend: `cd backend; ./mvnw.cmd clean test`
+- Frontend lint: `cd frontend; npm run lint`
+- (Optional) Frontend unit tests: `npm run test` (configure Vitest if not already set up)
 
-We've divided the work among our team members based on different feature areas:
+## Debugging & Developer Notes
 
-//Ilker Paken (25527603)//
-Ilker is handling the wins tracking system and leaderboard functionality. This includes Epic 9 (wins management) where completed goals get logged as wins, and Epic 31 (leaderboard) that ranks users based on their trophies and achievements. He's working on the Leaderboard.tsx and Wins.tsx components on the frontend, plus the WinService, WinController, and LeaderboardService on the backend.
+- **Backend:** Enable SQL logs by setting `spring.jpa.properties.hibernate.show_sql=true`. For remote debugging, run `./mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"` and attach from your IDE.
+- **Frontend:** Vite offers hot-module replacement. Use React DevTools and the browser network tab to inspect API calls. ESLint is configured to flag common issues—run `npm run lint` before committing.
+- **Comments:** Complex service methods and non-obvious UI interactions include succinct inline comments explaining domain logic. Maintain this standard when extending the codebase.
+- **CI pipeline:** See `azure-pipelines.yml` for build steps. The pipeline installs dependencies, runs tests, and produces artefacts for deployment.
 
-//Maxim Tabachuk (24615078)//
-Maxim is responsible for the streak system and social features. His work covers Epic 60 (automatic streaks, challenges and trophies) which tracks user activity streaks and resets them when inactive, and Epic 13 (friends management) for social connections and friend challenges. He's developing the FriendsPage.tsx component and various streak display components, along with the FriendshipService and ChallengeService backend logic.
+## Team & Ownership
 
-//Ali Idrees (24545790)//
-Ali is working on user management and the journaling system. He's handling Epic 12 (journaling and self reflection) where users can write, read, and manage their personal thoughts with sorting and reminder features, and Epic 4 (user management) covering sign up, login, profile management, and account operations. His components include Journal.tsx, SignIn.tsx, Register.tsx, and UserProfile.tsx, with corresponding UserService, UserController, JournalService, and JournalController backend services.
+- **Ilker Paken (25527603):** Wins tracking & leaderboard (frontend `Leaderboard.tsx`, `Wins.tsx`; backend `WinService`, `LeaderboardService`, controllers).
+- **Maxim Tabachuk (24615078):** Streaks and social features (`FriendsPage.tsx`, streak widgets; backend `FriendshipService`, `ChallengeService`).
+- **Ali Idrees (24545790):** User management and journaling (`Register.tsx`, `Journal.tsx`, auth controllers, `UserService`, `JournalService`).
+- **Naseem Win (24964684):** Goal and category management (`Goals.tsx`, `Categories.tsx`, `GoalService`, `CategoryService`).
+- **Nasser Al Mughairi (24605154):** Settings and notifications (`Settings.tsx`, notification components, notification services).
 
-//Naseem Win (24964684)//
-Naseem is taking care of goals and category management. His responsibilities include Epic 8 (goals management) for creating, filtering, updating and prioritizing goals, and Epic 34 (category management) for organizing goals into meaningful groups. He's developing Goals.tsx and Categories.tsx components along with the GoalService, GoalController, CategoryService, and CategoryController backend services.
+Every source file begins with a contributor attribution comment to keep ownership transparent for tutors and collaborators.
 
-//Nasser Al Mughairi (24605154)//
-Nasser is handling user settings and notifications. He's working on Epic 11 (settings) for profile management, account security, and notification preferences, and Epic 10 (notifications & reminders) for daily reminders, milestone alerts, and social notifications. His work includes the Settings.tsx component and various notification-related components, plus the backend settings management and notification services.
+## External Dependencies & Deadlines
+
+- **Azure for Students subscription:** Hosts the shared Postgres instance and CI/CD secrets. Subscription owner: @Maxim Tabachuk. **Expiry:** 13 Nov 2025. After that date, the hosted database and secrets will be removed—set up a replacement beforehand.
+
+For further clarifications, reach out to @Naseem Win.
+
 
