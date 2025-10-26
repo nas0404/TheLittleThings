@@ -85,6 +85,19 @@ Make sure a local PostgreSQL 16 server is running before you start the backend.
 - Create a user `thelittlethings` with password `thelittlethings` and grant it ownership of the database.
 - If you choose different names or credentials, update the environment variables in the next step to match.
 
+**Initialize the database schema**
+
+After creating the database and user, run the schema file to set up all tables and seed demo data:
+
+1. Open a terminal and navigate to the project root.
+2. Run the following command (replace with your actual path to `psql` if needed):
+
+	```powershell
+	psql -U thelittlethings -d thelittlethings -f backend/src/main/resources/db/schema.sql
+	```
+
+This will create all required tables and insert sample users.
+
 ### 3. Configure environment variables
 
 The backend reads its datasource settings from environment variables. In PowerShell, set them in the session where you will start the server:
